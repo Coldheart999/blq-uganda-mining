@@ -1,0 +1,196 @@
+import React, { useState } from 'react';
+import { useApp } from '../context/AppContext';
+import { ArrowUpRight, X, Smartphone, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
+
+interface WithdrawModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose }) => {
+  const { currentUser, adminConfig, submitWithdrawal } = useApp();
+
+  const [provider, setProvider] = useState<'MTN Mobile Money' | 'Airtel Money'>('MTN Mobile Money');
+  const [amount, setAmount] = useState<string>('20000');
+  const [destinationNumber, setDestinationNumber] = useState<string>(currentUser?.phone || '');
+  const [error, setError] = useState<string>('');
+  const [successMsg, setSuccessMsg] = useState<string>('');
+
+  if (!isOpen || !currentUser) return null;
+
+  const numAmount = parseInt(amount, 10) || 0;
+  const feeUGX = Math.round(numAmount * (adminConfig.withdrawalFeePercent / 100));
+  const netPayoutUGX = Math.max(0, numAmount - feeUGX);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+
+    if (numAmount < 10000) {
+      setError('Minimum withdrawal amount is UGX 10,000');
+      return;
+    }
+
+    if (currentUser.balanceUGX < numAmount) {
+      setError(`Insufficient balance. Your current withdrawable balance is UGX ${currentUser.balanceUGX.toLocaleString()}`);
+      return;
+    }
+
+    if (!destinationNumber.trim()) {
+      setError('Please provide your receiving Mobile Money phone number');
+      return;
+    }
+
+    const res = submitWithdrawal(numAmount, provider, destinationNumber.trim());
+    if (res.success) {
+      setSuccessMsg(res.message);
+      setTimeout(() => {
+        setSuccessMsg('');
+        onClose();
+      }, 3000);
+    } else {
+      setError(res.message);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#121824] to-[#0D121D] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 sm:p-8">
+        
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/60 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Modal Header */}
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-500 p-0.5 shadow-lg shadow-amber-950/50">
+            <div className="w-full h-full bg-[#0B0E14] rounded-[10px] flex items-center justify-center">
+              <ArrowUpRight className="w-5 h-5 text-amber-400" />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Withdraw Mining Profits</h2>
+            <p className="text-xs text-slate-400">Direct payout to your MTN or Airtel Mobile Money</p>
+          </div>
+        </div>
+
+        {/* Feedback Messages */}
+        {error && (
+          <div className="mb-4 p-3 bg-rose-950/60 border border-rose-800/80 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="mb-4 p-3 bg-emerald-950/60 border border-emerald-800/80 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Balance Bar */}
+          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+            <span className="text-slate-400 font-mono">Available Balance:</span>
+            <span className="font-extrabold text-emerald-400 font-mono text-base">
+              UGX {currentUser.balanceUGX.toLocaleString()}
+            </span>
+          </div>
+
+          {/* Provider Selection */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              Select Receive Mobile Network
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setProvider('MTN Mobile Money')}
+                className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  provider === 'MTN Mobile Money'
+                    ? 'bg-amber-400/10 border-amber-400 text-amber-400 shadow-md'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                }`}
+              >
+                MTN Mobile Money
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProvider('Airtel Money')}
+                className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  provider === 'Airtel Money'
+                    ? 'bg-rose-500/10 border-rose-500 text-rose-400 shadow-md'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                }`}
+              >
+                Airtel Money
+              </button>
+            </div>
+          </div>
+
+          {/* Target Phone Number */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+              Recipient Phone Number (MTN / Airtel)
+            </label>
+            <input
+              type="text"
+              value={destinationNumber}
+              onChange={(e) => setDestinationNumber(e.target.value)}
+              placeholder="e.g. 0771234567 or +256750000000"
+              className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-amber-400"
+              required
+            />
+          </div>
+
+          {/* Amount Input */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+              Withdrawal Amount (UGX)
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Minimum UGX 10,000"
+              className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-amber-400 font-mono font-bold text-lg focus:outline-none focus:border-amber-400"
+              required
+            />
+          </div>
+
+          {/* Payout Calculation Breakdown */}
+          <div className="p-3 bg-slate-950 border border-slate-800/80 rounded-xl space-y-1.5 text-xs font-mono">
+            <div className="flex justify-between text-slate-400">
+              <span>Gross Withdrawal:</span>
+              <span>UGX {numAmount.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-slate-500 text-[11px]">
+              <span>Processing Fee ({adminConfig.withdrawalFeePercent}%):</span>
+              <span>- UGX {feeUGX.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-emerald-400 font-bold border-t border-slate-800/80 pt-1.5 text-sm">
+              <span>Net Mobile Money Transfer:</span>
+              <span>UGX {netPayoutUGX.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg shadow-amber-950/50 transition-all active:scale-[0.98]"
+          >
+            Submit Withdrawal Order
+          </button>
+        </form>
+
+      </div>
+    </div>
+  );
+};
