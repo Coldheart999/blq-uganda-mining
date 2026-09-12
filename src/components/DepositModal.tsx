@@ -52,21 +52,12 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
       return;
     }
 
-    const res = await initiateMobileMoneyPayment(
-      {
-        phone: phone.trim(),
-        amountUGX: numAmount,
-        network: provider,
-        userName: currentUser.name
-      },
-      {
-        provider: 'flutterwave',
-        publicKey: '',
-        secretKey: '',
-        merchantName: 'BLQ MINING UGANDA',
-        isLiveMode: true
-      }
-    );
+    const res = await initiateMobileMoneyPayment({
+      phone: phone.trim(),
+      amountUGX: numAmount,
+      network: provider,
+      userName: currentUser.name
+    });
 
     setIsLoading(false);
     if (res.success) {
