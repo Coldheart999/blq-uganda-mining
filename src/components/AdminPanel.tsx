@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { ShieldCheck, Check, X, Smartphone, ArrowDownLeft, ArrowUpRight, Settings, Lock, AlertCircle, RefreshCw, KeyRound } from 'lucide-react';
+import { ShieldCheck, Check, X, Smartphone, ArrowDownLeft, ArrowUpRight, Settings, Lock, AlertCircle, MessageSquare, KeyRound } from 'lucide-react';
+import { getSMSGatewaySettings, saveSMSGatewaySettings, SMSGatewaySettings } from '../services/smsService';
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
   const [pinInput, setPinInput] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'withdrawals' | 'deposits' | 'settings'>('withdrawals');
+  const [activeTab, setActiveTab] = useState<'withdrawals' | 'deposits' | 'settings' | 'sms'>('withdrawals');
   const [pinError, setPinError] = useState<string>('');
 
   // Mobile Money Settings Form State
@@ -31,6 +32,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [airtelName, setAirtelName] = useState<string>(adminConfig.airtelMoneyName);
   const [newPin, setNewPin] = useState<string>(adminConfig.adminPin);
   const [saveSuccess, setSaveSuccess] = useState<string>('');
+
+  // SMS Gateway Settings State
+  const [smsSettings, setSmsSettings] = useState<SMSGatewaySettings>(getSMSGatewaySettings());
 
   if (!isOpen) return null;
 
@@ -56,6 +60,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     }));
     setSaveSuccess('Admin Mobile Money configuration saved successfully!');
     setTimeout(() => setSaveSuccess(''), 3000);
+  };
+
+  const handleSaveSmsSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveSMSGatewaySettings(smsSettings);
+    setSaveSuccess("Live SMS Gateway credentials saved! Real SMS OTPs will now be delivered via your API.");
+    setTimeout(() => setSaveSuccess(''), 4000);
   };
 
   const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
@@ -169,6 +180,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
               </button>
 
               <button
+                onClick={() => setActiveTab('sms')}
+                className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 ${
+                  activeTab === 'sms'
+                    ? 'bg-[#101622] border-slate-700 text-teal-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4 text-teal-400" />
+                Live SMS Gateway API
+              </button>
+
+              <button
                 onClick={() => setActiveTab('settings')}
                 className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 ${
                   activeTab === 'settings'
@@ -177,7 +200,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                 }`}
               >
                 <Settings className="w-4 h-4 text-cyan-400" />
-                Mobile Money Accounts Config
+                Mobile Money Accounts
               </button>
             </div>
 
@@ -324,7 +347,110 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
               </div>
             )}
 
-            {/* Tab 3: Mobile Money Accounts Settings */}
+            {/* Tab 3: Real SMS Gateway Settings */}
+            {activeTab === 'sms' && (
+              <div className="flex-1 overflow-y-auto p-6">
+                <form onSubmit={handleSaveSmsSettings} className="max-w-2xl space-y-6">
+                  {saveSuccess && (
+                    <div className="p-3 bg-emerald-950/80 border border-emerald-800 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
+                      <Check className="w-4 h-4 shrink-0" />
+                      <span>{saveSuccess}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold text-teal-400 uppercase font-mono tracking-wider">
+                      Uganda Live SMS Gateway Provider Configuration
+                    </h4>
+                    <p className="text-xs text-slate-400">
+                      Enter your Africa\'s Talking or Twilio API credentials to automatically send real 6-digit SMS OTP codes directly to Ugandan MTN & Airtel mobile numbers when users sign up.
+                    </p>
+
+                    <div>
+                      <label className="block text-xs text-slate-300 mb-1">Select SMS Gateway Provider</label>
+                      <select
+                        value={smsSettings.provider}
+                        onChange={(e) => setSmsSettings({ ...smsSettings, provider: e.target.value as any })}
+                        className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm"
+                      >
+                        <option value="africastalking">Africa\'s Talking Uganda (Recommended for MTN & Airtel)</option>
+                        <option value="twilio">Twilio SMS API</option>
+                      </select>
+                    </div>
+
+                    {smsSettings.provider === 'africastalking' ? (
+                      <div className="space-y-3 p-4 bg-slate-950 border border-slate-800 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-slate-300 mb-1">Africa\'s Talking API Key</label>
+                          <input
+                            type="password"
+                            value={smsSettings.apiKey}
+                            onChange={(e) => setSmsSettings({ ...smsSettings, apiKey: e.target.value })}
+                            placeholder="e.g. atsks_1a2b3c4d5e..."
+                            className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-amber-400 font-mono text-sm"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-slate-300 mb-1">Username</label>
+                            <input
+                              type="text"
+                              value={smsSettings.username}
+                              onChange={(e) => setSmsSettings({ ...smsSettings, username: e.target.value })}
+                              placeholder="sandbox or account_name"
+                              className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-slate-300 mb-1">Sender ID (Shortcode)</label>
+                            <input
+                              type="text"
+                              value={smsSettings.senderId}
+                              onChange={(e) => setSmsSettings({ ...smsSettings, senderId: e.target.value })}
+                              placeholder="e.g. BLQ_MINER"
+                              className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 p-4 bg-slate-950 border border-slate-800 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-slate-300 mb-1">Twilio Account SID</label>
+                          <input
+                            type="text"
+                            value={smsSettings.twilioSid || ''}
+                            onChange={(e) => setSmsSettings({ ...smsSettings, twilioSid: e.target.value })}
+                            placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxx"
+                            className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-amber-400 font-mono text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-slate-300 mb-1">Twilio Auth Token</label>
+                          <input
+                            type="password"
+                            value={smsSettings.twilioToken || ''}
+                            onChange={(e) => setSmsSettings({ ...smsSettings, twilioToken: e.target.value })}
+                            placeholder="••••••••••••••••••••••••"
+                            className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-amber-400 font-mono text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="py-3 px-6 bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg"
+                  >
+                    Save Live SMS Gateway Credentials
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Tab 4: Mobile Money Accounts Settings */}
             {activeTab === 'settings' && (
               <div className="flex-1 overflow-y-auto p-6">
                 <form onSubmit={handleSaveSettings} className="max-w-2xl space-y-6">
