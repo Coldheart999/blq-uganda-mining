@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Phone, Lock, CheckCircle2, ShieldCheck, Smartphone, X, KeyRound, AlertCircle, ArrowRight } from 'lucide-react';
+import { sendRealSMSOTP } from '../services/smsService';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -23,29 +24,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Step 1: Send OTP to Ugandan Phone Number
-  const handleSendOtp = (e: React.FormEvent) => {
+  // Step 1: Send Real OTP to Ugandan Phone Number
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     const cleanPhone = phone.trim();
-    // Validate Ugandan Phone Formats (MTN: 077/078/076, Airtel: 070/075/074)
     if (!/^(07\d{8}|\+2567\d{8})$/.test(cleanPhone)) {
       setError('Please enter a valid Ugandan mobile number (e.g. 0771234567 or 0751234567)');
       return;
     }
 
     if (isLoginMode) {
-      // Direct password login mode
       setStep('password');
       return;
     }
 
-    // Generate random 6-digit OTP code for instant testing & simulation
+    // Generate real 6-digit OTP code and dispatch via SMS Gateway
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOtp(code);
-    setOtpSentMsg(`OTP code sent via SMS to ${cleanPhone}. (Test OTP Code: ${code})`);
-    setStep('otp');
+    
+    const smsRes = await sendRealSMSOTP(cleanPhone, code);
+    if (smsRes.success) {
+      setOtpSentMsg(`SMS verification code sent to ${cleanPhone}. Please check your phone.`);
+      setStep('otp');
+    } else {
+      setError(smsRes.message);
+    }
   };
 
   // Step 2: Verify OTP
@@ -53,8 +58,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault();
     setError('');
 
-    if (otpCode !== generatedOtp && otpCode !== '123456') {
-      setError('Invalid OTP code. Please enter the 6-digit code shown above or 123456');
+    if (otpCode !== generatedOtp) {
+      setError('Invalid 6-digit SMS verification code. Please check your SMS and try again.');
       return;
     }
 
@@ -76,11 +81,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    // Process user login or creation via AppContext
     const fullFormattedPhone = phone.startsWith('+256') ? phone : `+256${phone.startsWith('0') ? phone.slice(1) : phone}`;
     loginWithPhone(fullFormattedPhone, fullName.trim() || undefined);
     
-    // Reset state & close
     onClose();
   };
 
@@ -160,7 +163,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 />
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
-                Enter your registered MTN or Airtel phone number to receive your OTP code.
+                Enter your registered MTN or Airtel phone number to receive your verification code.
               </p>
             </div>
 
@@ -168,7 +171,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               type="submit"
               className="w-full py-3 bg-gradient-to-r from-amber-500 via-emerald-500 to-teal-500 hover:from-amber-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg shadow-emerald-950/50 transition-all active:scale-[0.98]"
             >
-              {isLoginMode ? 'Continue to Login' : 'Send Verification OTP'}
+              {isLoginMode ? 'Continue to Login' : 'Send SMS Verification Code'}
             </button>
           </form>
         )}
@@ -185,7 +188,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Enter 6-Digit Verification Code
+                Enter 6-Digit SMS Code
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -196,7 +199,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   maxLength={6}
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
-                  placeholder="e.g. 123456"
+                  placeholder="••••••"
                   className="w-full pl-10 pr-4 py-3 bg-slate-900/90 border border-slate-800 rounded-xl text-emerald-400 font-mono font-bold text-center tracking-widest text-lg focus:outline-none focus:border-emerald-500"
                   required
                 />

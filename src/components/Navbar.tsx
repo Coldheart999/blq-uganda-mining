@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Cpu, Wallet, ArrowUpRight, ArrowDownLeft, Shield, LogOut, User as UserIcon, Zap, Lock } from 'lucide-react';
+import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, Zap } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -19,7 +19,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   openWithdraw,
   openAdmin
 }) => {
-  const { currentUser, logout, liveUnclaimedYield, claimEarnings } = useApp();
+  const { currentUser, logout, liveUnclaimedYield } = useApp();
+  const [logoClicks, setLogoClicks] = useState<number>(0);
+
+  // Hidden secret gesture: 5 rapid clicks on the logo opens Admin Panel
+  const handleLogoClick = () => {
+    const nextClicks = logoClicks + 1;
+    setLogoClicks(nextClicks);
+    if (nextClicks >= 5) {
+      openAdmin();
+      setLogoClicks(0);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-[#0B0E14]/90 backdrop-blur-md border-b border-slate-800">
@@ -40,21 +51,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
         
+        {/* Hidden Admin Access (No visible button) */}
         <div className="flex items-center space-x-3">
-          <button 
-            onClick={openAdmin}
-            className="flex items-center gap-1 text-slate-400 hover:text-amber-400 transition-colors font-mono text-[11px]"
-          >
-            <Shield className="w-3.5 h-3.5 text-amber-400" />
-            Admin Portal
-          </button>
+          <span className="text-[11px] text-slate-500 font-mono">UGX Settlement: Active</span>
         </div>
       </div>
 
       {/* Main Nav Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand Logo */}
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('store')}>
+        {/* Brand Logo with secret 5-click Admin trigger */}
+        <div 
+          className="flex items-center space-x-3 cursor-pointer select-none" 
+          onClick={() => {
+            setActiveTab('store');
+            handleLogoClick();
+          }}
+        >
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-emerald-500 to-blue-600 p-0.5 shadow-lg shadow-emerald-950/40">
             <div className="w-full h-full bg-[#0B0E14] rounded-[10px] flex items-center justify-center">
               <Cpu className="w-5 h-5 text-emerald-400 animate-pulse" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { MinerCard } from './components/MinerCard';
@@ -9,10 +9,10 @@ import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
-import { Cpu, Zap, ShieldCheck, ArrowRight, Activity, TrendingUp, Wallet } from 'lucide-react';
+import { Cpu, Zap, ShieldCheck, ArrowRight, Activity, TrendingUp } from 'lucide-react';
 
 const MainContent: React.FC = () => {
-  const { currentUser, minerPackages, buyMiner, liveUnclaimedYield } = useApp();
+  const { currentUser, minerPackages, buyMiner } = useApp();
 
   const [activeTab, setActiveTab] = useState<string>('store');
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
@@ -20,6 +20,18 @@ const MainContent: React.FC = () => {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState<boolean>(false);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [purchaseNotice, setPurchaseNotice] = useState<string>('');
+
+  // Keyboard shortcut (Ctrl + Shift + A) to secretly trigger Admin Panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setIsAdminOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleBuyMiner = (minerId: string) => {
     if (!currentUser) {
@@ -42,7 +54,7 @@ const MainContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0B0E14]">
-      {/* Top Navbar Header */}
+      {/* Top Navbar Header (Admin button hidden) */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -208,7 +220,7 @@ const MainContent: React.FC = () => {
       <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
 
       {/* Footer */}
-      <Footer />
+      <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
     </div>
   );
 };

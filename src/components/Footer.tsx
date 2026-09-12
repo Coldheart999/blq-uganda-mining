@@ -1,7 +1,11 @@
 import React from 'react';
-import { Cpu, ShieldCheck, Smartphone, HelpCircle } from 'lucide-react';
+import { Cpu, ShieldCheck, HelpCircle, Lock } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onOpenAdmin?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
   return (
     <footer className="border-t border-slate-800/80 bg-[#070A0F] text-slate-400 py-10 px-4 mt-20">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -65,14 +69,23 @@ export const Footer: React.FC = () => {
           </p>
           <div className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl text-[11px] text-amber-300 flex items-start gap-2">
             <HelpCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
-            <span>Need assistance? Contact your BLQ pool manager or Admin via Mobile Money support line.</span>
+            <span>Need assistance? Contact your BLQ pool manager or Mobile Money support line.</span>
           </div>
         </div>
 
       </div>
 
-      <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-slate-800/60 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} BLQ Platform Uganda. All rights reserved. Built for Ugandan Investors.
+      <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-500">
+        <div>© {new Date().getFullYear()} BLQ Platform Uganda. All rights reserved. Built for Ugandan Investors.</div>
+        
+        {/* Hidden secret lock icon for Admin access */}
+        <button
+          onClick={onOpenAdmin}
+          className="text-slate-800 hover:text-slate-600 transition-colors p-1"
+          title="Security Portal"
+        >
+          <Lock className="w-3 h-3" />
+        </button>
       </div>
     </footer>
   );
