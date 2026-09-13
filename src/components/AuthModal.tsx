@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Phone, Lock, CheckCircle2, ShieldCheck, X, AlertCircle, User as UserIcon, LogIn, UserPlus } from 'lucide-react';
+import { validateUgandanPhone } from '../utils/phoneValidation';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -26,8 +27,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setSuccessMsg('');
 
     const cleanPhone = phone.trim();
-    if (!/^(07\d{8}|\+2567\d{8})$/.test(cleanPhone)) {
-      setError('Please enter a valid Ugandan mobile number (e.g. 0771234567 or 0751234567)');
+    const phoneVal = validateUgandanPhone(cleanPhone);
+    if (!phoneVal.isValid) {
+      setError(phoneVal.errorMessage || 'Please enter a valid MTN (077/078/076/039) or Airtel (070/075/074) phone number.');
       return;
     }
 
@@ -36,9 +38,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       return;
     }
 
-    const fullFormattedPhone = cleanPhone.startsWith('+256') 
-      ? cleanPhone 
-      : `+256${cleanPhone.startsWith('0') ? cleanPhone.slice(1) : cleanPhone}`;
+    const fullFormattedPhone = phoneVal.formattedPhone || cleanPhone;
 
     if (isLoginMode) {
       // Perform strict login verification against stored accounts
@@ -179,12 +179,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <input
                 type="text"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  setError('');
+                }}
                 placeholder="0771234567 or 0751234567"
                 className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-amber-400"
                 required
               />
             </div>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Valid prefixes: MTN (077/078/076/039) • Airtel (070/075/074)
+            </p>
           </div>
 
           {/* Password */}

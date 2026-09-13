@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ArrowUpRight, X, Smartphone, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { validateUgandanPhone } from '../utils/phoneValidation';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -37,8 +38,10 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
       return;
     }
 
-    if (!destinationNumber.trim()) {
-      setError('Please provide your receiving Mobile Money phone number');
+    // Validate phone number network match (MTN vs Airtel)
+    const phoneVal = validateUgandanPhone(destinationNumber, provider);
+    if (!phoneVal.isValid) {
+      setError(phoneVal.errorMessage || 'Invalid phone number for selected recipient network.');
       return;
     }
 
@@ -112,7 +115,10 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setProvider('MTN Mobile Money')}
+                onClick={() => {
+                  setProvider('MTN Mobile Money');
+                  setError('');
+                }}
                 className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                   provider === 'MTN Mobile Money'
                     ? 'bg-amber-400/10 border-amber-400 text-amber-400 shadow-md'
@@ -124,7 +130,10 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
 
               <button
                 type="button"
-                onClick={() => setProvider('Airtel Money')}
+                onClick={() => {
+                  setProvider('Airtel Money');
+                  setError('');
+                }}
                 className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                   provider === 'Airtel Money'
                     ? 'bg-rose-500/10 border-rose-500 text-rose-400 shadow-md'
@@ -144,11 +153,20 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
             <input
               type="text"
               value={destinationNumber}
-              onChange={(e) => setDestinationNumber(e.target.value)}
-              placeholder="e.g. 0771234567 or +256750000000"
+              onChange={(e) => {
+                setDestinationNumber(e.target.value);
+                setError('');
+              }}
+              placeholder={provider === 'MTN Mobile Money' ? '0771234567 or 0781234567' : '0701234567 or 0751234567'}
               className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-amber-400"
               required
             />
+            <p className="text-[11px] text-slate-400 mt-1">
+              {provider === 'MTN Mobile Money'
+                ? 'Must match an MTN line (077/078/076/039)'
+                : 'Must match an Airtel line (070/075/074)'
+              }
+            </p>
           </div>
 
           {/* Amount Input */}

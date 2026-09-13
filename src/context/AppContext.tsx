@@ -427,7 +427,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDeposits(prev => [newDeposit, ...prev]);
     return { 
       success: true, 
-      message: `Deposit request of UGX ${amount.toLocaleString()} submitted successfully! Admin will verify your ${provider} transaction ID: ${transactionId} shortly.` 
+      message: `Thank you so much! Your deposit of UGX ${amount.toLocaleString()} has been received. Please wait gently while our accounts manager verifies your ${provider} transaction ID (${transactionId}). Your wallet balance will be updated automatically in just a moment!` 
     };
   };
 
