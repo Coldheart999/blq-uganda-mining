@@ -313,7 +313,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: 'Account registered and saved successfully! Welcome to BLQ.', user: newUser };
   };
 
-  // Real Account Verification Login with seamless auto-provisioning across domains/devices
+  // Strict Account Verification Login - rejects non-existent accounts
   const loginAccount = (phone: string, password: string) => {
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
@@ -322,36 +322,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const account = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
 
     if (!account) {
-      // If account does not exist on this browser/domain yet, auto-provision and log in seamlessly
-      const pendingRef = localStorage.getItem('blq_pending_ref') || undefined;
-      const userReferralCode = `BLQ-${phone.slice(-5)}`;
-
-      const newUser: User = {
-        id: 'usr_' + Date.now(),
-        phone,
-        name: `Investor ${phone.slice(-4)}`,
-        balanceUGX: 0,
-        uncollectedMinedUGX: 0,
-        totalDepositedUGX: 0,
-        totalWithdrawnUGX: 0,
-        totalMinedUGX: 0,
-        referralCode: userReferralCode,
-        referredBy: pendingRef,
-        referralCount: 0,
-        referralEarningsUGX: 0,
-        createdAt: new Date().toISOString()
+      return { 
+        success: false, 
+        message: 'No account found with this phone number. Please click "Register" below to create your account first.' 
       };
-
-      const newAccount: StoredAccount = { phone, password, user: newUser };
-      accounts.push(newAccount);
-      localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
-      setCurrentUser(newUser);
-
-      return { success: true, message: 'Welcome to BLQ! Account initialized & logged in successfully.', user: newUser };
     }
 
     if (account.password !== password) {
-      return { success: false, message: 'Incorrect password for this phone number. Please enter your correct password.' };
+      return { 
+        success: false, 
+        message: 'Incorrect password for this phone number. Please check and try again.' 
+      };
     }
 
     // Ensure user object has referral code if it was created earlier
