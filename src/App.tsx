@@ -35,6 +35,15 @@ const MainContent: React.FC = () => {
   // Unread Referral Bonus Notification
   const unreadBonusNotif = currentUser?.notifications?.find(n => !n.read) || null;
 
+  // Automatically scroll back to top smoothly whenever active tab / page changes
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+  }, [activeTab]);
+
   // Capture URL referral parameter on site landing (e.g., ?ref=BLQ-12345) & auto-open registration modal
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
