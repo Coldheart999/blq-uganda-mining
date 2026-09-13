@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
-import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History } from 'lucide-react';
+import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -9,6 +9,7 @@ interface NavbarProps {
   openAuth: () => void;
   openDeposit: () => void;
   openWithdraw: () => void;
+  openReferral: () => void;
   openAdmin: () => void;
 }
 
@@ -18,6 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   openAuth,
   openDeposit,
   openWithdraw,
+  openReferral,
   openAdmin
 }) => {
   const { currentUser, logout, liveUnclaimedYield } = useApp();
@@ -54,8 +56,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </div>
 
-          <div className="text-[10px] sm:text-[11px] text-slate-400 font-mono shrink-0">
-            Airtel & MTN Active
+          <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-mono">
+            <button
+              onClick={openReferral}
+              className="text-amber-400 font-bold hover:underline flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30"
+            >
+              <Gift className="w-3 h-3 text-amber-400" />
+              <span>Earn UGX 15K</span>
+            </button>
           </div>
         </div>
 
@@ -108,6 +116,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               Transactions
             </button>
+
+            <button
+              onClick={openReferral}
+              className="px-3.5 py-2 rounded-lg transition-all text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 bg-amber-500/10 border border-amber-500/20"
+            >
+              <Gift className="w-3.5 h-3.5" />
+              <span>Refer & Earn</span>
+            </button>
           </nav>
 
           {/* Right User Actions & Mobile Balance */}
@@ -157,10 +173,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                       <button
                         onClick={() => {
+                          openReferral();
+                          setUserDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs text-amber-400 hover:bg-amber-950/30 rounded-lg flex items-center gap-2 mt-1"
+                      >
+                        <Gift className="w-3.5 h-3.5" />
+                        Refer & Earn UGX 15,000
+                      </button>
+                      <button
+                        onClick={() => {
                           openDeposit();
                           setUserDropdownOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-emerald-950/30 rounded-lg flex items-center gap-2 mt-1 sm:hidden"
+                        className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-emerald-950/30 rounded-lg flex items-center gap-2 sm:hidden"
                       >
                         <ArrowDownLeft className="w-3.5 h-3.5" />
                         Deposit Funds
@@ -203,10 +229,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       </header>
 
       {/* Native App Fixed Bottom Navigation Bar for Mobile Screens */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0B0F17]/95 backdrop-blur-xl border-t border-slate-800/90 px-3 py-2 flex items-center justify-around shadow-2xl pb-[max(0.6rem,env(safe-area-inset-bottom))]">
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0B0F17]/95 backdrop-blur-xl border-t border-slate-800/90 px-2 py-2 flex items-center justify-around shadow-2xl pb-[max(0.6rem,env(safe-area-inset-bottom))]">
         <button
           onClick={() => setActiveTab('store')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'store' 
               ? 'text-amber-400 font-bold scale-105' 
               : 'text-slate-400 hover:text-slate-200'
@@ -218,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={() => setActiveTab('my-rigs')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all relative ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all relative ${
             activeTab === 'my-rigs' 
               ? 'text-amber-400 font-bold scale-105' 
               : 'text-slate-400 hover:text-slate-200'
@@ -234,8 +260,16 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         <button
+          onClick={openReferral}
+          className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-amber-400 hover:text-amber-300 transition-all"
+        >
+          <Gift className="w-5 h-5 text-amber-400 animate-pulse" />
+          <span className="text-[10px] font-mono font-bold">Earn 15K</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('history')}
-          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all ${
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'history' 
               ? 'text-amber-400 font-bold scale-105' 
               : 'text-slate-400 hover:text-slate-200'
@@ -250,7 +284,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             if (!currentUser) openAuth();
             else openDeposit();
           }}
-          className="flex flex-col items-center gap-1 py-1 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-extrabold shadow-md active:scale-95"
+          className="flex flex-col items-center gap-1 py-1 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-extrabold shadow-md active:scale-95"
         >
           <ArrowDownLeft className="w-5 h-5" />
           <span className="text-[10px] font-mono">Deposit</span>

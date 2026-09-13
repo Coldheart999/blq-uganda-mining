@@ -59,8 +59,8 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#121824] to-[#0D121D] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto bg-gradient-to-b from-[#121824] to-[#0D121D] border border-slate-800 rounded-3xl shadow-2xl p-4 sm:p-7 scrollbar-thin">
         
         {/* Close Button */}
         <button 

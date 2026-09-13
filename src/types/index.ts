@@ -7,6 +7,10 @@ export interface User {
   totalDepositedUGX: number;
   totalWithdrawnUGX: number;
   totalMinedUGX: number;
+  referralCode?: string;
+  referredBy?: string;
+  referralCount?: number;
+  referralEarningsUGX?: number;
   createdAt: string;
   isAdmin?: boolean;
 }

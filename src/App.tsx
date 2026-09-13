@@ -7,13 +7,14 @@ import { HistoryTab } from './components/HistoryTab';
 import { AuthModal } from './components/AuthModal';
 import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
+import { ReferralModal } from './components/ReferralModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
 import { EarningsCalculator } from './components/EarningsCalculator';
 import { FloatingSupport } from './components/FloatingSupport';
 import { AnimatedCryptoBackground } from './components/AnimatedCryptoBackground';
-import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity } from 'lucide-react';
+import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity, Gift, Sparkles } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { currentUser, minerPackages, buyMiner } = useApp();
@@ -23,6 +24,7 @@ const MainContent: React.FC = () => {
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isDepositOpen, setIsDepositOpen] = useState<boolean>(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState<boolean>(false);
+  const [isReferralOpen, setIsReferralOpen] = useState<boolean>(false);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [purchaseNotice, setPurchaseNotice] = useState<string>('');
 
@@ -75,7 +77,7 @@ const MainContent: React.FC = () => {
   return (
     <div className="relative min-h-screen flex flex-col bg-[#070A10] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
       
-      {/* Cool Dynamic Ambient Crypto Background */}
+      {/* Dynamic Ambient Crypto Background */}
       <AnimatedCryptoBackground />
 
       {/* Top Header */}
@@ -90,6 +92,10 @@ const MainContent: React.FC = () => {
         openWithdraw={() => {
           if (!currentUser) setIsAuthOpen(true);
           else setIsWithdrawOpen(true);
+        }}
+        openReferral={() => {
+          if (!currentUser) setIsAuthOpen(true);
+          else setIsReferralOpen(true);
         }}
         openAdmin={() => setIsAdminOpen(true)}
       />
@@ -113,6 +119,34 @@ const MainContent: React.FC = () => {
           </div>
         )}
 
+        {/* Captivating Referral Challenge Banner */}
+        <div 
+          onClick={() => {
+            if (!currentUser) setIsAuthOpen(true);
+            else setIsReferralOpen(true);
+          }}
+          className="cursor-pointer bg-gradient-to-r from-amber-500/20 via-yellow-500/10 to-emerald-500/20 border border-amber-500/40 rounded-3xl p-4 sm:p-5 flex items-center justify-between shadow-xl hover:border-amber-400 transition-all group"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-400 group-hover:scale-110 transition-transform">
+              <Gift className="w-6 h-6 text-amber-400 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-extrabold text-amber-400 uppercase tracking-wider font-mono">Referral Challenge</span>
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-mono font-bold">UGX 15,000 / Invite</span>
+              </div>
+              <h3 className="text-sm sm:text-base font-extrabold text-white mt-0.5 leading-snug">
+                Invite Friends & Earn UGX 15,000 Instant Cash Bonus!
+              </h3>
+            </div>
+          </div>
+          <button className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow group-hover:bg-amber-400 transition-colors shrink-0">
+            <span>Open Challenge</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
         {/* Vertical Hero Stack */}
         {activeTab === 'store' && (
           <div className="bg-gradient-to-b from-[#111724]/90 via-[#0D121F]/90 to-[#080B12]/90 backdrop-blur-md border border-cyan-500/30 rounded-3xl p-5 sm:p-8 space-y-6 shadow-2xl">
@@ -126,7 +160,7 @@ const MainContent: React.FC = () => {
                 High Yield Crypto Mining <span className="bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">Uganda</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                Deposit money via MTN or Airtel Mobile Money. Rent 5-Day Express, 10-Day VIP, or 30-Day Executive ASIC miners and receive daily profits paid directly to your balance.
+                Deposit money via Airtel or MTN Mobile Money. Rent 5-Day Express, 10-Day VIP, or 30-Day Executive ASIC miners and receive daily profits paid directly to your balance.
               </p>
             </div>
 
@@ -252,10 +286,11 @@ const MainContent: React.FC = () => {
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} />
       <WithdrawModal isOpen={isWithdrawOpen} onClose={() => setIsWithdrawOpen(false)} />
+      <ReferralModal isOpen={isReferralOpen} onClose={() => setIsReferralOpen(false)} onGoToStore={() => setActiveTab('store')} />
       <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
 
       {/* Footer */}
-      <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
+      <Footer onOpenAdmin={() => setIsAdminOpen(false)} />
     </div>
   );
 };
