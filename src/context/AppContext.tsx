@@ -1,18 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, MinerPackage, PurchasedRig, DepositRequest, WithdrawalRequest, AdminConfig } from '../types';
 
-// Highly lucrative miner packages with 5-Day, 10-Day, and 30-Day durations
+// Clean, attractive investment plans tailored for Ugandan investors
 export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
-  // 5-DAY EXPRESS PACKAGES (Ultra Fast Return)
+  // 5-DAY EXPRESS PLANS
   {
-    id: 'miner-5d-1',
-    name: 'BLQ 5-Day Express Mini',
-    model: 'Bitmain S9 SE Turbo',
+    id: 'plan-5d-1',
+    name: 'Starter Plan (5-Day)',
+    model: '5-Day Express Package',
     priceUGX: 10000,
     dailyYieldUGX: 3000,
     hashRate: '16 TH/s',
     powerDraw: '1280W',
-    algo: 'SHA-256 (BTC)',
+    algo: 'SHA-256',
     durationDays: 5,
     stock: 100,
     tier: 'Starter',
@@ -20,14 +20,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-5d-2',
-    name: 'BLQ 5-Day Turbo Rig',
-    model: 'MicroBT M30S+ Turbo',
+    id: 'plan-5d-2',
+    name: 'Turbo Plan (5-Day)',
+    model: '5-Day Turbo Package',
     priceUGX: 50000,
     dailyYieldUGX: 16000,
     hashRate: '88 TH/s',
     powerDraw: '3344W',
-    algo: 'SHA-256 (BTC)',
+    algo: 'SHA-256',
     durationDays: 5,
     stock: 60,
     tier: 'Starter',
@@ -35,14 +35,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-5d-3',
-    name: 'BLQ 5-Day VIP Express',
-    model: 'Bitmain T19 Express',
+    id: 'plan-5d-3',
+    name: 'VIP Express Plan (5-Day)',
+    model: '5-Day VIP Package',
     priceUGX: 200000,
     dailyYieldUGX: 70000,
     hashRate: '145 TH/s',
     powerDraw: '3150W',
-    algo: 'SHA-256 (BTC)',
+    algo: 'SHA-256',
     durationDays: 5,
     stock: 35,
     tier: 'Pro',
@@ -50,16 +50,16 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80'
   },
 
-  // 10-DAY ACCELERATED PACKAGES
+  // 10-DAY ACCELERATED PLANS
   {
-    id: 'miner-10d-1',
-    name: 'BLQ 10-Day Silver Producer',
-    model: 'Canaan Avalon 1166',
+    id: 'plan-10d-1',
+    name: 'Silver Plan (10-Day)',
+    model: '10-Day Accelerated Package',
     priceUGX: 30000,
     dailyYieldUGX: 6000,
     hashRate: '68 TH/s',
     powerDraw: '3196W',
-    algo: 'SHA-256 (BTC)',
+    algo: 'SHA-256',
     durationDays: 10,
     stock: 50,
     tier: 'Starter',
@@ -67,14 +67,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-10d-2',
-    name: 'BLQ 10-Day Gold Hydro',
-    model: 'Bitmain T19 Hydro Pro',
+    id: 'plan-10d-2',
+    name: 'Gold Hydro Plan (10-Day)',
+    model: '10-Day Gold Package',
     priceUGX: 100000,
     dailyYieldUGX: 22000,
     hashRate: '145 TH/s',
     powerDraw: '3150W',
-    algo: 'SHA-256 (BTC)',
+    algo: 'SHA-256',
     durationDays: 10,
     stock: 40,
     tier: 'Pro',
@@ -82,14 +82,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-10d-3',
-    name: 'BLQ 10-Day Platinum Farm',
-    model: 'IceRiver KS3 HeavyHash',
+    id: 'plan-10d-3',
+    name: 'Platinum Plan (10-Day)',
+    model: '10-Day Platinum Package',
     priceUGX: 500000,
     dailyYieldUGX: 125000,
     hashRate: '8000 GH/s',
     powerDraw: '3200W',
-    algo: 'kHeavyHash (KAS)',
+    algo: 'kHeavyHash',
     durationDays: 10,
     stock: 20,
     tier: 'Pro',
@@ -97,16 +97,16 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80'
   },
 
-  // 30-DAY HIGH CAPITAL FARMS
+  // 30-DAY EXECUTIVE PLANS
   {
-    id: 'miner-30d-1',
-    name: 'BLQ 30-Day Master Node',
-    model: 'Bitmain S19 Pro XP',
+    id: 'plan-30d-1',
+    name: 'Master Plan (30-Day)',
+    model: '30-Day Master Package',
     priceUGX: 150000,
     dailyYieldUGX: 27000,
     hashRate: '257 TH/s',
     powerDraw: '5300W',
-    algo: 'SHA-256 (BTC)',
+    algo: 'SHA-256',
     durationDays: 30,
     stock: 30,
     tier: 'Pro',
@@ -114,14 +114,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-30d-2',
-    name: 'BLQ 30-Day Diamond Farm',
-    model: 'Antminer Hydro 514 TH/s',
+    id: 'plan-30d-2',
+    name: 'Diamond Plan (30-Day)',
+    model: '30-Day Diamond Package',
     priceUGX: 1000000,
     dailyYieldUGX: 210000,
     hashRate: '514 TH/s',
     powerDraw: '5300W',
-    algo: 'SHA-256 (BTC)',
+    algo: 'SHA-256',
     durationDays: 30,
     stock: 15,
     tier: 'Enterprise',
@@ -129,14 +129,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-30d-3',
-    name: 'BLQ 30-Day Crown Executive',
-    model: 'IceRiver Mega Node',
+    id: 'plan-30d-3',
+    name: 'Crown Executive Plan (30-Day)',
+    model: '30-Day Executive Package',
     priceUGX: 2500000,
     dailyYieldUGX: 550000,
     hashRate: '12000 GH/s',
     powerDraw: '4500W',
-    algo: 'kHeavyHash (KAS)',
+    algo: 'kHeavyHash',
     durationDays: 30,
     stock: 5,
     tier: 'Industrial',
@@ -327,13 +327,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const pkg = INITIAL_MINER_PACKAGES.find(p => p.id === packageId);
     if (!pkg) {
-      return { success: false, message: 'Invalid miner package selected.' };
+      return { success: false, message: 'Invalid investment plan selected.' };
     }
 
     if (currentUser.balanceUGX < pkg.priceUGX) {
       return { 
         success: false, 
-        message: `Insufficient balance! Package cost is UGX ${pkg.priceUGX.toLocaleString()}. You have UGX ${currentUser.balanceUGX.toLocaleString()}. Please deposit funds via Mobile Money first.` 
+        message: `Insufficient balance! Plan cost is UGX ${pkg.priceUGX.toLocaleString()}. You have UGX ${currentUser.balanceUGX.toLocaleString()}. Please deposit funds via Mobile Money first.` 
       };
     }
 
@@ -375,7 +375,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return { 
       success: true, 
-      message: `Success! You purchased the ${pkg.name} (${pkg.durationDays}-Day Contract) for UGX ${pkg.priceUGX.toLocaleString()}. Daily profit: UGX ${pkg.dailyYieldUGX.toLocaleString()}` 
+      message: `Success! You activated the ${pkg.name} for UGX ${pkg.priceUGX.toLocaleString()}. Daily profit: UGX ${pkg.dailyYieldUGX.toLocaleString()}` 
     };
   };
 

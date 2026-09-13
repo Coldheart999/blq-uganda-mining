@@ -1,6 +1,6 @@
 import React from 'react';
 import { MinerPackage } from '../types';
-import { Cpu, Clock, ArrowRight } from 'lucide-react';
+import { TrendingUp, Clock, Check, ArrowRight, ShieldCheck } from 'lucide-react';
 
 interface MinerCardProps {
   miner: MinerPackage;
@@ -13,91 +13,103 @@ export const MinerCard: React.FC<MinerCardProps> = ({ miner, onBuy, userBalance 
   const totalReturnUGX = miner.dailyYieldUGX * miner.durationDays;
   const netProfitUGX = totalReturnUGX - miner.priceUGX;
 
+  // Clean human color accents per tier
+  const isExpress = miner.durationDays === 5;
+  const isVip = miner.priceUGX >= 500000;
+
   return (
-    <div className="bg-[#121722] border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between hover:border-slate-700 transition-all">
+    <div className="bg-[#151C28] border border-slate-800 hover:border-slate-700 rounded-2xl p-6 shadow-md transition-all flex flex-col justify-between">
       
       <div>
-        {/* Card Header Tag */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+        {/* Header Tag */}
+        <div className="flex items-center justify-between mb-4">
+          <span className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 ${
+            isExpress 
+              ? 'bg-amber-400/10 text-amber-400 border border-amber-400/20' 
+              : 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20'
+          }`}>
             <Clock className="w-3.5 h-3.5" />
-            {miner.durationDays}-Day Contract
+            {miner.durationDays}-Day Investment Plan
           </span>
-          <span className="text-[11px] font-mono text-slate-400">
-            {miner.algo}
-          </span>
+
+          {isVip && (
+            <span className="text-[11px] font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded">
+              VIP High Yield
+            </span>
+          )}
         </div>
 
-        {/* Machine Thumbnail */}
-        <div className="relative w-full h-40 rounded-xl bg-slate-950 overflow-hidden mb-4 border border-slate-800">
-          <img
-            src={miner.image}
-            alt={miner.name}
-            className="w-full h-full object-cover opacity-90"
-          />
-          <div className="absolute top-2.5 left-2.5 bg-slate-900/90 text-slate-200 text-[11px] font-mono px-2 py-0.5 rounded border border-slate-800">
-            {miner.hashRate}
-          </div>
-          <div className="absolute bottom-2.5 right-2.5 bg-amber-500 text-slate-950 text-[11px] font-bold px-2 py-0.5 rounded font-mono">
-            {miner.durationDays} DAYS
-          </div>
-        </div>
-
-        {/* Title & Model */}
-        <h3 className="text-lg font-bold text-white tracking-tight">
+        {/* Plan Title */}
+        <h3 className="text-xl font-bold text-white tracking-tight mb-1">
           {miner.name}
         </h3>
-        <p className="text-xs text-slate-400 font-mono mb-4">
-          {miner.model}
+        <p className="text-xs text-slate-400 mb-5">
+          Guaranteed daily profit paid directly to your balance.
         </p>
 
-        {/* Organized Earnings Box */}
-        <div className="bg-[#0B0F17] p-3.5 rounded-xl border border-slate-800/80 mb-4 space-y-2 text-xs">
-          <div className="flex justify-between items-center">
-            <span className="text-slate-400 font-medium">Daily Profit:</span>
-            <span className="font-bold text-emerald-400 font-mono text-sm">
-              + UGX {miner.dailyYieldUGX.toLocaleString()}
+        {/* Clear Investment & Return Numbers */}
+        <div className="bg-[#0D121B] rounded-xl p-4 border border-slate-800/80 mb-5 space-y-3">
+          
+          <div className="flex justify-between items-baseline">
+            <span className="text-xs text-slate-400">Daily Payout:</span>
+            <span className="text-lg font-extrabold text-emerald-400 font-mono">
+              + UGX {miner.dailyYieldUGX.toLocaleString()} <span className="text-xs text-slate-400 font-normal">/ day</span>
             </span>
           </div>
-          <div className="flex justify-between items-center border-t border-slate-800/80 pt-2">
-            <span className="text-slate-400">Total Contract Return:</span>
-            <span className="font-bold text-amber-400 font-mono">
+
+          <div className="flex justify-between items-center text-xs border-t border-slate-800/80 pt-2.5">
+            <span className="text-slate-400">Total Payout ({miner.durationDays} Days):</span>
+            <span className="font-bold text-white font-mono text-sm">
               UGX {totalReturnUGX.toLocaleString()}
             </span>
           </div>
-          <div className="flex justify-between items-center text-[11px] text-slate-500">
+
+          <div className="flex justify-between items-center text-xs text-emerald-400 border-t border-slate-800/80 pt-2 font-medium">
             <span>Net Profit Earned:</span>
-            <span className="font-mono text-emerald-400 font-semibold">
+            <span className="font-bold font-mono">
               + UGX {netProfitUGX.toLocaleString()}
             </span>
           </div>
+
         </div>
+
+        {/* Feature List */}
+        <ul className="space-y-2 text-xs text-slate-300 mb-6">
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Automatic daily collection to account balance</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>Instant MTN & Airtel Mobile Money withdrawal</span>
+          </li>
+        </ul>
       </div>
 
-      {/* Action Footer */}
-      <div className="pt-2 border-t border-slate-800/60">
-        <div className="flex items-center justify-between mb-2.5">
-          <span className="text-xs text-slate-400">Cost:</span>
-          <span className="text-lg font-bold text-white font-mono">
+      {/* Plan Price & Action Button */}
+      <div className="pt-4 border-t border-slate-800/80">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-slate-400 font-medium">Plan Investment Price:</span>
+          <span className="text-xl font-extrabold text-white font-mono">
             UGX {miner.priceUGX.toLocaleString()}
           </span>
         </div>
 
         <button
           onClick={() => onBuy(miner.id)}
-          className={`w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+          className={`w-full py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
             canAfford
               ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 active:scale-[0.98]'
-              : 'bg-slate-800 text-slate-300 hover:bg-slate-750 border border-slate-700'
+              : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
           }`}
         >
           {canAfford ? (
             <>
-              <span>Purchase {miner.durationDays}-Day Contract</span>
-              <ArrowRight className="w-4 h-4" />
+              <span>Invest UGX {miner.priceUGX.toLocaleString()}</span>
+              <ArrowRight className="w-4 h-4 text-slate-950" />
             </>
           ) : (
-            <span>Deposit Funds to Purchase</span>
+            <span>Deposit Funds to Invest</span>
           )}
         </button>
       </div>
