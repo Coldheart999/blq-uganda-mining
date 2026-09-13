@@ -8,6 +8,27 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) => {
+  const [clickCount, setClickCount] = React.useState<number>(0);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSecretTrigger = () => {
+    const nextCount = clickCount + 1;
+    setClickCount(nextCount);
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    if (nextCount >= 3) {
+      setClickCount(0);
+      onOpenAdmin?.();
+    } else {
+      timerRef.current = setTimeout(() => {
+        setClickCount(0);
+      }, 2500);
+    }
+  };
+
   return (
     <footer className="relative z-20 border-t border-amber-500/20 bg-gradient-to-b from-[#0D121F] via-[#090D17] to-[#05070B] text-slate-300 pt-14 pb-32 md:pb-14 px-4 sm:px-6 mt-16 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
       {/* Top accent glow line */}
@@ -24,7 +45,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) =>
             <p className="text-xs text-slate-400 leading-relaxed">
               Uganda's leading automated crypto mining cloud infrastructure. Rent virtual ASIC computing power with instant Airtel & MTN Mobile Money deposits and withdrawals.
             </p>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-xs font-mono text-emerald-400">
+            <div 
+              onClick={handleSecretTrigger}
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl text-xs font-mono text-emerald-400 cursor-pointer select-none active:scale-95 transition-transform"
+              title="Verified Secure Node"
+            >
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>256-Bit SSL Encrypted & Verified</span>
             </div>
@@ -118,24 +143,26 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin, onNavigateTab }) =>
 
         </div>
 
-        {/* Bottom Bar with Copyright & ADMIN ACCESS BUTTON */}
-        <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Bottom Bar with Discreet Stealth Admin Trigger */}
+        <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           
-          <div className="text-xs text-slate-400 text-center sm:text-left flex items-center gap-2">
+          <div 
+            onClick={handleSecretTrigger}
+            className="cursor-pointer select-none text-center sm:text-left flex items-center gap-2 hover:text-slate-300 transition-colors"
+            title="BLQ Platform Uganda"
+          >
             <span>© {new Date().getFullYear()} BLQ Platform Uganda. All rights reserved.</span>
             <span className="hidden sm:inline text-slate-600">•</span>
             <span className="hidden sm:inline text-amber-400/80 font-mono text-[11px]">Kampala, Uganda 🇺🇬</span>
           </div>
 
-          {/* Explicit and Prominent Admin Access Portal Button */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onOpenAdmin}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-900/90 hover:bg-amber-500/10 border border-slate-700/80 hover:border-amber-400/60 rounded-xl text-xs font-mono font-bold text-slate-300 hover:text-amber-300 transition-all shadow-md active:scale-95 group"
-            >
-              <KeyRound className="w-3.5 h-3.5 text-amber-400 group-hover:rotate-45 transition-transform" />
-              <span>Admin Portal</span>
-            </button>
+          <div 
+            onClick={handleSecretTrigger}
+            className="cursor-pointer select-none text-[11px] font-mono text-slate-400 hover:text-slate-300 transition-colors flex items-center gap-1"
+          >
+            <span>v2.4.0</span>
+            <span>•</span>
+            <span>SHA-256</span>
           </div>
 
         </div>
