@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
 import { UgandaFlag } from './UgandaFlag';
-import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift } from 'lucide-react';
+import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -26,6 +26,22 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { currentUser, logout } = useApp();
   const [logoClicks, setLogoClicks] = useState<number>(0);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem('blq_dark_mode') === 'true';
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark-mode');
+    } else {
+      document.documentElement.classList.remove('dark-mode');
+    }
+    localStorage.setItem('blq_dark_mode', String(isDarkMode));
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+  };
 
   // Hidden secret gesture: 5 rapid clicks on "Live Node" pill opens Admin Panel
   const handleNodeClick = () => {
@@ -201,11 +217,29 @@ export const Navbar: React.FC<NavbarProps> = ({
                         Withdraw Profits
                       </button>
                       <button
+                        onClick={toggleDarkMode}
+                        className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 rounded-lg flex items-center justify-between mt-1 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          {isDarkMode ? (
+                            <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                          ) : (
+                            <Sun className="w-3.5 h-3.5 text-amber-400" />
+                          )}
+                          <span>Dark Mode (OLED)</span>
+                        </div>
+                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                          isDarkMode ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-400'
+                        }`}>
+                          {isDarkMode ? 'ON' : 'OFF'}
+                        </span>
+                      </button>
+                      <button
                         onClick={() => {
                           logout();
                           setUserDropdownOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/30 rounded-lg flex items-center gap-2 mt-1 transition-colors"
+                        className="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/30 rounded-lg flex items-center gap-2 mt-1 transition-colors border-t border-slate-800/80 pt-2"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         Sign Out

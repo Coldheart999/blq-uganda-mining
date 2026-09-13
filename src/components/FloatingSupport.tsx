@@ -3,7 +3,7 @@ import { Send } from 'lucide-react';
 
 export const FloatingSupport: React.FC = () => {
   const handleOpenTelegram = () => {
-    window.open('https://t.me/Robin_hood_project', '_blank');
+    window.open('https://t.me/BLQ_UG', '_blank');
   };
 
   return (

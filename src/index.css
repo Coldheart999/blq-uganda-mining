@@ -8,6 +8,28 @@
   }
 }
 
+/* Ultra Dark / OLED Mode */
+html.dark-mode body {
+  background: #000000 !important;
+}
+html.dark-mode header,
+html.dark-mode footer,
+html.dark-mode .md\:hidden.fixed {
+  background: rgba(0, 0, 0, 0.97) !important;
+}
+html.dark-mode [class*="bg-[#0"] {
+  background-color: #000000 !important;
+}
+html.dark-mode [class*="bg-[#1"] {
+  background-color: #050505 !important;
+}
+html.dark-mode [class*="bg-slate-9"] {
+  background-color: #0a0a0a !important;
+}
+html.dark-mode [class*="border-slate-8"] {
+  border-color: rgba(30, 30, 30, 0.6) !important;
+}
+
 /* Custom glowing effects and metallic animations */
 .glow-emerald {
   box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
