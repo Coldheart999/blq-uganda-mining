@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { BackButton } from './BackButton';
 import { ArrowUpRight, X, Smartphone, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
 import { MtnLogo, AirtelLogo } from './ProviderLogos';
@@ -69,6 +70,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* Back Button */}
+        <div className="absolute top-4 left-4 z-10">
+          <BackButton onClick={onClose} />
+        </div>
 
         {/* Modal Header */}
         <div className="flex items-center space-x-3 mb-6">

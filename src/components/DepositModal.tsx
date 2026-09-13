@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ArrowDownLeft, X, Smartphone, CheckCircle2, AlertCircle, Copy, Info, Clock, HeartHandshake, Bell, Lock } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
+import { BackButton } from './BackButton';
 import { MtnLogo, AirtelLogo } from './ProviderLogos';
 
 interface DepositModalProps {
@@ -86,6 +87,11 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* Back Button */}
+        <div className="absolute top-4 left-4 z-10">
+          <BackButton onClick={handleCloseModal} />
+        </div>
 
         {isSubmitted ? (
           /* Hospitable Gentle Deposit Success Screen */

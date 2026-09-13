@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { BackButton } from './BackButton';
 import { X, Gift, Users, Copy, Check, Lock, Sparkles, ArrowRight, Share2, Award, ShieldCheck } from 'lucide-react';
 
 interface ReferralModalProps {
@@ -79,6 +80,11 @@ export const ReferralModal: React.FC<ReferralModalProps> = ({ isOpen, onClose, o
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* Back Button */}
+        <div className="absolute top-4 left-4 z-10">
+          <BackButton onClick={onClose} />
+        </div>
 
         {/* Modal Header */}
         <div className="text-center mb-5">

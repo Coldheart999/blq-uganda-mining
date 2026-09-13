@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { BackButton } from './BackButton';
 import { ShieldCheck, Check, X, Smartphone, ArrowDownLeft, ArrowUpRight, Settings, Lock, AlertCircle, MessageSquare, CreditCard } from 'lucide-react';
 import { getSMSGatewaySettings, saveSMSGatewaySettings, SMSGatewaySettings } from '../services/smsService';
 import { getPaymentGatewaySettings, savePaymentGatewaySettings, PaymentGatewaySettings } from '../services/paymentGateway';
@@ -100,6 +101,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
               </h2>
               <p className="text-xs text-slate-400">Owner Portal for Uganda Mobile Money Transfers</p>
             </div>
+          </div>
+          {/* Back Button */}
+          <div className="absolute top-4 left-4 z-10">
+            <BackButton onClick={onClose} />
           </div>
           <button 
             onClick={onClose}

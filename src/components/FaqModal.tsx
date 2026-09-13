@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+import { BackButton } from './BackButton';
 import { HelpCircle, ChevronDown, X, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react';
 import { BlqLogo } from './BlqLogo';
 
@@ -59,6 +60,11 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* Back Button */}
+        <div className="absolute top-4 left-4 z-10">
+          <BackButton onClick={onClose} />
+        </div>
 
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-4">

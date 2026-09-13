@@ -382,7 +382,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const targetKey = normalizePhoneKey(currentUser.phone);
       const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === targetKey);
       if (accIndex !== -1) {
+        // Preserve the password from the existing account when updating user object
+        const existingPassword = accounts[accIndex].password || '';
         accounts[accIndex].user = currentUser;
+        accounts[accIndex].password = existingPassword;
         saveAllStoredAccounts(accounts);
         saveCloudData('accounts', accounts);
       }

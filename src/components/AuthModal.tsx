@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
 import { UgandaFlag } from './UgandaFlag';
+import { BackButton } from './BackButton';
 import { Phone, Lock, CheckCircle2, ShieldCheck, X, AlertCircle, User as UserIcon, LogIn, UserPlus, Sparkles, Zap, Heart, Eye, EyeOff } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
 
@@ -103,6 +104,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* Back Button */}
+        <div className="absolute top-4 left-4 z-10">
+          <BackButton onClick={onClose} />
+        </div>
 
         {/* Animated Header & Welcome Banner */}
         <div className="flex flex-col items-center text-center mb-5 relative z-10">

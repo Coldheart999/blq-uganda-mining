@@ -1,5 +1,6 @@
 import React from 'react';
 import { MinerPackage } from '../types';
+import { BackButton } from './BackButton';
 import { Sparkles, Check, X, Heart, Zap, Coins } from 'lucide-react';
 
 interface ConfirmPurchaseModalProps {
@@ -31,6 +32,11 @@ export const ConfirmPurchaseModal: React.FC<ConfirmPurchaseModalProps> = ({
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* Back Button */}
+        <div className="absolute top-4 left-4 z-10">
+          <BackButton onClick={onClose} />
+        </div>
 
         {/* Cute Hospitable Header Icon */}
         <div className="text-center space-y-2 pt-2">

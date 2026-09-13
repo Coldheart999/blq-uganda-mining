@@ -90,6 +90,41 @@ const MainContent: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Browser back button: close the topmost open modal instead of navigating away
+  useEffect(() => {
+    const closeAllModals = () => {
+      setIsAuthOpen(false);
+      setIsDepositOpen(false);
+      setIsWithdrawOpen(false);
+      setIsReferralOpen(false);
+      setIsAdminOpen(false);
+      setIsFaqOpen(false);
+      setSelectedPackageToBuy(null);
+    };
+
+    const handlePopState = (e: PopStateEvent) => {
+      const anyModalOpen = isAuthOpen || isDepositOpen || isWithdrawOpen ||
+                           isReferralOpen || isAdminOpen || isFaqOpen ||
+                           selectedPackageToBuy !== null;
+      if (anyModalOpen) {
+        closeAllModals();
+        // Push state back so the next back button goes to the real previous page
+        if (window.history.length > 1) {
+          window.history.pushState(null, '', window.location.href);
+        }
+      }
+    };
+
+    // When a modal opens, push state so back button targets the modal
+    const modalStates = [isAuthOpen, isDepositOpen, isWithdrawOpen, isReferralOpen, isAdminOpen, isFaqOpen, selectedPackageToBuy !== null];
+    if (modalStates.some(v => v)) {
+      window.history.pushState(null, '', window.location.href);
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isAuthOpen, isDepositOpen, isWithdrawOpen, isReferralOpen, isAdminOpen, isFaqOpen, selectedPackageToBuy]);
+
   const handleBuyMiner = (minerId: string) => {
     if (!currentUser) {
       setIsAuthOpen(true);
