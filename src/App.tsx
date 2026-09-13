@@ -235,13 +235,13 @@ const MainContent: React.FC = () => {
             <div className="space-y-3 text-center sm:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 font-mono text-xs">
                 <Activity className="w-3.5 h-3.5 text-cyan-400" />
-                BLQ SHA-256 Mining Pool • Active Node
+                <span>Trusted by 2,000+ Ugandan Investors 🇺🇬</span>
               </div>
               <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight leading-tight">
                 High Yield Crypto Mining <span className="bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">Uganda</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                Deposit money via Airtel or MTN Mobile Money. Rent 5-Day Express, 10-Day VIP, or 30-Day Executive ASIC miners and receive daily profits paid directly to your balance.
+                Join Uganda's trusted crypto mining cooperative. Start with just UGX 10,000 via Airtel or MTN Mobile Money and watch your daily mining profits compound. Payouts are verified and sent directly to your Mobile Money wallet within minutes.
               </p>
             </div>
 
@@ -256,8 +256,8 @@ const MainContent: React.FC = () => {
                 <span className="font-bold text-emerald-400 text-xs sm:text-sm">5 - 15 Mins</span>
               </div>
               <div className="col-span-2 sm:col-span-1 bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
-                <span className="text-slate-500 block text-[10px] uppercase">Networks</span>
-                <span className="font-bold text-cyan-400 text-xs sm:text-sm">MTN / AIRTEL</span>
+                <span className="text-slate-500 block text-[10px] uppercase">Security</span>
+                <span className="font-bold text-cyan-400 text-xs sm:text-sm">SSL Encrypted</span>
               </div>
             </div>
 
