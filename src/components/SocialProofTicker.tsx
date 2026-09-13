@@ -3,7 +3,6 @@ import { ArrowUpRight, ArrowDownLeft, Zap } from 'lucide-react';
 
 interface ProofItem {
   user: string;
-  location: string;
   amountUGX: number;
   provider: string;
   timeAgo: string;
@@ -18,11 +17,6 @@ const UGANDAN_NAMES = [
   'Atuhaire N.', 'Mwesigwa B.', 'Tusubira M.', 'Opio D.', 'Nalubega E.'
 ];
 
-const UGANDAN_TOWNS = [
-  'Kampala', 'Entebbe', 'Jinja', 'Mbarara', 'Gulu', 'Arua',
-  'Mbale', 'Kasese', 'Masaka', 'Lira', 'Hoima', 'Mukono', 'Fort Portal'
-];
-
 const PACKAGES = [
   '⚡ 5-Day Express (UGX 20,000)',
   '⚡ 5-Day Express (UGX 50,000)',
@@ -33,7 +27,6 @@ const PACKAGES = [
 
 const GENERATED_PROOFS: ProofItem[] = Array.from({ length: 100 }).map((_, i) => {
   const user = UGANDAN_NAMES[i % UGANDAN_NAMES.length];
-  const town = UGANDAN_TOWNS[(i * 3) % UGANDAN_TOWNS.length];
   const type: 'withdrawal' | 'deposit' | 'activation' = i % 3 === 0 ? 'withdrawal' : i % 3 === 1 ? 'deposit' : 'activation';
   const plan = PACKAGES[i % PACKAGES.length];
   
@@ -44,7 +37,6 @@ const GENERATED_PROOFS: ProofItem[] = Array.from({ length: 100 }).map((_, i) => 
   return {
     type,
     user,
-    location: town,
     amountUGX,
     provider: type === 'withdrawal' ? (i % 2 === 0 ? 'Airtel Money' : 'MTN Mobile Money') : type === 'deposit' ? 'Airtel Money' : plan,
     timeAgo: `${minutes}m ago`
@@ -107,7 +99,10 @@ export const SocialProofTicker: React.FC = () => {
 
         <div className="flex-1 text-xs min-w-0">
           <div className="flex items-center justify-between text-slate-400 font-mono text-[10px]">
-            <span className="text-cyan-400 font-semibold truncate">{current.location} Investor</span>
+            <span className="text-cyan-400 font-semibold truncate flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live Pool Activity
+            </span>
             <span className="shrink-0 ml-1">{current.timeAgo}</span>
           </div>
 
