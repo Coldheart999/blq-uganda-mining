@@ -1,7 +1,6 @@
 import React from 'react';
 import { BlqLogo } from './BlqLogo';
-import { MtnLogo, AirtelLogo } from './ProviderLogos';
-import { ShieldCheck, HelpCircle, Lock } from 'lucide-react';
+import { ShieldCheck, HelpCircle, Lock, Sparkles, Cpu } from 'lucide-react';
 
 interface FooterProps {
   onOpenAdmin?: () => void;
@@ -35,26 +34,18 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
           </div>
         </div>
 
-        {/* Accepted Payment Methods */}
+        {/* More Packages On The Way Announcement */}
         <div className="space-y-3">
-          <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider font-mono">
-            Supported Mobile Money
+          <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider font-mono flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            More Packages On The Way
           </h4>
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2.5 p-2 bg-slate-900/60 border border-slate-800 rounded-lg">
-              <AirtelLogo size="sm" />
-              <div>
-                <span className="font-bold text-white block">Airtel Money Uganda</span>
-                <span className="text-[10px] text-emerald-400 font-mono">Deposits & Withdrawals</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5 p-2 bg-slate-900/60 border border-slate-800 rounded-lg">
-              <MtnLogo size="sm" />
-              <div>
-                <span className="font-bold text-white block">MTN Mobile Money</span>
-                <span className="text-[10px] text-amber-400 font-mono">Withdrawals Active • Deposits Soon</span>
-              </div>
-            </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Our mining hardware fleet is expanding rapidly. Stay tuned for new specialized ASIC virtual rigs and custom plans designed for Ugandan investors.
+          </p>
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-[11px] text-amber-300 font-mono flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>New ASIC Batches Deploying Soon 🚀</span>
           </div>
         </div>
 

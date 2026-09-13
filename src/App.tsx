@@ -299,6 +299,29 @@ const MainContent: React.FC = () => {
                 />
               ))}
             </div>
+
+            {/* More Packages On The Way Announcement Banner */}
+            <div className="mt-8 p-5 bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-emerald-500/10 border border-amber-500/30 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg text-center sm:text-left">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0 text-amber-400">
+                  <Sparkles className="w-6 h-6 text-amber-400 animate-spin" />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold rounded-full mb-1">
+                    <span>⚡ Fleet Expansion</span>
+                  </div>
+                  <h4 className="text-sm sm:text-base font-extrabold text-white">
+                    More Packages On The Way!
+                  </h4>
+                  <p className="text-xs text-slate-300 mt-0.5 leading-relaxed max-w-xl">
+                    Our technical team is configuring additional high-hashrate ASIC servers. New custom investment packages with even higher daily yields will be launching soon for all Ugandan miners!
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0 px-3.5 py-2 bg-slate-900/90 border border-amber-500/30 rounded-2xl font-mono text-xs text-amber-300 font-bold">
+                🚀 Coming Soon
+              </div>
+            </div>
           </div>
         )}
 
