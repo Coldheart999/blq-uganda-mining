@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, ArrowDownLeft, Zap, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, Zap } from 'lucide-react';
 
 interface ActivityItem {
   id: number;
@@ -33,7 +33,6 @@ const PLANS = [
 
 const AMOUNTS = [10000, 30000, 50000, 100000, 150000, 200000, 500000, 1000000, 2500000];
 
-// Generate 100 realistic Ugandan proof items dynamically
 const GENERATED_PROOFS: ActivityItem[] = Array.from({ length: 100 }, (_, i) => {
   const name = UGANDAN_NAMES[i % UGANDAN_NAMES.length];
   const town = TOWNS[(i * 3) % TOWNS.length];
@@ -58,21 +57,31 @@ const GENERATED_PROOFS: ActivityItem[] = Array.from({ length: 100 }, (_, i) => {
 
 export const SocialProofTicker: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [isVisible, setIsVisible] = useState<boolean>(true);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   useEffect(() => {
-    // Slower rotation speed (7.5 seconds)
-    const interval = setInterval(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        // Pick random proof item from the 100 pool
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const scheduleNextShow = () => {
+      // Random delay between 5,000ms and 30,000ms (5 to 30 seconds)
+      const randomInterval = Math.floor(Math.random() * (30000 - 5000 + 1)) + 5000;
+      
+      timeoutId = setTimeout(() => {
         const randomIndex = Math.floor(Math.random() * GENERATED_PROOFS.length);
         setCurrentIndex(randomIndex);
         setIsVisible(true);
-      }, 500);
-    }, 7500);
 
-    return () => clearInterval(interval);
+        // Hide after 4.5 seconds
+        setTimeout(() => {
+          setIsVisible(false);
+          scheduleNextShow();
+        }, 4500);
+      }, randomInterval);
+    };
+
+    scheduleNextShow();
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const current = GENERATED_PROOFS[currentIndex];
@@ -80,8 +89,8 @@ export const SocialProofTicker: React.FC = () => {
   return (
     <div className="fixed bottom-20 left-4 z-40 max-w-xs sm:max-w-sm pointer-events-none">
       <div 
-        className={`bg-[#0C1019]/95 backdrop-blur-md border border-cyan-500/30 rounded-2xl p-3.5 shadow-2xl shadow-cyan-950/40 transition-all duration-500 pointer-events-auto flex items-center gap-3 ${
-          isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'
+        className={`bg-[#0C1019]/95 backdrop-blur-md border border-cyan-500/40 rounded-2xl p-3.5 shadow-2xl shadow-cyan-950/50 transition-all duration-700 pointer-events-auto flex items-center gap-3 ${
+          isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-90'
         }`}
       >
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${

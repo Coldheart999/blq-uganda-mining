@@ -12,6 +12,7 @@ import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
 import { EarningsCalculator } from './components/EarningsCalculator';
 import { FloatingSupport } from './components/FloatingSupport';
+import { AnimatedCryptoBackground } from './components/AnimatedCryptoBackground';
 import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -72,7 +73,11 @@ const MainContent: React.FC = () => {
     : minerPackages.filter(p => p.durationDays === durationFilter);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#070A10] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
+    <div className="relative min-h-screen flex flex-col bg-[#070A10] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
+      
+      {/* Cool Dynamic Ambient Crypto Background */}
+      <AnimatedCryptoBackground />
+
       {/* Top Header */}
       <Navbar
         activeTab={activeTab}
@@ -90,7 +95,7 @@ const MainContent: React.FC = () => {
       />
 
       {/* Vertical Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
         
         {/* Global Feedback Banner */}
         {purchaseNotice && (
@@ -110,7 +115,7 @@ const MainContent: React.FC = () => {
 
         {/* Vertical Hero Stack */}
         {activeTab === 'store' && (
-          <div className="bg-gradient-to-b from-[#111724] via-[#0D121F] to-[#080B12] border border-cyan-500/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+          <div className="bg-gradient-to-b from-[#111724]/90 via-[#0D121F]/90 to-[#080B12]/90 backdrop-blur-md border border-cyan-500/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
             
             <div className="space-y-3 text-center sm:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 font-mono text-xs">
@@ -127,15 +132,15 @@ const MainContent: React.FC = () => {
 
             {/* Vertical Quick Stats Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
-              <div className="bg-[#070A10] p-3 rounded-2xl border border-slate-800 text-center">
+              <div className="bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
                 <span className="text-slate-500 block text-[10px] uppercase">Min Deposit</span>
                 <span className="font-bold text-amber-400 text-sm">UGX 5,000</span>
               </div>
-              <div className="bg-[#070A10] p-3 rounded-2xl border border-slate-800 text-center">
+              <div className="bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
                 <span className="text-slate-500 block text-[10px] uppercase">Payout Speed</span>
                 <span className="font-bold text-emerald-400 text-sm">5 - 15 Mins</span>
               </div>
-              <div className="col-span-2 sm:col-span-1 bg-[#070A10] p-3 rounded-2xl border border-slate-800 text-center">
+              <div className="col-span-2 sm:col-span-1 bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
                 <span className="text-slate-500 block text-[10px] uppercase">Networks</span>
                 <span className="font-bold text-cyan-400 text-sm">MTN / AIRTEL</span>
               </div>
@@ -237,7 +242,7 @@ const MainContent: React.FC = () => {
 
       </main>
 
-      {/* Social Proof Live Ugandan Activity Ticker (Slower rotation) */}
+      {/* Social Proof Live Ugandan Activity Ticker (Slower rotation between 5s-30s) */}
       <SocialProofTicker />
 
       {/* Floating Telegram Support Button */}
