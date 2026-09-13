@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
+import { UgandaFlag } from './UgandaFlag';
 import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift } from 'lucide-react';
 
 interface NavbarProps {
@@ -43,11 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="bg-[#0A0D14] px-3 sm:px-4 py-1.5 text-xs border-b border-slate-800/60 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {/* Uganda Flag Badge */}
-            <div className="flex items-center h-3 w-4 rounded overflow-hidden border border-slate-700 shrink-0">
-              <div className="h-full w-1/3 bg-black"></div>
-              <div className="h-full w-1/3 bg-amber-400"></div>
-              <div className="h-full w-1/3 bg-red-600"></div>
-            </div>
+            <UgandaFlag size="sm" />
             <span className="font-semibold text-slate-300 text-[11px] truncate">BLQ Pool Uganda</span>
             <span className="text-slate-700">•</span>
             <span className="text-emerald-400 font-mono text-[10px] sm:text-[11px] flex items-center gap-1.5 shrink-0">

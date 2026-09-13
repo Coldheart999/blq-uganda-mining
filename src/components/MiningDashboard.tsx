@@ -28,6 +28,28 @@ export const MiningDashboard: React.FC<MiningDashboardProps> = ({ onGoToStore, o
   const activeRigs = userRigs.filter(r => r.status === 'active');
   const totalDailyYield = activeRigs.reduce((sum, r) => sum + r.dailyYieldUGX, 0);
 
+  // Calculate 24-hour payout countdown timer
+  const [countdown, setCountdown] = React.useState<{ hours: number; minutes: number; seconds: number }>({ hours: 0, minutes: 0, seconds: 0 });
+
+  React.useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const nextPayout = new Date(now);
+      nextPayout.setHours(24, 0, 0, 0); // Next 24-hour cycle mark
+      
+      const diffMs = nextPayout.getTime() - now.getTime();
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+      setCountdown({ hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="space-y-6">
       
@@ -35,7 +57,7 @@ export const MiningDashboard: React.FC<MiningDashboardProps> = ({ onGoToStore, o
       <div className="relative bg-gradient-to-r from-[#141C2B] via-[#101726] to-[#0A0F1A] border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
           
-          {/* Farm Capacity */}
+          {/* Farm Capacity & Total Lifetime Mined */}
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 font-mono text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -44,21 +66,23 @@ export const MiningDashboard: React.FC<MiningDashboardProps> = ({ onGoToStore, o
             <h2 className="text-2xl font-black text-white tracking-tight">
               My Active Farm
             </h2>
-            <p className="text-xs text-slate-400 font-mono">
-              Operating {activeRigs.length} Mining Package(s)
-            </p>
+            <div className="p-2.5 bg-slate-950/80 border border-slate-800 rounded-xl space-y-0.5">
+              <span className="text-[10px] text-slate-400 uppercase font-mono block">Total Lifetime Mined</span>
+              <span className="text-base font-extrabold text-amber-400 font-mono">UGX {currentUser.totalMinedUGX.toLocaleString()}</span>
+            </div>
           </div>
 
-          {/* Daily Capacity */}
-          <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 text-center space-y-1">
-            <span className="text-xs text-slate-400 uppercase font-mono tracking-wider">
-              Total Daily Profit Rate
-            </span>
-            <div className="text-2xl font-black text-amber-400 font-mono">
-              UGX {totalDailyYield.toLocaleString()} <span className="text-xs text-slate-400">/ day</span>
+          {/* 24-Hour Payout Countdown Timer */}
+          <div className="bg-slate-950/90 p-4 rounded-2xl border border-amber-500/40 text-center space-y-2 shadow-lg">
+            <div className="flex items-center justify-center gap-1.5 text-xs text-amber-300 font-mono font-bold uppercase tracking-wider">
+              <Coins className="w-4 h-4 text-amber-400 animate-pulse" />
+              Next 24h Payout Credit
             </div>
-            <p className="text-[11px] text-slate-400 font-mono">
-              Monthly Return: UGX {(totalDailyYield * 30).toLocaleString()}
+            <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight bg-slate-900/90 py-1.5 px-3 rounded-xl border border-slate-800 inline-block">
+              {String(countdown.hours).padStart(2, '0')}h : {String(countdown.minutes).padStart(2, '0')}m : {String(countdown.seconds).padStart(2, '0')}s
+            </div>
+            <p className="text-[10px] text-slate-400 font-mono leading-tight">
+              Daily earnings are credited every 24 hrs directly to your account.
             </p>
           </div>
 
@@ -67,7 +91,7 @@ export const MiningDashboard: React.FC<MiningDashboardProps> = ({ onGoToStore, o
             <div className="flex items-center justify-between text-xs text-emerald-300 font-medium">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-                Live Unclaimed Mined UGX:
+                Uncollected Yield:
               </span>
               <span className="font-mono text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded text-emerald-300 font-bold">
                 AUTO-ACCUMULATING
@@ -89,7 +113,7 @@ export const MiningDashboard: React.FC<MiningDashboardProps> = ({ onGoToStore, o
               }`}
             >
               <Coins className="w-4 h-4 text-slate-950" />
-              Collect Profits to Account Balance
+              Collect Profits to Balance
             </button>
           </div>
 

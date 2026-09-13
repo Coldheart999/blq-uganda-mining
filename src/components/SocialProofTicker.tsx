@@ -59,7 +59,8 @@ export const SocialProofTicker: React.FC = () => {
     let timeoutId: ReturnType<typeof setTimeout>;
 
     const scheduleNextShow = () => {
-      const randomInterval = Math.floor(Math.random() * (30000 - 5000 + 1)) + 5000;
+      // Random interval between 10 seconds (10,000ms) and 4 minutes (240,000ms)
+      const randomInterval = Math.floor(Math.random() * (240000 - 10000 + 1)) + 10000;
       
       timeoutId = setTimeout(() => {
         const randomIndex = Math.floor(Math.random() * GENERATED_PROOFS.length);

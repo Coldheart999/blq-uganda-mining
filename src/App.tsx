@@ -9,6 +9,7 @@ import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { ReferralModal } from './components/ReferralModal';
 import { ReferralBonusModal } from './components/ReferralBonusModal';
+import { FaqSection } from './components/FaqSection';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
@@ -297,6 +298,9 @@ const MainContent: React.FC = () => {
 
         {/* TAB 3: Transactions */}
         {activeTab === 'history' && <HistoryTab />}
+
+        {/* FAQ Section */}
+        <FaqSection />
 
       </main>
 
