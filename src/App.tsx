@@ -95,7 +95,7 @@ const MainContent: React.FC = () => {
       />
 
       {/* Vertical Container */}
-      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 mb-20 md:mb-8">
         
         {/* Global Feedback Banner */}
         {purchaseNotice && (
@@ -115,14 +115,14 @@ const MainContent: React.FC = () => {
 
         {/* Vertical Hero Stack */}
         {activeTab === 'store' && (
-          <div className="bg-gradient-to-b from-[#111724]/90 via-[#0D121F]/90 to-[#080B12]/90 backdrop-blur-md border border-cyan-500/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+          <div className="bg-gradient-to-b from-[#111724]/90 via-[#0D121F]/90 to-[#080B12]/90 backdrop-blur-md border border-cyan-500/30 rounded-3xl p-5 sm:p-8 space-y-6 shadow-2xl">
             
             <div className="space-y-3 text-center sm:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 font-mono text-xs">
                 <Activity className="w-3.5 h-3.5 text-cyan-400" />
                 BLQ SHA-256 Mining Pool • Active Node
               </div>
-              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-5xl font-black text-white tracking-tight leading-tight">
                 High Yield Crypto Mining <span className="bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">Uganda</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
@@ -131,18 +131,18 @@ const MainContent: React.FC = () => {
             </div>
 
             {/* Vertical Quick Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 font-mono text-xs">
               <div className="bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
                 <span className="text-slate-500 block text-[10px] uppercase">Min Deposit</span>
-                <span className="font-bold text-amber-400 text-sm">UGX 5,000</span>
+                <span className="font-bold text-amber-400 text-xs sm:text-sm">UGX 5,000</span>
               </div>
               <div className="bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
                 <span className="text-slate-500 block text-[10px] uppercase">Payout Speed</span>
-                <span className="font-bold text-emerald-400 text-sm">5 - 15 Mins</span>
+                <span className="font-bold text-emerald-400 text-xs sm:text-sm">5 - 15 Mins</span>
               </div>
               <div className="col-span-2 sm:col-span-1 bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
                 <span className="text-slate-500 block text-[10px] uppercase">Networks</span>
-                <span className="font-bold text-cyan-400 text-sm">MTN / AIRTEL</span>
+                <span className="font-bold text-cyan-400 text-xs sm:text-sm">MTN / AIRTEL</span>
               </div>
             </div>
 
@@ -156,7 +156,7 @@ const MainContent: React.FC = () => {
         {activeTab === 'store' && (
           <div className="space-y-6">
             
-            {/* Filter Pill Selector */}
+            {/* Filter Pill Selector with horizontal scrolling on mobile */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
               <div>
                 <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
@@ -168,10 +168,10 @@ const MainContent: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex bg-[#0D121B] p-1 rounded-2xl border border-slate-800 text-xs font-semibold self-start sm:self-auto">
+              <div className="flex overflow-x-auto max-w-full space-x-1.5 bg-[#0D121B] p-1.5 rounded-2xl border border-slate-800 text-xs font-semibold self-start sm:self-auto scrollbar-none">
                 <button
                   onClick={() => setDurationFilter('all')}
-                  className={`px-3.5 py-2 rounded-xl transition-all ${
+                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
                     durationFilter === 'all'
                       ? 'bg-amber-500 text-slate-950 font-bold shadow'
                       : 'text-slate-400 hover:text-white'
@@ -181,7 +181,7 @@ const MainContent: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setDurationFilter(5)}
-                  className={`px-3.5 py-2 rounded-xl transition-all ${
+                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
                     durationFilter === 5
                       ? 'bg-amber-500 text-slate-950 font-bold shadow'
                       : 'text-slate-400 hover:text-white'
@@ -191,7 +191,7 @@ const MainContent: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setDurationFilter(10)}
-                  className={`px-3.5 py-2 rounded-xl transition-all ${
+                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
                     durationFilter === 10
                       ? 'bg-amber-500 text-slate-950 font-bold shadow'
                       : 'text-slate-400 hover:text-white'
@@ -201,7 +201,7 @@ const MainContent: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setDurationFilter(30)}
-                  className={`px-3.5 py-2 rounded-xl transition-all ${
+                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
                     durationFilter === 30
                       ? 'bg-amber-500 text-slate-950 font-bold shadow'
                       : 'text-slate-400 hover:text-white'

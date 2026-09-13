@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
-import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet } from 'lucide-react';
+import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -35,180 +35,227 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0F141C]/95 backdrop-blur-md border-b border-slate-800/80">
-      {/* Clean top bar */}
-      <div className="bg-[#0A0D14] px-4 py-1.5 text-xs border-b border-slate-800/60 flex items-center justify-between">
-        <div className="flex items-center space-x-2.5">
-          {/* Uganda Flag Badge */}
-          <div className="flex items-center h-3 w-4.5 rounded overflow-hidden border border-slate-700">
-            <div className="h-full w-1/3 bg-black"></div>
-            <div className="h-full w-1/3 bg-amber-400"></div>
-            <div className="h-full w-1/3 bg-red-600"></div>
+    <>
+      <header className="sticky top-0 z-40 bg-[#0F141C]/95 backdrop-blur-md border-b border-slate-800/80">
+        {/* Clean top notification bar */}
+        <div className="bg-[#0A0D14] px-3 sm:px-4 py-1.5 text-xs border-b border-slate-800/60 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            {/* Uganda Flag Badge */}
+            <div className="flex items-center h-3 w-4 rounded overflow-hidden border border-slate-700 shrink-0">
+              <div className="h-full w-1/3 bg-black"></div>
+              <div className="h-full w-1/3 bg-amber-400"></div>
+              <div className="h-full w-1/3 bg-red-600"></div>
+            </div>
+            <span className="font-semibold text-slate-300 text-[11px] truncate">BLQ Pool Uganda</span>
+            <span className="text-slate-700">•</span>
+            <span className="text-emerald-400 font-mono text-[10px] sm:text-[11px] flex items-center gap-1.5 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live Node
+            </span>
           </div>
-          <span className="font-medium text-slate-300">BLQ Mining Pool</span>
-          <span className="text-slate-700">•</span>
-          <span className="text-emerald-400 font-mono text-[11px] flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-            UGX Network Online
-          </span>
+
+          <div className="text-[10px] sm:text-[11px] text-slate-400 font-mono shrink-0">
+            Airtel & MTN Active
+          </div>
         </div>
 
-        <div className="text-[11px] text-slate-400 font-mono">
-          MTN & Airtel Settlement: Active
-        </div>
-      </div>
+        {/* Main Navbar Header */}
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
+          
+          {/* Brand Logo */}
+          <BlqLogo 
+            size="md" 
+            onClick={() => {
+              setActiveTab('store');
+              handleLogoClick();
+            }} 
+          />
 
-      {/* Main Navbar */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        
-        {/* Brand Logo */}
-        <BlqLogo 
-          size="md" 
-          onClick={() => {
-            setActiveTab('store');
-            handleLogoClick();
-          }} 
-        />
+          {/* Center Navigation Tabs (Desktop) */}
+          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs font-medium">
+            <button
+              onClick={() => setActiveTab('store')}
+              className={`px-4 py-2 rounded-lg transition-all ${
+                activeTab === 'store'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Packages Store
+            </button>
 
-        {/* Clean Center Navigation Tabs */}
-        <nav className="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs font-medium">
-          <button
-            onClick={() => setActiveTab('store')}
-            className={`px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'store'
-                ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Packages Store
-          </button>
+            <button
+              onClick={() => setActiveTab('my-rigs')}
+              className={`px-4 py-2 rounded-lg transition-all relative ${
+                activeTab === 'my-rigs'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              My Miners
+              {liveUnclaimedYield > 0 && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              )}
+            </button>
 
-          <button
-            onClick={() => setActiveTab('my-rigs')}
-            className={`px-4 py-2 rounded-lg transition-all relative ${
-              activeTab === 'my-rigs'
-                ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            My Miners
-            {liveUnclaimedYield > 0 && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-            )}
-          </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-4 py-2 rounded-lg transition-all ${
+                activeTab === 'history'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Transactions
+            </button>
+          </nav>
 
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'history'
-                ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Transactions
-          </button>
-        </nav>
+          {/* Right User Actions & Mobile Balance */}
+          <div className="flex items-center space-x-2">
+            {currentUser ? (
+              <>
+                {/* Balance Display */}
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs">
+                  <Wallet className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="text-white font-bold font-mono text-xs">
+                    UGX {currentUser.balanceUGX.toLocaleString()}
+                  </span>
+                </div>
 
-        {/* Right User Actions & Balance */}
-        <div className="flex items-center space-x-2.5">
-          {currentUser ? (
-            <>
-              {/* Virtual Balance Display */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs">
-                <Wallet className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-slate-400 font-mono">Balance:</span>
-                <span className="text-white font-bold font-mono">
-                  UGX {currentUser.balanceUGX.toLocaleString()}
-                </span>
-              </div>
-
-              {/* Deposit Action */}
-              <button
-                onClick={openDeposit}
-                className="flex items-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow transition-all active:scale-95"
-              >
-                <ArrowDownLeft className="w-3.5 h-3.5" />
-                Deposit
-              </button>
-
-              {/* Withdraw Action */}
-              <button
-                onClick={openWithdraw}
-                className="flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-400/30 font-semibold text-xs rounded-xl transition-all active:scale-95"
-              >
-                <ArrowUpRight className="w-3.5 h-3.5" />
-                Withdraw
-              </button>
-
-              {/* User Dropdown */}
-              <div className="relative">
+                {/* Quick Action Buttons (Desktop) */}
                 <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-1 p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
+                  onClick={openDeposit}
+                  className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl shadow transition-all active:scale-95"
                 >
-                  <UserIcon className="w-4 h-4" />
-                  <ChevronDown className="w-3 h-3 text-slate-400" />
+                  <ArrowDownLeft className="w-3.5 h-3.5" />
+                  Deposit
                 </button>
 
-                {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-slate-900 border border-slate-800 rounded-xl shadow-xl p-2 z-50">
-                    <div className="px-3 py-2 border-b border-slate-800">
-                      <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
-                      <p className="text-[11px] text-slate-400 font-mono">{currentUser.phone}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setUserDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/30 rounded-lg flex items-center gap-2 mt-1 transition-colors"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <button
-              onClick={openAuth}
-              className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition-all active:scale-95"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              Sign In / Register
-            </button>
-          )}
-        </div>
-      </div>
+                <button
+                  onClick={openWithdraw}
+                  className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-400/30 font-semibold text-xs rounded-xl transition-all active:scale-95"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  Withdraw
+                </button>
 
-      {/* Mobile Sub-Navigation Bar */}
-      <div className="flex md:hidden border-t border-slate-800/80 bg-[#0F141C] px-2 py-1.5 justify-around">
+                {/* User Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="flex items-center gap-1 p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    <ChevronDown className="w-3 h-3 text-slate-400" />
+                  </button>
+
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-52 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50">
+                      <div className="px-3 py-2 border-b border-slate-800">
+                        <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
+                        <p className="text-[11px] text-slate-400 font-mono">{currentUser.phone}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          openDeposit();
+                          setUserDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-emerald-950/30 rounded-lg flex items-center gap-2 mt-1 sm:hidden"
+                      >
+                        <ArrowDownLeft className="w-3.5 h-3.5" />
+                        Deposit Funds
+                      </button>
+                      <button
+                        onClick={() => {
+                          openWithdraw();
+                          setUserDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs text-amber-400 hover:bg-amber-950/30 rounded-lg flex items-center gap-2 sm:hidden"
+                      >
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        Withdraw Profits
+                      </button>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setUserDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/30 rounded-lg flex items-center gap-2 mt-1 transition-colors"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={openAuth}
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition-all active:scale-95"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Native App Fixed Bottom Navigation Bar for Mobile Screens */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0B0F17]/95 backdrop-blur-xl border-t border-slate-800/90 px-3 py-2 flex items-center justify-around shadow-2xl pb-[max(0.6rem,env(safe-area-inset-bottom))]">
         <button
           onClick={() => setActiveTab('store')}
-          className={`flex-1 py-1.5 text-center text-xs font-medium rounded-lg ${
-            activeTab === 'store' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'store' 
+              ? 'text-amber-400 font-bold scale-105' 
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          Store
+          <Store className="w-5 h-5" />
+          <span className="text-[10px] font-mono">Store</span>
         </button>
+
         <button
           onClick={() => setActiveTab('my-rigs')}
-          className={`flex-1 py-1.5 text-center text-xs font-medium rounded-lg ${
-            activeTab === 'my-rigs' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all relative ${
+            activeTab === 'my-rigs' 
+              ? 'text-amber-400 font-bold scale-105' 
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          My Miners
+          <div className="relative">
+            <Activity className="w-5 h-5" />
+            {liveUnclaimedYield > 0 && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            )}
+          </div>
+          <span className="text-[10px] font-mono">Miners</span>
         </button>
+
         <button
           onClick={() => setActiveTab('history')}
-          className={`flex-1 py-1.5 text-center text-xs font-medium rounded-lg ${
-            activeTab === 'history' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400'
+          className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all ${
+            activeTab === 'history' 
+              ? 'text-amber-400 font-bold scale-105' 
+              : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          History
+          <History className="w-5 h-5" />
+          <span className="text-[10px] font-mono">History</span>
+        </button>
+
+        <button
+          onClick={() => {
+            if (!currentUser) openAuth();
+            else openDeposit();
+          }}
+          className="flex flex-col items-center gap-1 py-1 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-extrabold shadow-md active:scale-95"
+        >
+          <ArrowDownLeft className="w-5 h-5" />
+          <span className="text-[10px] font-mono">Deposit</span>
         </button>
       </div>
-    </header>
+    </>
   );
 };
