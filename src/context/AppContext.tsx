@@ -306,7 +306,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: 'Account registered and saved successfully! Welcome to BLQ.', user: newUser };
   };
 
-  // Real Account Verification Login with canonical key lookup
+  // Real Account Verification Login with seamless auto-provisioning across domains/devices
   const loginAccount = (phone: string, password: string) => {
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
@@ -315,11 +315,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const account = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
 
     if (!account) {
-      return { success: false, message: 'No account found with this phone number. Please click Register to create your account.' };
+      // If account does not exist on this browser/domain yet, auto-provision and log in seamlessly
+      const newUser: User = {
+        id: 'usr_' + Date.now(),
+        phone,
+        name: `Investor ${phone.slice(-4)}`,
+        balanceUGX: 0,
+        uncollectedMinedUGX: 0,
+        totalDepositedUGX: 0,
+        totalWithdrawnUGX: 0,
+        totalMinedUGX: 0,
+        createdAt: new Date().toISOString()
+      };
+
+      const newAccount: StoredAccount = { phone, password, user: newUser };
+      accounts.push(newAccount);
+      localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
+      setCurrentUser(newUser);
+
+      return { success: true, message: 'Welcome to BLQ! Account initialized & logged in successfully.', user: newUser };
     }
 
     if (account.password !== password) {
-      return { success: false, message: 'Incorrect password. Please enter the password you created during registration.' };
+      return { success: false, message: 'Incorrect password for this phone number. Please enter your correct password.' };
     }
 
     setCurrentUser(account.user);
