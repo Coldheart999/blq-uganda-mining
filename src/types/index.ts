@@ -1,3 +1,14 @@
+export interface ReferralNotification {
+  id: string;
+  title: string;
+  message: string;
+  amountUGX: number;
+  referredName: string;
+  referredPhone: string;
+  createdAt: string;
+  read: boolean;
+}
+
 export interface User {
   id: string;
   phone: string;
@@ -11,6 +22,7 @@ export interface User {
   referredBy?: string;
   referralCount?: number;
   referralEarningsUGX?: number;
+  notifications?: ReferralNotification[];
   createdAt: string;
   isAdmin?: boolean;
 }

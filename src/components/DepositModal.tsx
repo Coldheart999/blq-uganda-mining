@@ -47,8 +47,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
     }
 
     const numAmount = parseInt(amount, 10);
-    if (isNaN(numAmount) || numAmount < 5000) {
-      setError('Minimum deposit is UGX 5,000');
+    if (isNaN(numAmount) || numAmount < 10000) {
+      setError('Minimum deposit is UGX 10,000');
       return;
     }
 

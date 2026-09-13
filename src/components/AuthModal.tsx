@@ -12,7 +12,8 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { registerAccount, loginAccount } = useApp();
   
-  const [isLoginMode, setIsLoginMode] = useState<boolean>(true);
+  const pendingRef = typeof window !== 'undefined' ? localStorage.getItem('blq_pending_ref') : null;
+  const [isLoginMode, setIsLoginMode] = useState<boolean>(() => !pendingRef);
   const [phone, setPhone] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -92,6 +93,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <p className="text-xs text-slate-400 mt-1">
             {isLoginMode ? 'Enter your registered phone number & password' : 'Register with your MTN or Airtel number'}
           </p>
+
+          {/* Inviter Referral Badge */}
+          {!isLoginMode && pendingRef && (
+            <div className="mt-3 px-3.5 py-1.5 bg-amber-500/15 border border-amber-500/40 rounded-full text-amber-300 font-mono text-[11px] font-bold flex items-center gap-1.5 shadow-sm">
+              <span className="animate-pulse">🎁</span>
+              <span>Invited By Partner: <strong className="text-white underline">{pendingRef}</strong></span>
+            </div>
+          )}
         </div>
 
         {/* Mode Switcher Tabs */}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppProvider, useApp } from './context/AppContext';
+import { AppProvider, useApp, StoredAccount } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { MinerCard } from './components/MinerCard';
 import { MiningDashboard } from './components/MiningDashboard';
@@ -8,15 +8,17 @@ import { AuthModal } from './components/AuthModal';
 import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { ReferralModal } from './components/ReferralModal';
+import { ReferralBonusModal } from './components/ReferralBonusModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
 import { FloatingSupport } from './components/FloatingSupport';
 import { AnimatedCryptoBackground } from './components/AnimatedCryptoBackground';
 import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity, Gift, Sparkles } from 'lucide-react';
+import { ReferralNotification } from './types';
 
 const MainContent: React.FC = () => {
-  const { currentUser, minerPackages, buyMiner } = useApp();
+  const { currentUser, setCurrentUser, minerPackages, buyMiner } = useApp();
 
   const [activeTab, setActiveTab] = useState<string>('store');
   const [durationFilter, setDurationFilter] = useState<number | 'all'>('all');
@@ -27,14 +29,42 @@ const MainContent: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [purchaseNotice, setPurchaseNotice] = useState<string>('');
 
-  // Capture URL referral parameter on site landing (e.g., ?ref=BLQ-12345)
+  // Unread Referral Bonus Notification
+  const unreadBonusNotif = currentUser?.notifications?.find(n => !n.read) || null;
+
+  // Capture URL referral parameter on site landing (e.g., ?ref=BLQ-12345) & auto-open registration modal
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const refCode = params.get('ref');
     if (refCode) {
       localStorage.setItem('blq_pending_ref', refCode);
+      if (!currentUser) {
+        setIsAuthOpen(true);
+      }
     }
-  }, []);
+  }, [currentUser]);
+
+  const handleDismissBonusNotif = () => {
+    if (!currentUser || !unreadBonusNotif) return;
+    const updatedNotifications = (currentUser.notifications || []).map(n => 
+      n.id === unreadBonusNotif.id ? { ...n, read: true } : n
+    );
+    const updatedUser = {
+      ...currentUser,
+      notifications: updatedNotifications
+    };
+    setCurrentUser(updatedUser);
+
+    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
+    if (savedAccountsStr) {
+      const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
+      const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+      if (accIndex !== -1) {
+        accounts[accIndex].user = updatedUser;
+        localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
+      }
+    }
+  };
 
   // Secret keyboard shortcut (Ctrl + Shift + A) for Admin Panel
   useEffect(() => {
@@ -165,7 +195,7 @@ const MainContent: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 font-mono text-xs">
               <div className="bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
                 <span className="text-slate-500 block text-[10px] uppercase">Min Deposit</span>
-                <span className="font-bold text-amber-400 text-xs sm:text-sm">UGX 5,000</span>
+                <span className="font-bold text-amber-400 text-xs sm:text-sm">UGX 10,000</span>
               </div>
               <div className="bg-[#070A10]/90 p-3 rounded-2xl border border-slate-800 text-center">
                 <span className="text-slate-500 block text-[10px] uppercase">Payout Speed</span>
@@ -281,6 +311,7 @@ const MainContent: React.FC = () => {
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} />
       <WithdrawModal isOpen={isWithdrawOpen} onClose={() => setIsWithdrawOpen(false)} />
       <ReferralModal isOpen={isReferralOpen} onClose={() => setIsReferralOpen(false)} onGoToStore={() => setActiveTab('store')} />
+      <ReferralBonusModal notification={unreadBonusNotif} onClose={handleDismissBonusNotif} />
       <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
 
       {/* Footer */}

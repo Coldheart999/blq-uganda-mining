@@ -432,11 +432,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         );
         if (referrerIndex !== -1) {
           const referrer = accounts[referrerIndex].user;
+          const sweetNotif = {
+            id: 'notif_' + Date.now(),
+            title: '🎉 Sweet News! UGX 15,000 Bonus Received!',
+            message: `Congratulations! Your referred investor ${currentUser.name} (${currentUser.phone.slice(0, 3)}****${currentUser.phone.slice(-3)}) has successfully activated a miner! UGX 15,000 referral commission has been credited directly to your withdrawable balance. Keep sharing to earn more! 🌟💖`,
+            amountUGX: 15000,
+            referredName: currentUser.name,
+            referredPhone: currentUser.phone,
+            createdAt: new Date().toISOString(),
+            read: false
+          };
+
           const updatedReferrer: User = {
             ...referrer,
             balanceUGX: (referrer.balanceUGX || 0) + 15000,
             referralCount: (referrer.referralCount || 0) + 1,
-            referralEarningsUGX: (referrer.referralEarningsUGX || 0) + 15000
+            referralEarningsUGX: (referrer.referralEarningsUGX || 0) + 15000,
+            notifications: [sweetNotif, ...(referrer.notifications || [])]
           };
           accounts[referrerIndex].user = updatedReferrer;
 
@@ -485,7 +497,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Submit Mobile Money Deposit
   const submitDeposit = (amount: number, provider: 'MTN Mobile Money' | 'Airtel Money', transactionId: string) => {
     if (!currentUser) return { success: false, message: 'User not logged in' };
-    if (amount < 5000) return { success: false, message: 'Minimum deposit amount is UGX 5,000' };
+    if (amount < 10000) return { success: false, message: 'Minimum deposit amount is UGX 10,000' };
     if (!transactionId.trim()) return { success: false, message: 'Transaction ID is required' };
 
     const newDeposit: DepositRequest = {
