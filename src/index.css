@@ -8,26 +8,126 @@
   }
 }
 
-/* Ultra Dark / OLED Mode */
+/* Deep Midnight Sapphire & Blue Shades Dark Mode */
 html.dark-mode body {
-  background: #000000 !important;
+  background: #020617 !important;
+  color: #e2e8f0 !important;
 }
+
+/* Headers, Navbars, Footers & Fixed Bottom Nav */
 html.dark-mode header,
 html.dark-mode footer,
 html.dark-mode .md\:hidden.fixed {
-  background: rgba(0, 0, 0, 0.97) !important;
+  background: rgba(2, 6, 23, 0.96) !important;
+  border-color: rgba(30, 58, 138, 0.4) !important;
 }
+
+/* Background containers and cards */
 html.dark-mode [class*="bg-[#0"] {
-  background-color: #000000 !important;
+  background-color: #020617 !important;
 }
 html.dark-mode [class*="bg-[#1"] {
-  background-color: #050505 !important;
+  background-color: #0b152e !important;
 }
-html.dark-mode [class*="bg-slate-9"] {
-  background-color: #0a0a0a !important;
+html.dark-mode [class*="bg-slate-950"] {
+  background-color: #040a1c !important;
 }
-html.dark-mode [class*="border-slate-8"] {
-  border-color: rgba(30, 30, 30, 0.6) !important;
+html.dark-mode [class*="bg-slate-900"] {
+  background-color: #0c1838 !important;
+}
+html.dark-mode [class*="bg-slate-800"] {
+  background-color: #11224d !important;
+}
+
+/* Borders */
+html.dark-mode [class*="border-slate-800"],
+html.dark-mode [class*="border-slate-700"] {
+  border-color: rgba(37, 99, 235, 0.25) !important;
+}
+html.dark-mode [class*="border-amber-"],
+html.dark-mode [class*="border-yellow-"] {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+}
+html.dark-mode [class*="border-emerald-"] {
+  border-color: rgba(96, 165, 250, 0.45) !important;
+}
+
+/* Text Colors: Amber, Yellow, Emerald turn into vibrant Blue/Cyan/Sky */
+html.dark-mode [class*="text-amber-"],
+html.dark-mode [class*="text-yellow-"] {
+  color: #38bdf8 !important; /* Vivid Cyan Sky */
+}
+html.dark-mode [class*="text-emerald-"] {
+  color: #60a5fa !important; /* Soft Blue */
+}
+
+/* Buttons & Solid Accent Backgrounds */
+html.dark-mode [class*="bg-amber-500"],
+html.dark-mode [class*="bg-amber-400"],
+html.dark-mode [class*="bg-yellow-500"],
+html.dark-mode [class*="bg-yellow-400"] {
+  background-color: #2563eb !important; /* Royal Blue */
+  color: #ffffff !important;
+}
+html.dark-mode [class*="hover:bg-amber-400"]:hover,
+html.dark-mode [class*="hover:bg-amber-500"]:hover {
+  background-color: #1d4ed8 !important;
+}
+
+html.dark-mode [class*="bg-emerald-600"],
+html.dark-mode [class*="bg-emerald-500"] {
+  background-color: #0284c7 !important; /* Cyan / Blue */
+  color: #ffffff !important;
+}
+html.dark-mode [class*="hover:bg-emerald-500"]:hover {
+  background-color: #0369a1 !important;
+}
+
+/* Badges & Semi-transparent Accents */
+html.dark-mode [class*="bg-amber-500/"],
+html.dark-mode [class*="bg-amber-950/"],
+html.dark-mode [class*="bg-yellow-"] {
+  background-color: rgba(14, 165, 233, 0.15) !important;
+}
+html.dark-mode [class*="bg-emerald-500/"],
+html.dark-mode [class*="bg-emerald-950/"] {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Gradients */
+html.dark-mode [class*="from-amber-"],
+html.dark-mode [class*="to-amber-"],
+html.dark-mode [class*="via-yellow-"] {
+  --tw-gradient-from: #1d4ed8 !important;
+  --tw-gradient-to: #06b6d4 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #0284c7, var(--tw-gradient-to) !important;
+}
+
+/* Glowing effects */
+html.dark-mode .glow-yellow,
+html.dark-mode .glow-emerald,
+html.dark-mode .glow-blue {
+  box-shadow: 0 0 30px -5px rgba(56, 189, 248, 0.45) !important;
+}
+
+/* Background grid in dark mode */
+html.dark-mode .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.08) 1px, transparent 1px) !important;
+}
+
+/* SVG fills/strokes */
+html.dark-mode svg.text-amber-400,
+html.dark-mode svg.text-amber-300,
+html.dark-mode svg.text-yellow-300 {
+  color: #38bdf8 !important;
+}
+html.dark-mode svg.text-emerald-400 {
+  color: #60a5fa !important;
+}
+html.dark-mode [class*="fill-amber-"] {
+  fill: rgba(56, 189, 248, 0.25) !important;
 }
 
 /* Custom glowing effects and metallic animations */

@@ -222,14 +222,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                       >
                         <div className="flex items-center gap-2">
                           {isDarkMode ? (
-                            <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                            <Moon className="w-3.5 h-3.5 text-cyan-400" />
                           ) : (
                             <Sun className="w-3.5 h-3.5 text-amber-400" />
                           )}
-                          <span>Dark Mode (OLED)</span>
+                          <span>Blue Dark Mode</span>
                         </div>
                         <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
-                          isDarkMode ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-400'
+                          isDarkMode ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-slate-800 text-slate-400'
                         }`}>
                           {isDarkMode ? 'ON' : 'OFF'}
                         </span>
