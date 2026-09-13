@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ArrowDownLeft, X, Smartphone, CheckCircle2, AlertCircle, Copy, Info, Clock, HeartHandshake, Sparkles } from 'lucide-react';
+import { ArrowDownLeft, X, Smartphone, CheckCircle2, AlertCircle, Copy, Info, Clock, HeartHandshake, Bell, Lock } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
 import { MtnLogo, AirtelLogo } from './ProviderLogos';
 
@@ -12,21 +12,22 @@ interface DepositModalProps {
 export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
   const { currentUser, adminConfig, submitDeposit } = useApp();
 
-  // Currently accepting Airtel Money deposits primarily
-  const [provider, setProvider] = useState<'MTN Mobile Money' | 'Airtel Money'>('Airtel Money');
+  // Locked to Airtel Money for deposits currently
+  const [provider] = useState<'Airtel Money'>('Airtel Money');
   const [senderPhone, setSenderPhone] = useState<string>(currentUser?.phone || '');
   const [amount, setAmount] = useState<string>('50000');
   const [txId, setTxId] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [mtnNotice, setMtnNotice] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [submittedTxId, setSubmittedTxId] = useState<string>('');
   const [submittedAmount, setSubmittedAmount] = useState<number>(0);
 
   if (!isOpen || !currentUser) return null;
 
-  const targetNumber = provider === 'MTN Mobile Money' ? adminConfig.mobileMoneyNumber : adminConfig.airtelMoneyNumber;
-  const targetName = provider === 'MTN Mobile Money' ? adminConfig.mobileMoneyName : adminConfig.airtelMoneyName;
+  const targetNumber = adminConfig.airtelMoneyNumber;
+  const targetName = adminConfig.airtelMoneyName;
 
   const handleCopyNumber = () => {
     navigator.clipboard.writeText(targetNumber);
@@ -38,10 +39,10 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
     e.preventDefault();
     setError('');
 
-    // 1. Validate sender phone number network prefix match
-    const phoneVal = validateUgandanPhone(senderPhone, provider);
+    // Validate Airtel phone number network prefix (070, 075, 074)
+    const phoneVal = validateUgandanPhone(senderPhone, 'Airtel Money');
     if (!phoneVal.isValid) {
-      setError(phoneVal.errorMessage || 'Invalid phone number for selected provider.');
+      setError(phoneVal.errorMessage || 'Please enter a valid Airtel Money phone number (070/075/074).');
       return;
     }
 
@@ -56,7 +57,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
       return;
     }
 
-    const res = submitDeposit(numAmount, provider, txId.trim());
+    const res = submitDeposit(numAmount, 'Airtel Money', txId.trim());
     if (res.success) {
       setSubmittedTxId(txId.trim());
       setSubmittedAmount(numAmount);
@@ -70,6 +71,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
     setIsSubmitted(false);
     setError('');
     setTxId('');
+    setMtnNotice(false);
     onClose();
   };
 
@@ -100,9 +102,9 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
             </div>
 
             <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3 text-left text-xs">
-              <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-                {provider === 'Airtel Money' ? <AirtelLogo size="sm" /> : <MtnLogo size="sm" />}
-                <span className="font-bold text-white text-sm">{provider}</span>
+              <div className="flex items-center gap-2.5 pb-2 border-b border-slate-800">
+                <AirtelLogo size="sm" />
+                <span className="font-bold text-white text-sm">Airtel Money Uganda</span>
               </div>
               <p className="text-slate-300 leading-relaxed">
                 We have received your deposit request of <span className="font-bold font-mono text-emerald-400">UGX {submittedAmount.toLocaleString()}</span>.
@@ -112,7 +114,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
                 <span className="text-amber-400 font-bold">{submittedTxId}</span>
               </div>
               <p className="text-slate-400 leading-relaxed">
-                Please wait gently while our financial accounts manager verifies your transaction. Your wallet balance will be updated automatically in just a moment.
+                Please wait gently while our financial accounts manager verifies your transaction. Your account balance will be updated automatically in just a moment.
               </p>
             </div>
 
@@ -123,7 +125,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
 
             <button
               onClick={handleCloseModal}
-              className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-emerald-500 to-teal-500 hover:from-amber-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg transition-all active:scale-[0.98]"
+              className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-rose-500 to-teal-500 hover:from-amber-400 hover:to-teal-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg transition-all active:scale-[0.98]"
             >
               Return to Dashboard
             </button>
@@ -142,18 +144,15 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
               </div>
             </div>
 
-            {/* Hospitable Deposit Notice: Currently Accepting Airtel Money */}
-            <div className="mb-5 p-3.5 bg-rose-950/30 border border-rose-500/30 rounded-xl space-y-1.5 text-xs text-rose-200">
-              <div className="flex items-center gap-2 font-bold text-rose-300">
+            {/* Hospitable Notification: Currently Airtel Only */}
+            <div className="mb-5 p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-1.5 text-xs text-rose-200">
+              <div className="flex items-center gap-2 font-bold text-white">
                 <AirtelLogo size="sm" />
-                <span>Notice to Our Valued Investors:</span>
+                <span>Active Deposit Method: Airtel Money</span>
               </div>
               <p className="text-[11px] leading-relaxed text-slate-300">
-                To guarantee instant 24/7 automated reconciliation, we currently process all deposit payments via <strong className="text-white font-semibold">Airtel Money Uganda</strong>. MTN Mobile Money deposit support will be added in our upcoming gateway update! 
+                Dear investor, we currently process deposit payments exclusively via <strong className="text-white font-semibold">Airtel Money Uganda</strong>. MTN Mobile Money deposit integration is coming soon in our upcoming release!
               </p>
-              <div className="text-[10px] text-amber-400 font-mono pt-0.5">
-                • Note: Withdrawals to both MTN & Airtel lines remain 100% active and instant!
-              </div>
             </div>
 
             {/* Error Message Banner */}
@@ -164,54 +163,58 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
               </div>
             )}
 
+            {/* MTN Non-Clickable Popover Notification */}
+            {mtnNotice && (
+              <div className="mb-4 p-3 bg-amber-950/70 border border-amber-500/60 rounded-xl text-amber-200 text-xs flex items-center gap-2 animate-bounce">
+                <Bell className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>MTN Mobile Money deposits are coming soon! Please use Airtel Money below.</span>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               
-              {/* Provider Selector with Logos */}
+              {/* Provider Options */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                   1. Select Mobile Money Provider
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setProvider('Airtel Money');
-                      setError('');
-                    }}
-                    className={`py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2.5 transition-all ${
-                      provider === 'Airtel Money'
-                        ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-md ring-1 ring-rose-500/50'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <AirtelLogo size="sm" />
-                    <span>Airtel Money</span>
-                    <span className="ml-auto text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono">Active</span>
-                  </button>
+                  
+                  {/* Active Airtel Money Button */}
+                  <div className="py-3 px-3 rounded-xl border border-rose-500 bg-rose-500/10 text-white text-xs font-bold flex items-center justify-between shadow-md ring-1 ring-rose-500/50">
+                    <div className="flex items-center gap-2">
+                      <AirtelLogo size="sm" />
+                      <span>Airtel Money</span>
+                    </div>
+                    <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono font-bold">Active</span>
+                  </div>
 
-                  <button
-                    type="button"
+                  {/* Disabled Non-clickable MTN Button with Notification Trigger */}
+                  <div
                     onClick={() => {
-                      setProvider('MTN Mobile Money');
-                      setError('');
+                      setMtnNotice(true);
+                      setTimeout(() => setMtnNotice(false), 3500);
                     }}
-                    className={`py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2.5 transition-all ${
-                      provider === 'MTN Mobile Money'
-                        ? 'bg-amber-400/20 border-amber-400 text-amber-300 shadow-md ring-1 ring-amber-400/50'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
+                    className="py-3 px-3 rounded-xl border border-slate-800 bg-slate-900/60 text-slate-500 text-xs font-bold flex items-center justify-between cursor-not-allowed opacity-75 hover:border-amber-500/40 transition-colors select-none"
+                    title="MTN Deposits Coming Soon"
                   >
-                    <MtnLogo size="sm" />
-                    <span>MTN Mobile</span>
-                    <span className="ml-auto text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-mono">Soon</span>
-                  </button>
+                    <div className="flex items-center gap-2">
+                      <MtnLogo size="sm" />
+                      <span>MTN MoMo</span>
+                    </div>
+                    <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-mono flex items-center gap-0.5">
+                      <Lock className="w-2.5 h-2.5" />
+                      Soon
+                    </span>
+                  </div>
+
                 </div>
               </div>
 
               {/* Sender Phone Number Field */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
-                  2. Your Mobile Money Sender Phone Number
+                  2. Your Airtel Money Sender Phone Number
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
@@ -224,23 +227,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
                       setSenderPhone(e.target.value);
                       setError('');
                     }}
-                    placeholder={provider === 'Airtel Money' ? 'e.g. 0701234567 or 0751234567' : 'e.g. 0771234567 or 0781234567'}
+                    placeholder="e.g. 0701234567 or 0751234567"
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-rose-500"
                     required
                   />
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                  {provider === 'Airtel Money' ? (
-                    <>
-                      <AirtelLogo size="sm" className="w-4 h-4 p-0 rounded-sm" />
-                      <span>Must be an Airtel Uganda line (070/075/074)</span>
-                    </>
-                  ) : (
-                    <>
-                      <MtnLogo size="sm" className="w-4 h-4 p-0 rounded-sm" />
-                      <span>Must be an MTN Uganda line (077/078/076/039)</span>
-                    </>
-                  )}
+                <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
+                  <AirtelLogo size="sm" className="w-4 h-4 p-0 rounded-sm" />
+                  <span>Must be an Airtel Uganda line (070/075/074)</span>
                 </p>
               </div>
 
@@ -248,11 +242,11 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
               <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
                 <div className="flex items-center justify-between text-xs text-slate-400 font-medium mb-1">
                   <span>3. Send deposit money to this official account:</span>
-                  {provider === 'Airtel Money' ? <AirtelLogo size="sm" /> : <MtnLogo size="sm" />}
+                  <AirtelLogo size="sm" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-mono">Receiver Number:</span>
-                  <div className="flex items-center gap-2 font-mono font-extrabold text-amber-400 text-base">
+                  <div className="flex items-center gap-2 font-mono font-extrabold text-rose-400 text-base">
                     <span>{targetNumber}</span>
                     <button
                       type="button"
@@ -282,7 +276,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="e.g. 50000"
-                  className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-emerald-400 font-mono font-bold text-lg focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-emerald-400 font-mono font-bold text-lg focus:outline-none focus:border-rose-500"
                   required
                 />
                 <div className="flex gap-2 mt-2">
@@ -309,12 +303,12 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
                   value={txId}
                   onChange={(e) => setTxId(e.target.value)}
                   placeholder="e.g. 24589102391"
-                  className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-rose-500"
                   required
                 />
                 <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
                   <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  Copy the transaction ID from your Airtel / MTN SMS confirmation message.
+                  Copy the transaction ID from your Airtel SMS confirmation message.
                 </p>
               </div>
 

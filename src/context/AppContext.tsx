@@ -267,14 +267,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [currentUser, purchasedRigs]);
 
-  // Real Account Registration
+  // Helper for flexible canonical phone matching across 077..., +25677..., 25677...
+  const normalizePhoneKey = (p: string): string => {
+    const clean = p.replace(/[\s\-\(\)\+]/g, '');
+    if (clean.startsWith('256')) return clean.slice(3);
+    if (clean.startsWith('0')) return clean.slice(1);
+    return clean;
+  };
+
+  // Real Account Registration with local storage persistence
   const registerAccount = (phone: string, password: string, name?: string) => {
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
+    const targetKey = normalizePhoneKey(phone);
 
-    const existing = accounts.find(a => a.phone === phone);
+    const existing = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
     if (existing) {
-      return { success: false, message: 'An account with this phone number already exists. Please log in.' };
+      return { success: false, message: 'An account with this phone number already exists. Please Sign In with your password.' };
     }
 
     const newUser: User = {
@@ -289,30 +298,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    accounts.push({ phone, password, user: newUser });
+    const newAccount: StoredAccount = { phone, password, user: newUser };
+    accounts.push(newAccount);
     localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
     setCurrentUser(newUser);
 
-    return { success: true, message: 'Account created successfully!', user: newUser };
+    return { success: true, message: 'Account registered and saved successfully! Welcome to BLQ.', user: newUser };
   };
 
-  // Real Account Verification Login
+  // Real Account Verification Login with canonical key lookup
   const loginAccount = (phone: string, password: string) => {
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
+    const targetKey = normalizePhoneKey(phone);
 
-    const account = accounts.find(a => a.phone === phone);
+    const account = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
 
     if (!account) {
-      return { success: false, message: 'No account found with this phone number. Please click Sign Up to register.' };
+      return { success: false, message: 'No account found with this phone number. Please click Register to create your account.' };
     }
 
     if (account.password !== password) {
-      return { success: false, message: 'Incorrect password. Please verify your password and try again.' };
+      return { success: false, message: 'Incorrect password. Please enter the password you created during registration.' };
     }
 
     setCurrentUser(account.user);
-    return { success: true, message: 'Login successful!', user: account.user };
+    return { success: true, message: 'Welcome back! Login successful.', user: account.user };
   };
 
   const logout = () => {
