@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
-import { ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -23,7 +23,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   openAdmin
 }) => {
   const { currentUser, logout } = useApp();
-  const [logoClicks, setLogoClicks] = useState<number>(0);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('blq_dark_mode') === 'true'; // Default is false (Original Golden Amber Theme)
@@ -42,28 +41,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     setIsDarkMode(prev => !prev);
   };
 
-  // 5 rapid clicks on the BLQ Logo anywhere in the header opens Admin Panel
-  const handleLogoSecretClick = () => {
-    const nextClicks = logoClicks + 1;
-    setLogoClicks(nextClicks);
-    if (nextClicks >= 5) {
-      openAdmin();
-      setLogoClicks(0);
-    } else {
-      setActiveTab('store');
-    }
-  };
-
   return (
     <>
       <header className="sticky top-0 z-40 bg-[#0F141C]/95 backdrop-blur-md border-b border-slate-800/80">
         {/* Main Navbar Header */}
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           
-          {/* Brand Logo (5 taps opens Admin) */}
+          {/* Brand Logo */}
           <BlqLogo 
             size="md" 
-            onClick={handleLogoSecretClick} 
+            onClick={() => setActiveTab('store')} 
           />
 
           {/* Center Navigation Tabs (Desktop) */}
@@ -206,16 +193,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                         }`}>
                           {isDarkMode ? 'ON' : 'OFF'}
                         </span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          openAdmin();
-                          setUserDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-xs text-slate-400 hover:text-amber-300 hover:bg-slate-800 rounded-lg flex items-center gap-2 mt-1 transition-colors"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Admin Console</span>
                       </button>
                       <button
                         onClick={() => {
