@@ -9,6 +9,9 @@ import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
+import { SocialProofTicker } from './components/SocialProofTicker';
+import { EarningsCalculator } from './components/EarningsCalculator';
+import { FloatingSupport } from './components/FloatingSupport';
 import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -53,12 +56,23 @@ const MainContent: React.FC = () => {
     setTimeout(() => setPurchaseNotice(''), 4000);
   };
 
+  const handleCalculatorSelect = (amountUGX: number) => {
+    const matched = minerPackages.find(p => p.priceUGX === amountUGX);
+    if (matched) {
+      handleBuyMiner(matched.id);
+    } else if (!currentUser) {
+      setIsAuthOpen(true);
+    } else {
+      setIsDepositOpen(true);
+    }
+  };
+
   const filteredPackages = durationFilter === 'all' 
     ? minerPackages 
     : minerPackages.filter(p => p.durationDays === durationFilter);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B0E14] text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen flex flex-col bg-[#0A0D14] text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-950">
       {/* Top Header */}
       <Navbar
         activeTab={activeTab}
@@ -75,117 +89,120 @@ const MainContent: React.FC = () => {
         openAdmin={() => setIsAdminOpen(true)}
       />
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
         
         {/* Global Feedback Banner */}
         {purchaseNotice && (
-          <div className="p-4 bg-emerald-950/90 border border-emerald-500/80 rounded-xl text-emerald-300 text-sm font-semibold flex items-center justify-between shadow">
+          <div className="p-4 bg-emerald-950/90 border border-emerald-500/80 rounded-2xl text-emerald-300 text-sm font-semibold flex items-center justify-between shadow-lg">
             <span className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400" />
               {purchaseNotice}
             </span>
             <button
               onClick={() => setActiveTab('my-rigs')}
-              className="px-3.5 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-lg hover:bg-emerald-400 transition-colors"
+              className="px-3.5 py-1.5 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-emerald-400 transition-colors"
             >
-              View Active Rigs
+              View Active Plans
             </button>
           </div>
         )}
 
-        {/* Organized Clean Hero Header */}
+        {/* Hero Header */}
         {activeTab === 'store' && (
-          <div className="bg-[#121722] border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-4">
+          <div className="bg-[#121824] border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
               <div className="space-y-2">
                 <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  Uganda Cloud Crypto Mining Platform
+                  Uganda Premier Mobile Investment Hub
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  High Yield Investment Packages (UGX)
+                <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                  Invest UGX & Earn Daily Cash Returns
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-                  Choose from 5-Day Express, 10-Day VIP, or 30-Day Executive packages. Deposit via MTN or Airtel Mobile Money and collect daily profits directly into your account balance.
+                  Choose from 5-Day Express, 10-Day VIP, or 30-Day Executive plans. Deposit via MTN or Airtel Mobile Money and withdraw your profits directly to your phone anytime.
                 </p>
               </div>
 
               {/* Quick Info Pill */}
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto font-mono text-xs">
-                <div className="bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-800 text-center">
+                <div className="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
                   <span className="text-slate-500 block text-[10px] uppercase">Min Deposit</span>
-                  <span className="font-bold text-amber-400">UGX 5,000</span>
+                  <span className="font-bold text-amber-400 text-sm">UGX 5,000</span>
                 </div>
-                <div className="bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-800 text-center">
+                <div className="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
                   <span className="text-slate-500 block text-[10px] uppercase">Payout Speed</span>
-                  <span className="font-bold text-emerald-400">5 - 15 Mins</span>
+                  <span className="font-bold text-emerald-400 text-sm">5 - 15 Mins</span>
                 </div>
               </div>
             </div>
+
+            {/* Interactive Calculator Component */}
+            <EarningsCalculator onSelectPlan={handleCalculatorSelect} />
           </div>
         )}
 
-        {/* TAB 1: Packages Store */}
+        {/* TAB 1: Investment Store */}
         {activeTab === 'store' && (
           <div className="space-y-6">
-            {/* Clean Segmented Filter Control */}
+            {/* Duration Filter Control */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-amber-400" />
-                  Available Packages
+                  Available Investment Plans
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Filter packages by contract duration:
+                  Select your investment duration:
                 </p>
               </div>
 
-              <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-semibold self-start sm:self-auto">
+              <div className="flex bg-slate-900 p-1 rounded-2xl border border-slate-800 text-xs font-semibold self-start sm:self-auto">
                 <button
                   onClick={() => setDurationFilter('all')}
-                  className={`px-3 py-2 rounded-lg transition-all ${
+                  className={`px-3.5 py-2 rounded-xl transition-all ${
                     durationFilter === 'all'
                       ? 'bg-amber-500 text-slate-950 font-bold'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  All Packages
+                  All Plans
                 </button>
                 <button
                   onClick={() => setDurationFilter(5)}
-                  className={`px-3 py-2 rounded-lg transition-all ${
+                  className={`px-3.5 py-2 rounded-xl transition-all ${
                     durationFilter === 5
                       ? 'bg-amber-500 text-slate-950 font-bold'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  5-Day Express
+                  ⚡ 5-Day Express
                 </button>
                 <button
                   onClick={() => setDurationFilter(10)}
-                  className={`px-3 py-2 rounded-lg transition-all ${
+                  className={`px-3.5 py-2 rounded-xl transition-all ${
                     durationFilter === 10
                       ? 'bg-amber-500 text-slate-950 font-bold'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  10-Day VIP
+                  ⭐ 10-Day VIP
                 </button>
                 <button
                   onClick={() => setDurationFilter(30)}
-                  className={`px-3 py-2 rounded-lg transition-all ${
+                  className={`px-3.5 py-2 rounded-xl transition-all ${
                     durationFilter === 30
                       ? 'bg-amber-500 text-slate-950 font-bold'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  30-Day Executive
+                  💎 30-Day Executive
                 </button>
               </div>
             </div>
 
-            {/* Organized Grid */}
+            {/* Investment Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPackages.map((miner) => (
                 <MinerCard
@@ -199,7 +216,7 @@ const MainContent: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 2: My Active Rigs */}
+        {/* TAB 2: My Active Investments */}
         {activeTab === 'my-rigs' && (
           <MiningDashboard
             onGoToStore={() => setActiveTab('store')}
@@ -214,6 +231,12 @@ const MainContent: React.FC = () => {
         {activeTab === 'history' && <HistoryTab />}
 
       </main>
+
+      {/* Social Proof Live Ugandan Activity Ticker */}
+      <SocialProofTicker />
+
+      {/* Floating WhatsApp Support */}
+      <FloatingSupport />
 
       {/* Modals */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
