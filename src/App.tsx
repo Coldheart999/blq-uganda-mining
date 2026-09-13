@@ -298,6 +298,35 @@ const MainContent: React.FC = () => {
                   userBalance={currentUser ? currentUser.balanceUGX : 0}
                 />
               ))}
+
+              {/* Teaser: More Packages On The Way */}
+              <div className="relative rounded-3xl border-2 border-dashed border-amber-500/40 bg-gradient-to-b from-[#141B2A]/70 via-[#0E1422]/70 to-[#070B12]/70 p-5 sm:p-7 flex flex-col justify-between overflow-hidden group hover:border-amber-400 transition-all shadow-xl">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-3 py-1 bg-amber-500/20 border border-amber-500/40 rounded-full text-amber-300 font-mono text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                      <Sparkles className="w-3 h-3 text-amber-400 animate-spin" />
+                      In Deployment
+                    </span>
+                    <span className="text-slate-500 text-xs font-mono font-bold">New Batch #2</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-black text-white">Next-Gen ASIC Fleet</h3>
+                    <p className="text-xs text-slate-300 mt-1.5 leading-relaxed">
+                      More high-yield packages & heavy-hash virtual rigs are currently undergoing server configuration. Stay tuned!
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-slate-800/80 flex items-center justify-between">
+                  <div className="font-mono text-xs text-amber-400 font-bold flex items-center gap-1.5">
+                    <Cpu className="w-4 h-4 text-amber-400" />
+                    <span>More Packages On The Way</span>
+                  </div>
+                  <span className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/40 rounded-xl text-amber-300 text-xs font-bold font-mono shadow-sm">
+                    Coming Soon 🚀
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* More Packages On The Way Announcement Banner */}
