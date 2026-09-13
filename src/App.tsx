@@ -10,9 +10,8 @@ import { WithdrawModal } from './components/WithdrawModal';
 import { ReferralModal } from './components/ReferralModal';
 import { ReferralBonusModal } from './components/ReferralBonusModal';
 import { ConfirmPurchaseModal } from './components/ConfirmPurchaseModal';
-import { FaqSection } from './components/FaqSection';
+import { FaqModal } from './components/FaqModal';
 import { AdminPanel } from './components/AdminPanel';
-import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
 import { FloatingSupport } from './components/FloatingSupport';
 import { AnimatedCryptoBackground } from './components/AnimatedCryptoBackground';
@@ -29,6 +28,7 @@ const MainContent: React.FC = () => {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState<boolean>(false);
   const [isReferralOpen, setIsReferralOpen] = useState<boolean>(false);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
+  const [isFaqOpen, setIsFaqOpen] = useState<boolean>(false);
   const [selectedPackageToBuy, setSelectedPackageToBuy] = useState<MinerPackage | null>(null);
   const [purchaseNotice, setPurchaseNotice] = useState<string>('');
 
@@ -143,6 +143,7 @@ const MainContent: React.FC = () => {
           else setIsReferralOpen(true);
         }}
         openAdmin={() => setIsAdminOpen(true)}
+        openFaq={() => setIsFaqOpen(true)}
       />
 
       {/* Vertical Container */}
@@ -345,9 +346,6 @@ const MainContent: React.FC = () => {
         {/* TAB 3: Transactions */}
         {activeTab === 'history' && <HistoryTab />}
 
-        {/* FAQ Section */}
-        <FaqSection />
-
       </main>
 
       {/* Social Proof Live Ugandan Activity Ticker (Slower rotation between 5s-30s) */}
@@ -368,10 +366,8 @@ const MainContent: React.FC = () => {
         onConfirm={handleConfirmPurchase} 
         onClose={() => setSelectedPackageToBuy(null)} 
       />
+      <FaqModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
       <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
-
-      {/* Footer */}
-      <Footer onOpenAdmin={() => setIsAdminOpen(true)} onNavigateTab={(tab) => setActiveTab(tab)} />
     </div>
   );
 };

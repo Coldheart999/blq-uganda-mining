@@ -11,6 +11,7 @@ interface NavbarProps {
   openWithdraw: () => void;
   openReferral: () => void;
   openAdmin: () => void;
+  openFaq: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -20,13 +21,34 @@ export const Navbar: React.FC<NavbarProps> = ({
   openDeposit,
   openWithdraw,
   openReferral,
-  openAdmin
+  openAdmin,
+  openFaq
 }) => {
   const { currentUser, logout } = useApp();
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
+  const [logoClicks, setLogoClicks] = useState<number>(0);
+  const logoTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('blq_dark_mode') === 'true'; // Default is false (Original Golden Amber Theme)
   });
+
+  const handleLogoSecretClick = () => {
+    setActiveTab('store');
+    const nextClicks = logoClicks + 1;
+    setLogoClicks(nextClicks);
+
+    if (logoTimerRef.current) clearTimeout(logoTimerRef.current);
+
+    if (nextClicks >= 5) {
+      setLogoClicks(0);
+      openAdmin();
+    } else {
+      logoTimerRef.current = setTimeout(() => {
+        setLogoClicks(0);
+      }, 2500);
+    }
+  };
 
   useEffect(() => {
     if (isDarkMode) {
@@ -47,11 +69,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Main Navbar Header */}
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           
-          {/* Brand Logo */}
-          <BlqLogo 
-            size="md" 
-            onClick={() => setActiveTab('store')} 
-          />
+          {/* Brand Logo with 5-Tap Secret Admin Gesture */}
+          <div onClick={handleLogoSecretClick} className="cursor-pointer select-none">
+            <BlqLogo size="md" />
+          </div>
 
           {/* Center Navigation Tabs (Desktop) */}
           <nav className="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs font-medium">
@@ -141,21 +162,34 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </button>
 
                   {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50">
+                    <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-2 z-50 animate-fade-in">
                       <div className="px-3 py-2 border-b border-slate-800">
                         <p className="text-xs font-bold text-white truncate">{currentUser.name}</p>
                         <p className="text-[11px] text-slate-400 font-mono">{currentUser.phone}</p>
                       </div>
+
                       <button
                         onClick={() => {
                           openReferral();
                           setUserDropdownOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-xs text-amber-400 hover:bg-amber-950/30 rounded-lg flex items-center gap-2 mt-1"
+                        className="w-full text-left px-3 py-2 text-xs text-amber-400 hover:bg-amber-950/30 rounded-lg flex items-center gap-2 mt-1 font-semibold"
                       >
                         <Gift className="w-3.5 h-3.5" />
                         Refer & Earn UGX 15,000
                       </button>
+
+                      <button
+                        onClick={() => {
+                          openFaq();
+                          setUserDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 rounded-lg flex items-center gap-2 transition-colors font-medium"
+                      >
+                        <span>📖</span>
+                        <span>FAQs & Investor Guide</span>
+                      </button>
+
                       <button
                         onClick={() => {
                           openDeposit();
@@ -166,6 +200,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <ArrowDownLeft className="w-3.5 h-3.5" />
                         Deposit Funds
                       </button>
+
                       <button
                         onClick={() => {
                           openWithdraw();
@@ -176,6 +211,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <ArrowUpRight className="w-3.5 h-3.5" />
                         Withdraw Profits
                       </button>
+
                       <button
                         onClick={toggleDarkMode}
                         className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 rounded-lg flex items-center justify-between mt-1 transition-colors"
@@ -194,6 +230,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           {isDarkMode ? 'ON' : 'OFF'}
                         </span>
                       </button>
+
                       <button
                         onClick={() => {
                           logout();
@@ -209,13 +246,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </>
             ) : (
-              <button
-                onClick={openAuth}
-                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition-all active:scale-95"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>Sign In</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={openFaq}
+                  className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/80 transition-colors text-xs flex items-center gap-1 font-medium"
+                  title="FAQs & Help"
+                >
+                  <span>📖</span>
+                  <span className="hidden sm:inline">FAQ</span>
+                </button>
+
+                <button
+                  onClick={openAuth}
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition-all active:scale-95"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
