@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
-import { UgandaFlag } from './UgandaFlag';
-import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -24,7 +23,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   openAdmin
 }) => {
   const { currentUser, logout } = useApp();
-  const [logoClicks, setLogoClicks] = useState<number>(0);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('blq_dark_mode') === 'true'; // Default is false (Original Golden Amber Theme)
@@ -43,47 +41,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     setIsDarkMode(prev => !prev);
   };
 
-  // Hidden secret gesture: 5 rapid clicks on "Live Node" pill opens Admin Panel
-  const handleNodeClick = () => {
-    const nextClicks = logoClicks + 1;
-    setLogoClicks(nextClicks);
-    if (nextClicks >= 5) {
-      openAdmin();
-      setLogoClicks(0);
-    }
-  };
-
   return (
     <>
       <header className="sticky top-0 z-40 bg-[#0F141C]/95 backdrop-blur-md border-b border-slate-800/80">
-        {/* Clean top notification bar */}
-        <div className="bg-[#0A0D14] px-3 sm:px-4 py-1.5 text-xs border-b border-slate-800/60 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {/* Uganda Flag Badge */}
-            <UgandaFlag size="sm" />
-            <span className="font-semibold text-slate-300 text-[11px] truncate">BLQ Pool Uganda</span>
-            <span className="text-slate-700">•</span>
-            <span 
-              onClick={handleNodeClick}
-              className="text-emerald-400 font-mono text-[10px] sm:text-[11px] flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
-              title="BLQ Node Status"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              Live Node
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-mono">
-            <button
-              onClick={openReferral}
-              className="animate-smooth-hover text-amber-300 font-extrabold hover:text-white flex items-center gap-1.5 bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-500/25 px-2.5 py-0.5 rounded-full border border-amber-400/40 shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95"
-            >
-              <Gift className="w-3.5 h-3.5 text-yellow-300" />
-              <span className="tracking-wide">🎁 Earn UGX 15K</span>
-            </button>
-          </div>
-        </div>
-
         {/* Main Navbar Header */}
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           

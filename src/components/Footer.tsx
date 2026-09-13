@@ -8,6 +8,17 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
+  const [footerClicks, setFooterClicks] = React.useState<number>(0);
+
+  const handleFooterSecretClick = () => {
+    const nextClicks = footerClicks + 1;
+    setFooterClicks(nextClicks);
+    if (nextClicks >= 5) {
+      onOpenAdmin?.();
+      setFooterClicks(0);
+    }
+  };
+
   return (
     <footer className="border-t border-slate-800/80 bg-[#070A0F] text-slate-400 py-10 px-4 mt-20">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -76,8 +87,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
 
       </div>
 
-      <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-500">
-        <div>© {new Date().getFullYear()} BLQ Platform Uganda. All rights reserved. Built for Ugandan Investors.</div>
+      <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-500 select-none">
+        <div 
+          onClick={handleFooterSecretClick}
+          className="cursor-pointer hover:text-slate-400 transition-colors"
+          title="BLQ Mining Platform Uganda"
+        >
+          © {new Date().getFullYear()} BLQ Platform Uganda. All rights reserved. Built for Ugandan Investors.
+        </div>
         
         {/* Hidden secret lock icon for Admin access */}
         <button
