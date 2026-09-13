@@ -29,8 +29,8 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
     setError('');
     setSuccessMsg('');
 
-    if (numAmount < 10000) {
-      setError('Minimum withdrawal amount is UGX 10,000');
+    if (numAmount < 3000) {
+      setError('Minimum withdrawal amount is UGX 3,000');
       return;
     }
 
@@ -184,7 +184,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Minimum UGX 10,000"
+              placeholder="Minimum UGX 3,000"
               className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-amber-400 font-mono font-bold text-lg focus:outline-none focus:border-amber-400"
               required
             />

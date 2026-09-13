@@ -275,7 +275,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return clean;
   };
 
-  // Real Account Registration with local storage persistence
+  // Real Account Registration with local storage persistence and referral tracking
   const registerAccount = (phone: string, password: string, name?: string) => {
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
@@ -286,6 +286,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: 'An account with this phone number already exists. Please Sign In with your password.' };
     }
 
+    const pendingRef = localStorage.getItem('blq_pending_ref') || undefined;
+    const userReferralCode = `BLQ-${phone.slice(-5)}`;
+
     const newUser: User = {
       id: 'usr_' + Date.now(),
       phone,
@@ -295,6 +298,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       totalDepositedUGX: 0,
       totalWithdrawnUGX: 0,
       totalMinedUGX: 0,
+      referralCode: userReferralCode,
+      referredBy: pendingRef,
+      referralCount: 0,
+      referralEarningsUGX: 0,
       createdAt: new Date().toISOString()
     };
 
@@ -316,6 +323,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (!account) {
       // If account does not exist on this browser/domain yet, auto-provision and log in seamlessly
+      const pendingRef = localStorage.getItem('blq_pending_ref') || undefined;
+      const userReferralCode = `BLQ-${phone.slice(-5)}`;
+
       const newUser: User = {
         id: 'usr_' + Date.now(),
         phone,
@@ -325,6 +335,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         totalDepositedUGX: 0,
         totalWithdrawnUGX: 0,
         totalMinedUGX: 0,
+        referralCode: userReferralCode,
+        referredBy: pendingRef,
+        referralCount: 0,
+        referralEarningsUGX: 0,
         createdAt: new Date().toISOString()
       };
 
@@ -338,6 +352,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (account.password !== password) {
       return { success: false, message: 'Incorrect password for this phone number. Please enter your correct password.' };
+    }
+
+    // Ensure user object has referral code if it was created earlier
+    if (!account.user.referralCode) {
+      account.user.referralCode = `BLQ-${account.phone.slice(-5)}`;
+      localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
     }
 
     setCurrentUser(account.user);
@@ -365,6 +385,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         message: `Insufficient balance! Plan cost is UGX ${pkg.priceUGX.toLocaleString()}. You have UGX ${currentUser.balanceUGX.toLocaleString()}. Please deposit funds via Mobile Money first.` 
       };
     }
+
+    const userPrevRigs = purchasedRigs.filter(r => r.userId === currentUser.id);
+    const isFirstPurchase = userPrevRigs.length === 0;
 
     const now = new Date();
     const expiry = new Date(now.getTime() + pkg.durationDays * 24 * 60 * 60 * 1000);
@@ -395,11 +418,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     if (savedAccountsStr) {
       const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
+      
+      // Update buyer account
       const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
       if (accIndex !== -1) {
         accounts[accIndex].user = updatedUser;
-        localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
       }
+
+      // Check if buyer was referred by someone and this is their FIRST miner purchase
+      if (isFirstPurchase && currentUser.referredBy) {
+        const referrerIndex = accounts.findIndex(
+          a => a.user.referralCode === currentUser.referredBy || normalizePhoneKey(a.phone) === normalizePhoneKey(currentUser.referredBy!)
+        );
+        if (referrerIndex !== -1) {
+          const referrer = accounts[referrerIndex].user;
+          const updatedReferrer: User = {
+            ...referrer,
+            balanceUGX: (referrer.balanceUGX || 0) + 15000,
+            referralCount: (referrer.referralCount || 0) + 1,
+            referralEarningsUGX: (referrer.referralEarningsUGX || 0) + 15000
+          };
+          accounts[referrerIndex].user = updatedReferrer;
+
+          if (currentUser.id === referrer.id) {
+            setCurrentUser(updatedReferrer);
+          }
+        }
+      }
+
+      localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
     }
 
     return { 
@@ -463,7 +510,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Submit Withdrawal Request
   const submitWithdrawal = (amount: number, provider: 'MTN Mobile Money' | 'Airtel Money', destinationNumber: string) => {
     if (!currentUser) return { success: false, message: 'User not logged in' };
-    if (amount < 10000) return { success: false, message: 'Minimum withdrawal amount is UGX 10,000' };
+    if (amount < 3000) return { success: false, message: 'Minimum withdrawal amount is UGX 3,000' };
     if (currentUser.balanceUGX < amount) {
       return { success: false, message: `Insufficient balance for withdrawal. Your balance is UGX ${currentUser.balanceUGX.toLocaleString()}` };
     }

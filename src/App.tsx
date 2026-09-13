@@ -11,7 +11,6 @@ import { ReferralModal } from './components/ReferralModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
-import { EarningsCalculator } from './components/EarningsCalculator';
 import { FloatingSupport } from './components/FloatingSupport';
 import { AnimatedCryptoBackground } from './components/AnimatedCryptoBackground';
 import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity, Gift, Sparkles } from 'lucide-react';
@@ -27,6 +26,15 @@ const MainContent: React.FC = () => {
   const [isReferralOpen, setIsReferralOpen] = useState<boolean>(false);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [purchaseNotice, setPurchaseNotice] = useState<string>('');
+
+  // Capture URL referral parameter on site landing (e.g., ?ref=BLQ-12345)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref');
+    if (refCode) {
+      localStorage.setItem('blq_pending_ref', refCode);
+    }
+  }, []);
 
   // Secret keyboard shortcut (Ctrl + Shift + A) for Admin Panel
   useEffect(() => {
@@ -57,17 +65,6 @@ const MainContent: React.FC = () => {
     const res = buyMiner(minerId);
     setPurchaseNotice(res.message);
     setTimeout(() => setPurchaseNotice(''), 4000);
-  };
-
-  const handleCalculatorSelect = (amountUGX: number) => {
-    const matched = minerPackages.find(p => p.priceUGX === amountUGX);
-    if (matched) {
-      handleBuyMiner(matched.id);
-    } else if (!currentUser) {
-      setIsAuthOpen(true);
-    } else {
-      setIsDepositOpen(true);
-    }
   };
 
   const filteredPackages = durationFilter === 'all' 
@@ -179,9 +176,6 @@ const MainContent: React.FC = () => {
                 <span className="font-bold text-cyan-400 text-xs sm:text-sm">MTN / AIRTEL</span>
               </div>
             </div>
-
-            {/* Profit Calculator */}
-            <EarningsCalculator onSelectPlan={handleCalculatorSelect} />
 
           </div>
         )}

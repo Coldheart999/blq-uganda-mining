@@ -22,6 +22,37 @@ export const ReferralModal: React.FC<ReferralModalProps> = ({ isOpen, onClose, o
   const referralCode = currentUser.referralCode || `BLQ-${currentUser.phone.slice(-5)}`;
   const referralLink = `${window.location.origin}/?ref=${referralCode}`;
 
+  // Get list of referred users from localStorage
+  const getReferredUsers = () => {
+    if (!currentUser) return [];
+    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
+    if (!savedAccountsStr) return [];
+    try {
+      const accounts: Array<{ phone: string; user: any }> = JSON.parse(savedAccountsStr);
+      const myCode = currentUser.referralCode || `BLQ-${currentUser.phone.slice(-5)}`;
+      const savedRigsStr = localStorage.getItem('blq_purchased_rigs');
+      const allRigs: Array<{ userId: string }> = savedRigsStr ? JSON.parse(savedRigsStr) : [];
+
+      return accounts
+        .filter(a => a.user.referredBy === myCode || a.user.referredBy === currentUser.phone)
+        .map(a => {
+          const userRigs = allRigs.filter(r => r.userId === a.user.id);
+          const isActivated = userRigs.length > 0;
+          return {
+            id: a.user.id,
+            name: a.user.name,
+            phone: a.user.phone,
+            createdAt: a.user.createdAt,
+            isActivated
+          };
+        });
+    } catch {
+      return [];
+    }
+  };
+
+  const referredUsers = getReferredUsers();
+
   const handleCopyLink = () => {
     if (!isReferralActivated) return;
     navigator.clipboard.writeText(referralLink);
@@ -125,12 +156,57 @@ export const ReferralModal: React.FC<ReferralModalProps> = ({ isOpen, onClose, o
             <div className="grid grid-cols-2 gap-3 pt-2 font-mono text-xs">
               <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center space-y-1">
                 <span className="text-slate-400 block text-[10px] uppercase">Friends Invited</span>
-                <span className="text-lg font-bold text-white">{currentUser.referralCount || 0}</span>
+                <span className="text-lg font-bold text-white">{referredUsers.length}</span>
               </div>
               <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center space-y-1">
                 <span className="text-slate-400 block text-[10px] uppercase">Commission Earned</span>
                 <span className="text-lg font-bold text-amber-400">UGX {(currentUser.referralEarningsUGX || 0).toLocaleString()}</span>
               </div>
+            </div>
+
+            {/* Referred Members Section */}
+            <div className="pt-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-extrabold text-white flex items-center gap-1.5 font-mono">
+                  <Users className="w-4 h-4 text-amber-400" />
+                  Your Invited Investors ({referredUsers.length})
+                </h4>
+              </div>
+
+              {referredUsers.length === 0 ? (
+                <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-2xl text-center space-y-1">
+                  <p className="text-xs text-slate-400">No friends invited yet.</p>
+                  <p className="text-[11px] text-slate-500 font-mono">Share your link via WhatsApp or copy link above!</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                  {referredUsers.map((usr) => (
+                    <div key={usr.id} className="p-3 bg-slate-950 border border-slate-800/80 rounded-2xl flex items-center justify-between text-xs">
+                      <div>
+                        <div className="font-bold text-white flex items-center gap-1.5">
+                          {usr.name}
+                          <span className="font-mono text-[10px] text-slate-400">
+                            ({usr.phone.slice(0, 3)}****{usr.phone.slice(-3)})
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          Joined {new Date(usr.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {usr.isActivated ? (
+                        <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px] rounded-full flex items-center gap-1 border border-emerald-500/30">
+                          <Check className="w-3 h-3 text-emerald-400" />
+                          Activated (+UGX 15k)
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 bg-amber-500/15 text-amber-400 font-mono font-semibold text-[10px] rounded-full border border-amber-500/30">
+                          Pending Activation
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ) : (
