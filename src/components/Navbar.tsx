@@ -27,7 +27,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [logoClicks, setLogoClicks] = useState<number>(0);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    return localStorage.getItem('blq_dark_mode') === 'true';
+    const saved = localStorage.getItem('blq_dark_mode');
+    return saved !== null ? saved === 'true' : true; // Default is true!
   });
 
   useEffect(() => {
