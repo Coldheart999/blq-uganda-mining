@@ -13,7 +13,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { registerAccount, loginAccount } = useApp();
   
   const [isLoginMode, setIsLoginMode] = useState<boolean>(true);
-  const [phone, setPhone] = useState<string>('0771234567');
+  const [phone, setPhone] = useState<string>('');
   const [fullName, setFullName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
