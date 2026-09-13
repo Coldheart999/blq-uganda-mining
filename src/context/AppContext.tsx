@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { User, MinerPackage, PurchasedRig, DepositRequest, WithdrawalRequest, AdminConfig } from '../types';
+import { fetchCloudData, saveCloudData } from '../services/cloudSync';
 
 // Clean, attractive investment plans tailored for Ugandan investors
 export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
@@ -171,9 +172,9 @@ interface AppContextType {
   adminConfig: AdminConfig;
   setAdminConfig: React.Dispatch<React.SetStateAction<AdminConfig>>;
   
-  // Auth methods
-  registerAccount: (phone: string, password: string, name?: string) => { success: boolean; message: string; user?: User };
-  loginAccount: (phone: string, password: string) => { success: boolean; message: string; user?: User };
+  // Auth methods (Async with cross-device cloud sync)
+  registerAccount: (phone: string, password: string, name?: string) => Promise<{ success: boolean; message: string; user?: User }>;
+  loginAccount: (phone: string, password: string) => Promise<{ success: boolean; message: string; user?: User }>;
   logout: () => void;
   
   // User Actions
@@ -193,6 +194,43 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Helper for flexible canonical phone matching across 077..., +25677..., 25677..., 77...
+const normalizePhoneKey = (p: string): string => {
+  if (!p) return '';
+  const digits = p.replace(/\D/g, '');
+  if (digits.startsWith('256') && digits.length >= 12) return digits.slice(3);
+  if (digits.startsWith('0') && digits.length === 10) return digits.slice(1);
+  if (digits.length >= 9) return digits.slice(-9);
+  return digits;
+};
+
+// Merge accounts cleanly without duplicates
+const mergeAccounts = (local: StoredAccount[], cloud: StoredAccount[]): StoredAccount[] => {
+  const map = new Map<string, StoredAccount>();
+  for (const acc of local) {
+    map.set(normalizePhoneKey(acc.phone), acc);
+  }
+  for (const acc of cloud) {
+    const key = normalizePhoneKey(acc.phone);
+    if (!map.has(key)) {
+      map.set(key, acc);
+    } else {
+      // Merge user state, keeping most up-to-date balance/data
+      const localAcc = map.get(key)!;
+      const mergedUser: User = {
+        ...localAcc.user,
+        ...acc.user,
+        balanceUGX: Math.max(localAcc.user.balanceUGX || 0, acc.user.balanceUGX || 0),
+        totalDepositedUGX: Math.max(localAcc.user.totalDepositedUGX || 0, acc.user.totalDepositedUGX || 0),
+        totalWithdrawnUGX: Math.max(localAcc.user.totalWithdrawnUGX || 0, acc.user.totalWithdrawnUGX || 0),
+        totalMinedUGX: Math.max(localAcc.user.totalMinedUGX || 0, acc.user.totalMinedUGX || 0)
+      };
+      map.set(key, { ...localAcc, password: acc.password || localAcc.password, user: mergedUser });
+    }
+  }
+  return Array.from(map.values());
+};
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -222,6 +260,120 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [liveUnclaimedYield, setLiveUnclaimedYield] = useState<number>(0);
 
+  // Local Storage Helpers
+  const getAllStoredAccounts = (): StoredAccount[] => {
+    try {
+      const primary = localStorage.getItem('blq_user_accounts');
+      if (primary) {
+        const parsed = JSON.parse(primary);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localStorage.setItem('blq_user_accounts_backup', primary);
+          return parsed;
+        }
+      }
+      const backup = localStorage.getItem('blq_user_accounts_backup');
+      if (backup) {
+        const parsedBackup = JSON.parse(backup);
+        if (Array.isArray(parsedBackup) && parsedBackup.length > 0) {
+          localStorage.setItem('blq_user_accounts', backup);
+          return parsedBackup;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading stored accounts', e);
+    }
+    return [];
+  };
+
+  const saveAllStoredAccounts = (accounts: StoredAccount[]) => {
+    try {
+      const payload = JSON.stringify(accounts);
+      localStorage.setItem('blq_user_accounts', payload);
+      localStorage.setItem('blq_user_accounts_backup', payload);
+    } catch (e) {
+      console.error('Failed to write accounts to permanent storage', e);
+    }
+  };
+
+  // INITIAL CLOUD SYNC: Run on app mount to sync data from cloud across all devices
+  useEffect(() => {
+    let isMounted = true;
+    const syncFromCloud = async () => {
+      try {
+        const [cloudAccounts, cloudRigs, cloudDeps, cloudWiths, cloudConfig] = await Promise.all([
+          fetchCloudData<StoredAccount[]>('accounts', []),
+          fetchCloudData<PurchasedRig[]>('rigs', []),
+          fetchCloudData<DepositRequest[]>('deposits', []),
+          fetchCloudData<WithdrawalRequest[]>('withdrawals', []),
+          fetchCloudData<AdminConfig | null>('admin_config', null)
+        ]);
+
+        if (!isMounted) return;
+
+        // Merge Accounts
+        const localAccounts = getAllStoredAccounts();
+        const mergedAccounts = mergeAccounts(localAccounts, cloudAccounts);
+        saveAllStoredAccounts(mergedAccounts);
+
+        // Update Rigs
+        if (cloudRigs && cloudRigs.length > 0) {
+          setPurchasedRigs(prev => {
+            const combined = [...prev];
+            for (const r of cloudRigs) {
+              if (!combined.some(existing => existing.id === r.id)) combined.push(r);
+            }
+            localStorage.setItem('blq_purchased_rigs', JSON.stringify(combined));
+            return combined;
+          });
+        }
+
+        // Update Deposits
+        if (cloudDeps && cloudDeps.length > 0) {
+          setDeposits(prev => {
+            const combined = [...prev];
+            for (const d of cloudDeps) {
+              if (!combined.some(existing => existing.id === d.id)) combined.push(d);
+            }
+            localStorage.setItem('blq_deposits', JSON.stringify(combined));
+            return combined;
+          });
+        }
+
+        // Update Withdrawals
+        if (cloudWiths && cloudWiths.length > 0) {
+          setWithdrawals(prev => {
+            const combined = [...prev];
+            for (const w of cloudWiths) {
+              if (!combined.some(existing => existing.id === w.id)) combined.push(w);
+            }
+            localStorage.setItem('blq_withdrawals', JSON.stringify(combined));
+            return combined;
+          });
+        }
+
+        // Update Admin Config
+        if (cloudConfig && cloudConfig.adminPin) {
+          setAdminConfig(cloudConfig);
+          localStorage.setItem('blq_admin_config', JSON.stringify(cloudConfig));
+        }
+
+        // If currentUser is logged in, refresh state from merged accounts
+        if (currentUser) {
+          const targetKey = normalizePhoneKey(currentUser.phone);
+          const freshAcc = mergedAccounts.find(a => normalizePhoneKey(a.phone) === targetKey);
+          if (freshAcc) {
+            setCurrentUser(freshAcc.user);
+          }
+        }
+      } catch (err) {
+        console.warn('[CloudSync] Background sync error:', err);
+      }
+    };
+
+    syncFromCloud();
+    return () => { isMounted = false; };
+  }, []);
+
   // Sync state to LocalStorage and keep accounts registry synced
   useEffect(() => {
     if (currentUser) {
@@ -232,6 +384,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (accIndex !== -1) {
         accounts[accIndex].user = currentUser;
         saveAllStoredAccounts(accounts);
+        saveCloudData('accounts', accounts);
       }
     } else {
       localStorage.removeItem('blq_current_user');
@@ -274,60 +427,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [currentUser, purchasedRigs]);
 
-  // Robust Dual Storage Access to ensure accounts are NEVER lost
-  const getAllStoredAccounts = (): StoredAccount[] => {
-    try {
-      const primary = localStorage.getItem('blq_user_accounts');
-      if (primary) {
-        const parsed = JSON.parse(primary);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          localStorage.setItem('blq_user_accounts_backup', primary);
-          return parsed;
-        }
-      }
-      // Redundant fallback to secondary backup vault
-      const backup = localStorage.getItem('blq_user_accounts_backup');
-      if (backup) {
-        const parsedBackup = JSON.parse(backup);
-        if (Array.isArray(parsedBackup) && parsedBackup.length > 0) {
-          localStorage.setItem('blq_user_accounts', backup);
-          return parsedBackup;
-        }
-      }
-    } catch (e) {
-      console.warn('Error reading stored accounts, attempting recovery', e);
-    }
-    return [];
-  };
-
-  const saveAllStoredAccounts = (accounts: StoredAccount[]) => {
-    try {
-      const payload = JSON.stringify(accounts);
-      localStorage.setItem('blq_user_accounts', payload);
-      localStorage.setItem('blq_user_accounts_backup', payload);
-    } catch (e) {
-      console.error('Failed to write accounts to permanent storage', e);
-    }
-  };
-
-  // Helper for flexible canonical phone matching across 077..., +25677..., 25677..., 77...
-  const normalizePhoneKey = (p: string): string => {
-    if (!p) return '';
-    const digits = p.replace(/\D/g, ''); // strip spaces, dashes, symbols
-    if (digits.startsWith('256') && digits.length >= 12) return digits.slice(3);
-    if (digits.startsWith('0') && digits.length === 10) return digits.slice(1);
-    if (digits.length >= 9) return digits.slice(-9); // canonical 9 digits
-    return digits;
-  };
-
-  // Real Account Registration with dual backup persistence
-  const registerAccount = (phone: string, password: string, name?: string) => {
+  // Real Account Registration with Cross-Device Cloud Sync
+  const registerAccount = async (phone: string, password: string, name?: string): Promise<{ success: boolean; message: string; user?: User }> => {
     const cleanPhone = phone.trim();
     const cleanPassword = password.trim();
-    const accounts = getAllStoredAccounts();
     const targetKey = normalizePhoneKey(cleanPhone);
 
-    const existing = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
+    // Pull latest cloud accounts to verify uniqueness across devices
+    let localAccounts = getAllStoredAccounts();
+    const cloudAccounts = await fetchCloudData<StoredAccount[]>('accounts', []);
+    const merged = mergeAccounts(localAccounts, cloudAccounts);
+
+    const existing = merged.find(a => normalizePhoneKey(a.phone) === targetKey);
     if (existing) {
       return { 
         success: false, 
@@ -355,25 +466,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const newAccount: StoredAccount = { phone: cleanPhone, password: cleanPassword, user: newUser };
-    accounts.push(newAccount);
-    saveAllStoredAccounts(accounts);
+    merged.push(newAccount);
+
+    // Save locally and push to cloud
+    saveAllStoredAccounts(merged);
+    await saveCloudData('accounts', merged);
+
     setCurrentUser(newUser);
 
     return { 
       success: true, 
-      message: 'Account created and permanently secured! Welcome to BLQ.', 
+      message: 'Account created and permanently secured across all devices! Welcome to BLQ.', 
       user: newUser 
     };
   };
 
-  // Strict Account Verification Login - always accepts existing accounts, rejects non-existent
-  const loginAccount = (phone: string, password: string) => {
+  // Strict Account Verification Login with Instant Cross-Device Cloud Lookup
+  const loginAccount = async (phone: string, password: string): Promise<{ success: boolean; message: string; user?: User }> => {
     const cleanPhone = phone.trim();
     const cleanPassword = password.trim();
-    const accounts = getAllStoredAccounts();
     const targetKey = normalizePhoneKey(cleanPhone);
 
-    const account = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
+    let accounts = getAllStoredAccounts();
+    let account = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
+
+    // If not found in local storage, query cloud database immediately
+    if (!account) {
+      const cloudAccounts = await fetchCloudData<StoredAccount[]>('accounts', []);
+      accounts = mergeAccounts(accounts, cloudAccounts);
+      saveAllStoredAccounts(accounts);
+      account = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
+    }
 
     if (!account) {
       return { 
@@ -393,6 +516,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!account.user.referralCode) {
       account.user.referralCode = `BLQ-${cleanPhone.slice(-5)}`;
       saveAllStoredAccounts(accounts);
+      saveCloudData('accounts', accounts);
+    }
+
+    // Sync down cloud rigs, deposits, withdrawals in the background
+    try {
+      const [cloudRigs, cloudDeps, cloudWiths] = await Promise.all([
+        fetchCloudData<PurchasedRig[]>('rigs', []),
+        fetchCloudData<DepositRequest[]>('deposits', []),
+        fetchCloudData<WithdrawalRequest[]>('withdrawals', [])
+      ]);
+      if (cloudRigs && cloudRigs.length > 0) {
+        setPurchasedRigs(cloudRigs);
+        localStorage.setItem('blq_purchased_rigs', JSON.stringify(cloudRigs));
+      }
+      if (cloudDeps && cloudDeps.length > 0) {
+        setDeposits(cloudDeps);
+        localStorage.setItem('blq_deposits', JSON.stringify(cloudDeps));
+      }
+      if (cloudWiths && cloudWiths.length > 0) {
+        setWithdrawals(cloudWiths);
+        localStorage.setItem('blq_withdrawals', JSON.stringify(cloudWiths));
+      }
+    } catch (e) {
+      console.warn('Post-login sync note:', e);
     }
 
     setCurrentUser(account.user);
@@ -446,7 +593,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'active'
     };
 
-    setPurchasedRigs(prev => [newRig, ...prev]);
+    const updatedRigs = [newRig, ...purchasedRigs];
+    setPurchasedRigs(updatedRigs);
+    saveCloudData('rigs', updatedRigs);
 
     const updatedUser = {
       ...currentUser,
@@ -454,51 +603,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setCurrentUser(updatedUser);
 
-    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
-    if (savedAccountsStr) {
-      const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
-      
-      // Update buyer account
-      const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
-      if (accIndex !== -1) {
-        accounts[accIndex].user = updatedUser;
-      }
+    const accounts = getAllStoredAccounts();
+    const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+    if (accIndex !== -1) {
+      accounts[accIndex].user = updatedUser;
+    }
 
-      // Check if buyer was referred by someone and this is their FIRST miner purchase
-      if (isFirstPurchase && currentUser.referredBy) {
-        const referrerIndex = accounts.findIndex(
-          a => a.user.referralCode === currentUser.referredBy || normalizePhoneKey(a.phone) === normalizePhoneKey(currentUser.referredBy!)
-        );
-        if (referrerIndex !== -1) {
-          const referrer = accounts[referrerIndex].user;
-          const sweetNotif = {
-            id: 'notif_' + Date.now(),
-            title: '🎉 Sweet News! UGX 15,000 Bonus Received!',
-            message: `Congratulations! Your referred investor ${currentUser.name} (${currentUser.phone.slice(0, 3)}****${currentUser.phone.slice(-3)}) has successfully activated a miner! UGX 15,000 referral commission has been credited directly to your withdrawable balance. Keep sharing to earn more! 🌟💖`,
-            amountUGX: 15000,
-            referredName: currentUser.name,
-            referredPhone: currentUser.phone,
-            createdAt: new Date().toISOString(),
-            read: false
-          };
+    // Check referral bonus on first miner purchase
+    if (isFirstPurchase && currentUser.referredBy) {
+      const referrerIndex = accounts.findIndex(
+        a => a.user.referralCode === currentUser.referredBy || normalizePhoneKey(a.phone) === normalizePhoneKey(currentUser.referredBy!)
+      );
+      if (referrerIndex !== -1) {
+        const referrer = accounts[referrerIndex].user;
+        const sweetNotif = {
+          id: 'notif_' + Date.now(),
+          title: '🎉 Sweet News! UGX 15,000 Bonus Received!',
+          message: `Congratulations! Your referred investor ${currentUser.name} (${currentUser.phone.slice(0, 3)}****${currentUser.phone.slice(-3)}) has successfully activated a miner! UGX 15,000 referral commission has been credited directly to your withdrawable balance. Keep sharing to earn more! 🌟💖`,
+          amountUGX: 15000,
+          referredName: currentUser.name,
+          referredPhone: currentUser.phone,
+          createdAt: new Date().toISOString(),
+          read: false
+        };
 
-          const updatedReferrer: User = {
-            ...referrer,
-            balanceUGX: (referrer.balanceUGX || 0) + 15000,
-            referralCount: (referrer.referralCount || 0) + 1,
-            referralEarningsUGX: (referrer.referralEarningsUGX || 0) + 15000,
-            notifications: [sweetNotif, ...(referrer.notifications || [])]
-          };
-          accounts[referrerIndex].user = updatedReferrer;
+        const updatedReferrer: User = {
+          ...referrer,
+          balanceUGX: (referrer.balanceUGX || 0) + 15000,
+          referralCount: (referrer.referralCount || 0) + 1,
+          referralEarningsUGX: (referrer.referralEarningsUGX || 0) + 15000,
+          notifications: [sweetNotif, ...(referrer.notifications || [])]
+        };
+        accounts[referrerIndex].user = updatedReferrer;
 
-          if (currentUser.id === referrer.id) {
-            setCurrentUser(updatedReferrer);
-          }
+        if (currentUser.id === referrer.id) {
+          setCurrentUser(updatedReferrer);
         }
       }
-
-      localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
     }
+
+    saveAllStoredAccounts(accounts);
+    saveCloudData('accounts', accounts);
 
     return { 
       success: true, 
@@ -522,14 +667,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(updatedUser);
     setLiveUnclaimedYield(0);
 
-    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
-    if (savedAccountsStr) {
-      const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
-      const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
-      if (accIndex !== -1) {
-        accounts[accIndex].user = updatedUser;
-        localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
-      }
+    const accounts = getAllStoredAccounts();
+    const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+    if (accIndex !== -1) {
+      accounts[accIndex].user = updatedUser;
+      saveAllStoredAccounts(accounts);
+      saveCloudData('accounts', accounts);
     }
   };
 
@@ -551,7 +694,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    setDeposits(prev => [newDeposit, ...prev]);
+    const updatedDeposits = [newDeposit, ...deposits];
+    setDeposits(updatedDeposits);
+    saveCloudData('deposits', updatedDeposits);
+
     return { 
       success: true, 
       message: `Thank you so much! Your deposit of UGX ${amount.toLocaleString()} has been received. Please wait gently while our accounts manager verifies your ${provider} transaction ID (${transactionId}). Your wallet balance will be updated automatically in just a moment!` 
@@ -593,62 +739,93 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setCurrentUser(updatedUser);
 
-    setWithdrawals(prev => [newWithdrawal, ...prev]);
-    return {
-      success: true,
-      message: `Withdrawal request of UGX ${amount.toLocaleString()} submitted! You will receive UGX ${netAmount.toLocaleString()} on ${destinationNumber} once approved.`
+    const updatedWithdrawals = [newWithdrawal, ...withdrawals];
+    setWithdrawals(updatedWithdrawals);
+    saveCloudData('withdrawals', updatedWithdrawals);
+
+    const accounts = getAllStoredAccounts();
+    const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+    if (accIndex !== -1) {
+      accounts[accIndex].user = updatedUser;
+      saveAllStoredAccounts(accounts);
+      saveCloudData('accounts', accounts);
+    }
+
+    return { 
+      success: true, 
+      message: `Withdrawal request of UGX ${amount.toLocaleString()} submitted! You will receive UGX ${netAmount.toLocaleString()} on ${destinationNumber} once approved.` 
     };
   };
 
   // Admin Actions
   const approveDeposit = (depositId: string) => {
-    setDeposits(prev => prev.map(dep => {
+    const updated = deposits.map(dep => {
       if (dep.id === depositId && dep.status === 'pending') {
-        if (currentUser && currentUser.id === dep.userId) {
-          setCurrentUser({
-            ...currentUser,
-            balanceUGX: currentUser.balanceUGX + dep.amountUGX,
-            totalDepositedUGX: currentUser.totalDepositedUGX + dep.amountUGX
-          });
+        const accounts = getAllStoredAccounts();
+        const accIndex = accounts.findIndex(a => a.user.id === dep.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(dep.userPhone));
+        if (accIndex !== -1) {
+          accounts[accIndex].user.balanceUGX = (accounts[accIndex].user.balanceUGX || 0) + dep.amountUGX;
+          accounts[accIndex].user.totalDepositedUGX = (accounts[accIndex].user.totalDepositedUGX || 0) + dep.amountUGX;
+          saveAllStoredAccounts(accounts);
+          saveCloudData('accounts', accounts);
+          if (currentUser && currentUser.id === dep.userId) {
+            setCurrentUser({ ...accounts[accIndex].user });
+          }
         }
-        return { ...dep, status: 'approved' };
+        return { ...dep, status: 'approved' as const };
       }
       return dep;
-    }));
+    });
+    setDeposits(updated);
+    saveCloudData('deposits', updated);
   };
 
   const rejectDeposit = (depositId: string) => {
-    setDeposits(prev => prev.map(dep => dep.id === depositId ? { ...dep, status: 'rejected' } : dep));
+    const updated = deposits.map(dep => dep.id === depositId ? { ...dep, status: 'rejected' as const } : dep);
+    setDeposits(updated);
+    saveCloudData('deposits', updated);
   };
 
   const approveWithdrawal = (withdrawalId: string) => {
-    setWithdrawals(prev => prev.map(wth => {
+    const updated = withdrawals.map(wth => {
       if (wth.id === withdrawalId && wth.status === 'pending') {
-        if (currentUser && currentUser.id === wth.userId) {
-          setCurrentUser({
-            ...currentUser,
-            totalWithdrawnUGX: currentUser.totalWithdrawnUGX + wth.amountUGX
-          });
+        const accounts = getAllStoredAccounts();
+        const accIndex = accounts.findIndex(a => a.user.id === wth.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(wth.userPhone));
+        if (accIndex !== -1) {
+          accounts[accIndex].user.totalWithdrawnUGX = (accounts[accIndex].user.totalWithdrawnUGX || 0) + wth.amountUGX;
+          saveAllStoredAccounts(accounts);
+          saveCloudData('accounts', accounts);
+          if (currentUser && currentUser.id === wth.userId) {
+            setCurrentUser({ ...accounts[accIndex].user });
+          }
         }
-        return { ...wth, status: 'approved' };
+        return { ...wth, status: 'approved' as const };
       }
       return wth;
-    }));
+    });
+    setWithdrawals(updated);
+    saveCloudData('withdrawals', updated);
   };
 
   const rejectWithdrawal = (withdrawalId: string) => {
-    setWithdrawals(prev => prev.map(wth => {
+    const updated = withdrawals.map(wth => {
       if (wth.id === withdrawalId && wth.status === 'pending') {
-        if (currentUser && currentUser.id === wth.userId) {
-          setCurrentUser({
-            ...currentUser,
-            balanceUGX: currentUser.balanceUGX + wth.amountUGX
-          });
+        const accounts = getAllStoredAccounts();
+        const accIndex = accounts.findIndex(a => a.user.id === wth.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(wth.userPhone));
+        if (accIndex !== -1) {
+          accounts[accIndex].user.balanceUGX = (accounts[accIndex].user.balanceUGX || 0) + wth.amountUGX;
+          saveAllStoredAccounts(accounts);
+          saveCloudData('accounts', accounts);
+          if (currentUser && currentUser.id === wth.userId) {
+            setCurrentUser({ ...accounts[accIndex].user });
+          }
         }
-        return { ...wth, status: 'rejected' };
+        return { ...wth, status: 'rejected' as const };
       }
       return wth;
-    }));
+    });
+    setWithdrawals(updated);
+    saveCloudData('withdrawals', updated);
   };
 
   return (

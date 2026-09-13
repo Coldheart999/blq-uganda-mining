@@ -23,11 +23,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
     setError('');
     setSuccessMsg('');
 
@@ -44,33 +47,43 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
 
     const fullFormattedPhone = phoneVal.formattedPhone || cleanPhone;
+    setIsSubmitting(true);
 
-    if (isLoginMode) {
-      // Strict verification login
-      const res = loginAccount(fullFormattedPhone, password);
-      if (!res.success) {
-        setError(res.message);
-        return;
+    try {
+      if (isLoginMode) {
+        // Strict verification login with cross-device cloud sync
+        const res = await loginAccount(fullFormattedPhone, password);
+        if (!res.success) {
+          setError(res.message);
+          setIsSubmitting(false);
+          return;
+        }
+        setSuccessMsg('Welcome back! Login successful.');
+      } else {
+        // Real registration with cross-device cloud sync
+        if (password !== confirmPassword) {
+          setError('Passwords do not match. Please re-enter.');
+          setIsSubmitting(false);
+          return;
+        }
+        const res = await registerAccount(fullFormattedPhone, password, fullName.trim() || undefined);
+        if (!res.success) {
+          setError(res.message);
+          setIsSubmitting(false);
+          return;
+        }
+        setSuccessMsg('Account created successfully! Welcome to BLQ.');
       }
-      setSuccessMsg('Welcome back! Login successful.');
-    } else {
-      // Real registration
-      if (password !== confirmPassword) {
-        setError('Passwords do not match. Please re-enter.');
-        return;
-      }
-      const res = registerAccount(fullFormattedPhone, password, fullName.trim() || undefined);
-      if (!res.success) {
-        setError(res.message);
-        return;
-      }
-      setSuccessMsg('Account created successfully! Welcome to BLQ.');
+      
+      setTimeout(() => {
+        setSuccessMsg('');
+        setIsSubmitting(false);
+        onClose();
+      }, 1200);
+    } catch (err: any) {
+      setError(err?.message || 'Authentication error. Please check your network and try again.');
+      setIsSubmitting(false);
     }
-    
-    setTimeout(() => {
-      setSuccessMsg('');
-      onClose();
-    }, 1200);
   };
 
   return (
@@ -299,10 +312,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-emerald-400 hover:from-amber-400 hover:to-emerald-300 text-slate-950 font-black rounded-xl text-sm shadow-xl shadow-amber-500/20 transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+            className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-emerald-400 hover:from-amber-400 hover:to-emerald-300 disabled:opacity-60 text-slate-950 font-black rounded-xl text-sm shadow-xl shadow-amber-500/20 transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
           >
-            <Zap className="w-4 h-4 fill-slate-950" />
-            <span>{isLoginMode ? 'Sign In to Farm Dashboard' : 'Start Mining & Earn Profits'}</span>
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+                <span>Connecting to Cloud Vault...</span>
+              </span>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 fill-slate-950" />
+                <span>{isLoginMode ? 'Sign In to Farm Dashboard' : 'Start Mining & Earn Profits'}</span>
+              </>
+            )}
           </button>
         </form>
 
