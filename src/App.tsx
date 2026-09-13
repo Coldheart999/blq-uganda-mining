@@ -9,6 +9,7 @@ import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { ReferralModal } from './components/ReferralModal';
 import { ReferralBonusModal } from './components/ReferralBonusModal';
+import { ConfirmPurchaseModal } from './components/ConfirmPurchaseModal';
 import { FaqSection } from './components/FaqSection';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
@@ -16,7 +17,7 @@ import { SocialProofTicker } from './components/SocialProofTicker';
 import { FloatingSupport } from './components/FloatingSupport';
 import { AnimatedCryptoBackground } from './components/AnimatedCryptoBackground';
 import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity, Gift, Sparkles } from 'lucide-react';
-import { ReferralNotification } from './types';
+import { MinerPackage, ReferralNotification } from './types';
 
 const MainContent: React.FC = () => {
   const { currentUser, setCurrentUser, minerPackages, buyMiner } = useApp();
@@ -28,6 +29,7 @@ const MainContent: React.FC = () => {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState<boolean>(false);
   const [isReferralOpen, setIsReferralOpen] = useState<boolean>(false);
   const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
+  const [selectedPackageToBuy, setSelectedPackageToBuy] = useState<MinerPackage | null>(null);
   const [purchaseNotice, setPurchaseNotice] = useState<string>('');
 
   // Unread Referral Bonus Notification
@@ -93,7 +95,13 @@ const MainContent: React.FC = () => {
       return;
     }
 
-    const res = buyMiner(minerId);
+    // Open hospitable confirmation modal to ask if they are sure
+    setSelectedPackageToBuy(pkg);
+  };
+
+  const handleConfirmPurchase = (packageId: string) => {
+    setSelectedPackageToBuy(null);
+    const res = buyMiner(packageId);
     setPurchaseNotice(res.message);
     setTimeout(() => setPurchaseNotice(''), 4000);
   };
@@ -316,6 +324,12 @@ const MainContent: React.FC = () => {
       <WithdrawModal isOpen={isWithdrawOpen} onClose={() => setIsWithdrawOpen(false)} />
       <ReferralModal isOpen={isReferralOpen} onClose={() => setIsReferralOpen(false)} onGoToStore={() => setActiveTab('store')} />
       <ReferralBonusModal notification={unreadBonusNotif} onClose={handleDismissBonusNotif} />
+      <ConfirmPurchaseModal 
+        packageToBuy={selectedPackageToBuy} 
+        userBalance={currentUser ? currentUser.balanceUGX : 0} 
+        onConfirm={handleConfirmPurchase} 
+        onClose={() => setSelectedPackageToBuy(null)} 
+      />
       <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
 
       {/* Footer */}
