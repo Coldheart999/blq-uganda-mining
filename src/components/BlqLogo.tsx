@@ -7,6 +7,8 @@ interface BlqLogoProps {
   showSubtitle?: boolean;
 }
 
+const RANDOM_EMOJIS = ['💖', '❤️', '✨', '🌟', '🥰', '💎', '🚀', '🔥', '🎉', '👑', '💸', '🤑', '🍀', '💐', '🌸', '💫', '🦄', '🍰', '🍭', '🍯', '🏆', '🌈', '🌹', '🥂', '⚡', '💰'];
+
 const CUTE_MESSAGES = [
   "You are doing amazing today! 💖",
   "Thank you for being a star BLQ investor! 🌟",
@@ -15,7 +17,29 @@ const CUTE_MESSAGES = [
   "We appreciate you so much! 🥰",
   "Keep glowing and growing your wealth! 💎",
   "Wishing you a blessed day ahead! 💖",
-  "You are our favorite investor! 💖"
+  "You are our favorite investor! 👑",
+  "May your mining profits multiply today! 🚀",
+  "Your financial freedom journey is unstoppable! 🔥",
+  "Smile! Great profits are on their way to you! 🌸",
+  "You've got that investor magic touch! ✨",
+  "Sending you hugs, happiness and high hash rate! 🤗",
+  "Big things are coming your way! 💰",
+  "You are creating generational wealth! 🏆",
+  "Uganda's top investor right here! 🇺🇬✨",
+  "Stay awesome, stay winning! 💫",
+  "Every small step brings you closer to your dreams! 🌟",
+  "May your wallet overflow with blessings! 💸",
+  "You bring positive energy to BLQ! 🌈",
+  "Keep that beautiful smile on your face! 💖",
+  "Today is going to be a lucky day for you! 🍀",
+  "Smart investors make smart moves like you! 🧠💡",
+  "We are so grateful to have you with us! 💐",
+  "To the moon and beyond! 🚀🌙",
+  "You are a true champion! 🥇",
+  "Your dedication will pay off in abundance! 🍯",
+  "Good vibes, positive minds, big profits! 🥂",
+  "Never forget how capable and powerful you are! ⚡",
+  "Sending you virtual roses and good luck! 🌹"
 ];
 
 export const BlqLogo: React.FC<BlqLogoProps> = ({ 
@@ -24,7 +48,7 @@ export const BlqLogo: React.FC<BlqLogoProps> = ({
   showSubtitle = true 
 }) => {
   const [activeMessage, setActiveMessage] = useState<string | null>(null);
-  const [hearts, setHearts] = useState<Array<{ id: number; left: number }>>([]);
+  const [particles, setParticles] = useState<Array<{ id: number; emoji: string; left: number; speed: number }>>([]);
 
   const iconBoxSizes = {
     sm: 'w-9 h-9',
@@ -41,45 +65,49 @@ export const BlqLogo: React.FC<BlqLogoProps> = ({
   const handleLogoClick = (e: React.MouseEvent) => {
     if (onClick) onClick();
 
-    // Trigger sweet heart popover easter egg
+    // Trigger random sweet message
     const randomMsg = CUTE_MESSAGES[Math.floor(Math.random() * CUTE_MESSAGES.length)];
     setActiveMessage(randomMsg);
 
-    const newHearts = Array.from({ length: 5 }).map((_, i) => ({
-      id: Date.now() + i,
-      left: Math.random() * 80 - 40
+    // Generate random particle emojis
+    const newParticles = Array.from({ length: 7 }).map((_, i) => ({
+      id: Date.now() + i + Math.random(),
+      emoji: RANDOM_EMOJIS[Math.floor(Math.random() * RANDOM_EMOJIS.length)],
+      left: Math.random() * 120 - 60,
+      speed: Math.random() * 0.5 + 0.8
     }));
-    setHearts(prev => [...prev, ...newHearts]);
+    setParticles(prev => [...prev, ...newParticles]);
 
     setTimeout(() => {
       setActiveMessage(null);
-    }, 3200);
+    }, 3500);
 
     setTimeout(() => {
-      setHearts([]);
-    }, 2000);
+      setParticles([]);
+    }, 2200);
   };
 
   return (
     <div className="relative inline-block">
       
-      {/* Floating Hearts Animation */}
-      {hearts.map(h => (
+      {/* Floating Random Emoji Particles Animation */}
+      {particles.map(p => (
         <span
-          key={h.id}
-          className="absolute -top-4 text-base pointer-events-none animate-bounce z-50 transition-all duration-1000 opacity-90"
+          key={p.id}
+          className="absolute -top-4 text-lg pointer-events-none z-50 select-none animate-bounce"
           style={{
-            transform: `translate(${h.left}px, -30px) scale(1.3)`,
-            transition: 'all 1.5s ease-out'
+            transform: `translate(${p.left}px, -40px) scale(1.4)`,
+            transition: `all ${p.speed}s cubic-bezier(0.25, 1, 0.5, 1)`,
+            opacity: 0.95
           }}
         >
-          💖
+          {p.emoji}
         </span>
       ))}
 
       {/* Cute Sweet Popover Toast */}
       {activeMessage && (
-        <div className="absolute -bottom-10 left-0 z-50 whitespace-nowrap px-3 py-1.5 bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 text-slate-950 font-black text-[11px] rounded-full shadow-2xl animate-bounce flex items-center gap-1 border border-white/40">
+        <div className="absolute -bottom-11 left-0 z-50 whitespace-nowrap px-3.5 py-1.5 bg-gradient-to-r from-rose-500 via-amber-500 to-emerald-500 text-slate-950 font-black text-xs rounded-full shadow-2xl animate-bounce flex items-center gap-1.5 border border-white/50 ring-2 ring-amber-400/50">
           <span>{activeMessage}</span>
         </div>
       )}

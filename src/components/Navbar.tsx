@@ -27,8 +27,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [logoClicks, setLogoClicks] = useState<number>(0);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
 
-  // Hidden secret gesture: 5 rapid clicks on logo opens Admin Panel
-  const handleLogoClick = () => {
+  // Hidden secret gesture: 5 rapid clicks on "Live Node" pill opens Admin Panel
+  const handleNodeClick = () => {
     const nextClicks = logoClicks + 1;
     setLogoClicks(nextClicks);
     if (nextClicks >= 5) {
@@ -47,7 +47,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <UgandaFlag size="sm" />
             <span className="font-semibold text-slate-300 text-[11px] truncate">BLQ Pool Uganda</span>
             <span className="text-slate-700">•</span>
-            <span className="text-emerald-400 font-mono text-[10px] sm:text-[11px] flex items-center gap-1.5 shrink-0">
+            <span 
+              onClick={handleNodeClick}
+              className="text-emerald-400 font-mono text-[10px] sm:text-[11px] flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
+              title="BLQ Node Status"
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               Live Node
             </span>
@@ -70,10 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Logo */}
           <BlqLogo 
             size="md" 
-            onClick={() => {
-              setActiveTab('store');
-              handleLogoClick();
-            }} 
+            onClick={() => setActiveTab('store')} 
           />
 
           {/* Center Navigation Tabs (Desktop) */}
