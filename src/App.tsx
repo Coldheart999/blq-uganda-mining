@@ -394,7 +394,7 @@ const MainContent: React.FC = () => {
       <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
 
       {/* Footer */}
-      <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
+      <Footer onOpenAdmin={() => setIsAdminOpen(true)} onNavigateTab={(tab) => setActiveTab(tab)} />
     </div>
   );
 };
