@@ -158,9 +158,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         {/* Feedback Messages */}
         {error && (
-          <div className="mb-4 p-3 bg-rose-950/80 border border-rose-800 rounded-2xl text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-            <span>{error}</span>
+          <div className="mb-4 p-3 bg-rose-950/80 border border-rose-800 rounded-2xl text-rose-300 text-xs flex flex-col gap-2 animate-fade-in">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <span>{error}</span>
+            </div>
+            {isLoginMode && error.includes('Register') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLoginMode(false);
+                  setError('');
+                }}
+                className="self-start px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black rounded-xl text-[11px] shadow transition-all active:scale-95 flex items-center gap-1.5 mt-0.5"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Create Account Now</span>
+              </button>
+            )}
           </div>
         )}
 

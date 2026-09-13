@@ -222,10 +222,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [liveUnclaimedYield, setLiveUnclaimedYield] = useState<number>(0);
 
-  // Sync state to LocalStorage
+  // Sync state to LocalStorage and keep accounts registry synced
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('blq_current_user', JSON.stringify(currentUser));
+      const accounts = getAllStoredAccounts();
+      const targetKey = normalizePhoneKey(currentUser.phone);
+      const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === targetKey);
+      if (accIndex !== -1) {
+        accounts[accIndex].user = currentUser;
+        saveAllStoredAccounts(accounts);
+      }
     } else {
       localStorage.removeItem('blq_current_user');
     }
@@ -267,32 +274,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [currentUser, purchasedRigs]);
 
-  // Helper for flexible canonical phone matching across 077..., +25677..., 25677...
-  const normalizePhoneKey = (p: string): string => {
-    const clean = p.replace(/[\s\-\(\)\+]/g, '');
-    if (clean.startsWith('256')) return clean.slice(3);
-    if (clean.startsWith('0')) return clean.slice(1);
-    return clean;
+  // Robust Dual Storage Access to ensure accounts are NEVER lost
+  const getAllStoredAccounts = (): StoredAccount[] => {
+    try {
+      const primary = localStorage.getItem('blq_user_accounts');
+      if (primary) {
+        const parsed = JSON.parse(primary);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localStorage.setItem('blq_user_accounts_backup', primary);
+          return parsed;
+        }
+      }
+      // Redundant fallback to secondary backup vault
+      const backup = localStorage.getItem('blq_user_accounts_backup');
+      if (backup) {
+        const parsedBackup = JSON.parse(backup);
+        if (Array.isArray(parsedBackup) && parsedBackup.length > 0) {
+          localStorage.setItem('blq_user_accounts', backup);
+          return parsedBackup;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading stored accounts, attempting recovery', e);
+    }
+    return [];
   };
 
-  // Real Account Registration with local storage persistence and referral tracking
+  const saveAllStoredAccounts = (accounts: StoredAccount[]) => {
+    try {
+      const payload = JSON.stringify(accounts);
+      localStorage.setItem('blq_user_accounts', payload);
+      localStorage.setItem('blq_user_accounts_backup', payload);
+    } catch (e) {
+      console.error('Failed to write accounts to permanent storage', e);
+    }
+  };
+
+  // Helper for flexible canonical phone matching across 077..., +25677..., 25677..., 77...
+  const normalizePhoneKey = (p: string): string => {
+    if (!p) return '';
+    const digits = p.replace(/\D/g, ''); // strip spaces, dashes, symbols
+    if (digits.startsWith('256') && digits.length >= 12) return digits.slice(3);
+    if (digits.startsWith('0') && digits.length === 10) return digits.slice(1);
+    if (digits.length >= 9) return digits.slice(-9); // canonical 9 digits
+    return digits;
+  };
+
+  // Real Account Registration with dual backup persistence
   const registerAccount = (phone: string, password: string, name?: string) => {
-    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
-    const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
-    const targetKey = normalizePhoneKey(phone);
+    const cleanPhone = phone.trim();
+    const cleanPassword = password.trim();
+    const accounts = getAllStoredAccounts();
+    const targetKey = normalizePhoneKey(cleanPhone);
 
     const existing = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
     if (existing) {
-      return { success: false, message: 'An account with this phone number already exists. Please Sign In with your password.' };
+      return { 
+        success: false, 
+        message: 'An account with this phone number already exists! Please click "Sign In" with your password.' 
+      };
     }
 
     const pendingRef = localStorage.getItem('blq_pending_ref') || undefined;
-    const userReferralCode = `BLQ-${phone.slice(-5)}`;
+    const userReferralCode = `BLQ-${cleanPhone.slice(-5)}`;
 
     const newUser: User = {
       id: 'usr_' + Date.now(),
-      phone,
-      name: name || `Investor ${phone.slice(-4)}`,
+      phone: cleanPhone,
+      name: name?.trim() || `Investor ${cleanPhone.slice(-4)}`,
       balanceUGX: 0,
       uncollectedMinedUGX: 0,
       totalDepositedUGX: 0,
@@ -305,19 +354,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    const newAccount: StoredAccount = { phone, password, user: newUser };
+    const newAccount: StoredAccount = { phone: cleanPhone, password: cleanPassword, user: newUser };
     accounts.push(newAccount);
-    localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
+    saveAllStoredAccounts(accounts);
     setCurrentUser(newUser);
 
-    return { success: true, message: 'Account registered and saved successfully! Welcome to BLQ.', user: newUser };
+    return { 
+      success: true, 
+      message: 'Account created and permanently secured! Welcome to BLQ.', 
+      user: newUser 
+    };
   };
 
-  // Strict Account Verification Login - rejects non-existent accounts
+  // Strict Account Verification Login - always accepts existing accounts, rejects non-existent
   const loginAccount = (phone: string, password: string) => {
-    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
-    const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
-    const targetKey = normalizePhoneKey(phone);
+    const cleanPhone = phone.trim();
+    const cleanPassword = password.trim();
+    const accounts = getAllStoredAccounts();
+    const targetKey = normalizePhoneKey(cleanPhone);
 
     const account = accounts.find(a => normalizePhoneKey(a.phone) === targetKey);
 
@@ -328,21 +382,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    if (account.password !== password) {
+    if (account.password.trim() !== cleanPassword) {
       return { 
         success: false, 
         message: 'Incorrect password for this phone number. Please check and try again.' 
       };
     }
 
-    // Ensure user object has referral code if it was created earlier
+    // Ensure user object has referral code if missing
     if (!account.user.referralCode) {
-      account.user.referralCode = `BLQ-${account.phone.slice(-5)}`;
-      localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
+      account.user.referralCode = `BLQ-${cleanPhone.slice(-5)}`;
+      saveAllStoredAccounts(accounts);
     }
 
     setCurrentUser(account.user);
-    return { success: true, message: 'Welcome back! Login successful.', user: account.user };
+    return { 
+      success: true, 
+      message: 'Welcome back! Login successful.', 
+      user: account.user 
+    };
   };
 
   const logout = () => {
