@@ -1,5 +1,6 @@
 import React from 'react';
 import { BlqLogo } from './BlqLogo';
+import { MtnLogo, AirtelLogo } from './ProviderLogos';
 import { ShieldCheck, HelpCircle, Lock } from 'lucide-react';
 
 interface FooterProps {
@@ -29,13 +30,19 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
             Supported Mobile Money
           </h4>
           <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2 p-2 bg-slate-900/60 border border-slate-800 rounded-lg">
-              <div className="w-3 h-3 rounded-full bg-amber-400"></div>
-              <span className="font-semibold text-slate-200">MTN Mobile Money Uganda</span>
+            <div className="flex items-center gap-2.5 p-2 bg-slate-900/60 border border-slate-800 rounded-lg">
+              <AirtelLogo size="sm" />
+              <div>
+                <span className="font-bold text-white block">Airtel Money Uganda</span>
+                <span className="text-[10px] text-emerald-400 font-mono">Deposits & Withdrawals</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 p-2 bg-slate-900/60 border border-slate-800 rounded-lg">
-              <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-              <span className="font-semibold text-slate-200">Airtel Money Uganda</span>
+            <div className="flex items-center gap-2.5 p-2 bg-slate-900/60 border border-slate-800 rounded-lg">
+              <MtnLogo size="sm" />
+              <div>
+                <span className="font-bold text-white block">MTN Mobile Money</span>
+                <span className="text-[10px] text-amber-400 font-mono">Withdrawals Active • Deposits Soon</span>
+              </div>
             </div>
           </div>
         </div>

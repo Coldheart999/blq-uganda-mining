@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ArrowUpRight, X, Smartphone, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
+import { MtnLogo, AirtelLogo } from './ProviderLogos';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -107,7 +108,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
             </span>
           </div>
 
-          {/* Provider Selection */}
+          {/* Provider Selection with Authentic Logos */}
           <div>
             <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
               Select Receive Mobile Network
@@ -119,13 +120,15 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
                   setProvider('MTN Mobile Money');
                   setError('');
                 }}
-                className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2.5 transition-all ${
                   provider === 'MTN Mobile Money'
-                    ? 'bg-amber-400/10 border-amber-400 text-amber-400 shadow-md'
+                    ? 'bg-amber-400/20 border-amber-400 text-amber-300 shadow-md ring-1 ring-amber-400/50'
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                MTN Mobile Money
+                <MtnLogo size="sm" />
+                <span>MTN Mobile</span>
+                <span className="ml-auto text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono">Instant</span>
               </button>
 
               <button
@@ -134,21 +137,24 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
                   setProvider('Airtel Money');
                   setError('');
                 }}
-                className={`py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                className={`py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2.5 transition-all ${
                   provider === 'Airtel Money'
-                    ? 'bg-rose-500/10 border-rose-500 text-rose-400 shadow-md'
+                    ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-md ring-1 ring-rose-500/50'
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
                 }`}
               >
-                Airtel Money
+                <AirtelLogo size="sm" />
+                <span>Airtel Money</span>
+                <span className="ml-auto text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-mono">Instant</span>
               </button>
             </div>
           </div>
 
           {/* Target Phone Number */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
-              Recipient Phone Number (MTN / Airtel)
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-2">
+              <span>Recipient Phone Number</span>
+              {provider === 'MTN Mobile Money' ? <MtnLogo size="sm" /> : <AirtelLogo size="sm" />}
             </label>
             <input
               type="text"
