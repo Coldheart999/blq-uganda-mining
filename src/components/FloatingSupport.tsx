@@ -1,21 +1,20 @@
 import React from 'react';
-import { MessageCircle, PhoneCall } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 export const FloatingSupport: React.FC = () => {
-  const handleOpenWhatsApp = () => {
-    // Open WhatsApp support link (replace number with user's support line if needed)
-    window.open('https://wa.me/256789123456?text=Hello%20BLQ%20Support,%20I%20need%20help%20with%20my%20deposit/account', '_blank');
+  const handleOpenTelegram = () => {
+    window.open('https://t.me/Robin_hood_project', '_blank');
   };
 
   return (
     <div className="fixed bottom-6 right-6 z-40">
       <button
-        onClick={handleOpenWhatsApp}
-        className="flex items-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-full shadow-2xl transition-all active:scale-95 group border border-emerald-400/50"
+        onClick={handleOpenTelegram}
+        className="flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-bold text-xs rounded-full shadow-2xl shadow-cyan-950/60 transition-all active:scale-95 border border-cyan-400/40 group"
       >
-        <MessageCircle className="w-5 h-5 fill-slate-950" />
-        <span className="hidden sm:inline">WhatsApp Support</span>
-        <span className="w-2 h-2 rounded-full bg-emerald-950 animate-ping"></span>
+        <Send className="w-4 h-4 fill-white shrink-0 group-hover:translate-x-0.5 transition-transform" />
+        <span>Telegram Support</span>
+        <span className="w-2 h-2 rounded-full bg-cyan-300 animate-ping"></span>
       </button>
     </div>
   );

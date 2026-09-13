@@ -12,7 +12,7 @@ import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
 import { EarningsCalculator } from './components/EarningsCalculator';
 import { FloatingSupport } from './components/FloatingSupport';
-import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Clock } from 'lucide-react';
+import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { currentUser, minerPackages, buyMiner } = useApp();
@@ -72,7 +72,7 @@ const MainContent: React.FC = () => {
     : minerPackages.filter(p => p.durationDays === durationFilter);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0D14] text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-950">
+    <div className="min-h-screen flex flex-col bg-[#070A10] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
       {/* Top Header */}
       <Navbar
         activeTab={activeTab}
@@ -89,12 +89,12 @@ const MainContent: React.FC = () => {
         openAdmin={() => setIsAdminOpen(true)}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+      {/* Vertical Container */}
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
         
         {/* Global Feedback Banner */}
         {purchaseNotice && (
-          <div className="p-4 bg-emerald-950/90 border border-emerald-500/80 rounded-2xl text-emerald-300 text-sm font-semibold flex items-center justify-between shadow-lg">
+          <div className="p-4 bg-emerald-950/90 border border-emerald-500/80 rounded-2xl text-emerald-300 text-sm font-semibold flex items-center justify-between shadow-xl">
             <span className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400" />
               {purchaseNotice}
@@ -108,62 +108,67 @@ const MainContent: React.FC = () => {
           </div>
         )}
 
-        {/* Hero Header */}
+        {/* Vertical Hero Stack */}
         {activeTab === 'store' && (
-          <div className="bg-[#121824] border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 text-xs font-semibold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  Uganda Premier Mobile Investment Hub
-                </div>
-                <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-                  Invest UGX & Earn Daily Cash Returns
-                </h1>
-                <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-                  Choose from 5-Day Express, 10-Day VIP, or 30-Day Executive plans. Deposit via MTN or Airtel Mobile Money and withdraw your profits directly to your phone anytime.
-                </p>
+          <div className="bg-gradient-to-b from-[#111724] via-[#0D121F] to-[#080B12] border border-cyan-500/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+            
+            <div className="space-y-3 text-center sm:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full text-cyan-400 font-mono text-xs">
+                <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                BLQ SHA-256 Mining Pool • Active Node
               </div>
+              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+                High Yield Crypto Mining <span className="bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400 bg-clip-text text-transparent">Uganda</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                Deposit money via MTN or Airtel Mobile Money. Rent 5-Day Express, 10-Day VIP, or 30-Day Executive ASIC miners and receive daily profits paid directly to your balance.
+              </p>
+            </div>
 
-              {/* Quick Info Pill */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto font-mono text-xs">
-                <div className="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
-                  <span className="text-slate-500 block text-[10px] uppercase">Min Deposit</span>
-                  <span className="font-bold text-amber-400 text-sm">UGX 5,000</span>
-                </div>
-                <div className="bg-slate-950 px-4 py-3 rounded-2xl border border-slate-800 text-center">
-                  <span className="text-slate-500 block text-[10px] uppercase">Payout Speed</span>
-                  <span className="font-bold text-emerald-400 text-sm">5 - 15 Mins</span>
-                </div>
+            {/* Vertical Quick Stats Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
+              <div className="bg-[#070A10] p-3 rounded-2xl border border-slate-800 text-center">
+                <span className="text-slate-500 block text-[10px] uppercase">Min Deposit</span>
+                <span className="font-bold text-amber-400 text-sm">UGX 5,000</span>
+              </div>
+              <div className="bg-[#070A10] p-3 rounded-2xl border border-slate-800 text-center">
+                <span className="text-slate-500 block text-[10px] uppercase">Payout Speed</span>
+                <span className="font-bold text-emerald-400 text-sm">5 - 15 Mins</span>
+              </div>
+              <div className="col-span-2 sm:col-span-1 bg-[#070A10] p-3 rounded-2xl border border-slate-800 text-center">
+                <span className="text-slate-500 block text-[10px] uppercase">Networks</span>
+                <span className="font-bold text-cyan-400 text-sm">MTN / AIRTEL</span>
               </div>
             </div>
 
-            {/* Interactive Calculator Component */}
+            {/* Profit Calculator */}
             <EarningsCalculator onSelectPlan={handleCalculatorSelect} />
+
           </div>
         )}
 
-        {/* TAB 1: Investment Store */}
+        {/* TAB 1: Vertical Packages Catalog */}
         {activeTab === 'store' && (
           <div className="space-y-6">
-            {/* Duration Filter Control */}
+            
+            {/* Filter Pill Selector */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-amber-400" />
-                  Available Investment Plans
+                  Mining Packages Store
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Select your investment duration:
+                <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                  Select your preferred contract lifecycle:
                 </p>
               </div>
 
-              <div className="flex bg-slate-900 p-1 rounded-2xl border border-slate-800 text-xs font-semibold self-start sm:self-auto">
+              <div className="flex bg-[#0D121B] p-1 rounded-2xl border border-slate-800 text-xs font-semibold self-start sm:self-auto">
                 <button
                   onClick={() => setDurationFilter('all')}
                   className={`px-3.5 py-2 rounded-xl transition-all ${
                     durationFilter === 'all'
-                      ? 'bg-amber-500 text-slate-950 font-bold'
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -173,7 +178,7 @@ const MainContent: React.FC = () => {
                   onClick={() => setDurationFilter(5)}
                   className={`px-3.5 py-2 rounded-xl transition-all ${
                     durationFilter === 5
-                      ? 'bg-amber-500 text-slate-950 font-bold'
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -183,7 +188,7 @@ const MainContent: React.FC = () => {
                   onClick={() => setDurationFilter(10)}
                   className={`px-3.5 py-2 rounded-xl transition-all ${
                     durationFilter === 10
-                      ? 'bg-amber-500 text-slate-950 font-bold'
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -193,7 +198,7 @@ const MainContent: React.FC = () => {
                   onClick={() => setDurationFilter(30)}
                   className={`px-3.5 py-2 rounded-xl transition-all ${
                     durationFilter === 30
-                      ? 'bg-amber-500 text-slate-950 font-bold'
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -202,8 +207,8 @@ const MainContent: React.FC = () => {
               </div>
             </div>
 
-            {/* Investment Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Vertical Stack Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredPackages.map((miner) => (
                 <MinerCard
                   key={miner.id}
@@ -232,10 +237,10 @@ const MainContent: React.FC = () => {
 
       </main>
 
-      {/* Social Proof Live Ugandan Activity Ticker */}
+      {/* Social Proof Live Ugandan Activity Ticker (Slower rotation) */}
       <SocialProofTicker />
 
-      {/* Floating WhatsApp Support */}
+      {/* Floating Telegram Support Button */}
       <FloatingSupport />
 
       {/* Modals */}
