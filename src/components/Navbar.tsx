@@ -23,7 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   openReferral,
   openAdmin
 }) => {
-  const { currentUser, logout, liveUnclaimedYield } = useApp();
+  const { currentUser, logout } = useApp();
   const [logoClicks, setLogoClicks] = useState<number>(0);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
 
@@ -99,9 +99,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               My Miners
-              {liveUnclaimedYield > 0 && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-              )}
             </button>
 
             <button
@@ -248,12 +245,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <div className="relative">
-            <Activity className="w-5 h-5" />
-            {liveUnclaimedYield > 0 && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            )}
-          </div>
+          <Activity className="w-5 h-5" />
           <span className="text-[10px] font-mono">Miners</span>
         </button>
 
