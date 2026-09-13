@@ -19,7 +19,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
   };
 
   return (
-    <footer className="border-t border-slate-800/80 bg-[#070A0F] text-slate-400 py-10 px-4 mt-20">
+    <footer className="border-t border-slate-800/80 bg-[#070A0F] text-slate-400 pt-12 pb-32 md:pb-12 px-4 mt-20">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         
         {/* Brand Column */}
