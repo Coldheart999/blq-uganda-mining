@@ -60,10 +60,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-2 text-[10px] sm:text-[11px] font-mono">
             <button
               onClick={openReferral}
-              className="text-amber-400 font-bold hover:underline flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30"
+              className="animate-happy-jump text-amber-300 font-extrabold hover:text-white flex items-center gap-1.5 bg-gradient-to-r from-amber-500/25 via-yellow-500/30 to-amber-500/25 px-2.5 py-0.5 rounded-full border border-amber-400/50 shadow-md shadow-amber-500/20 cursor-pointer transition-transform active:scale-95"
             >
-              <Gift className="w-3 h-3 text-amber-400" />
-              <span>Earn UGX 15K</span>
+              <Gift className="w-3.5 h-3.5 text-yellow-300 animate-bounce" />
+              <span className="tracking-wide">🎁 Earn UGX 15K!</span>
             </button>
           </div>
         </div>
@@ -114,10 +114,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={openReferral}
-              className="px-3.5 py-2 rounded-lg transition-all text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 bg-amber-500/10 border border-amber-500/20"
+              className="relative px-3.5 py-2 rounded-xl transition-all text-slate-950 font-black flex items-center gap-1.5 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 shadow-lg shadow-amber-500/30 border border-yellow-300 animate-happy-jump hover:brightness-110 active:scale-95 cursor-pointer"
             >
-              <Gift className="w-3.5 h-3.5" />
-              <span>Refer & Earn</span>
+              <Gift className="w-4 h-4 text-slate-950 animate-bounce" />
+              <span>Refer & Earn 15K 🎉</span>
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-300"></span>
+              </span>
             </button>
           </nav>
 
@@ -251,10 +255,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={openReferral}
-          className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-amber-400 hover:text-amber-300 transition-all"
+          className="flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-amber-300 hover:text-amber-200 transition-all animate-happy-jump active:scale-95"
         >
-          <Gift className="w-5 h-5 text-amber-400 animate-pulse" />
-          <span className="text-[10px] font-mono font-bold">Earn 15K</span>
+          <div className="relative">
+            <div className="p-1 rounded-lg bg-amber-500/20 border border-amber-500/40">
+              <Gift className="w-5 h-5 text-yellow-300 animate-bounce" />
+            </div>
+            <span className="absolute -top-1.5 -right-1.5 text-[9px] animate-pulse">✨</span>
+          </div>
+          <span className="text-[10px] font-mono font-black text-amber-300">Earn 15K 🎉</span>
         </button>
 
         <button
