@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { BlqLogo } from './BlqLogo';
 import { Cpu, ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet } from 'lucide-react';
 
 interface NavbarProps {
@@ -61,28 +62,13 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         
         {/* Brand Logo */}
-        <div 
-          className="flex items-center space-x-3 cursor-pointer select-none group" 
+        <BlqLogo 
+          size="md" 
           onClick={() => {
             setActiveTab('store');
             handleLogoClick();
-          }}
-        >
-          <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
-            <Cpu className="w-5 h-5 text-slate-950" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-1.5">
-              <span className="font-extrabold text-xl tracking-tight text-white">
-                BLQ
-              </span>
-              <span className="bg-amber-400/10 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                UGX
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-400">Crypto Miners Uganda</p>
-          </div>
-        </div>
+          }} 
+        />
 
         {/* Clean Center Navigation Tabs */}
         <nav className="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs font-medium">

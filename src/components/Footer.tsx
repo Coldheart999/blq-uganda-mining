@@ -1,5 +1,6 @@
 import React from 'react';
-import { Cpu, ShieldCheck, HelpCircle, Lock } from 'lucide-react';
+import { BlqLogo } from './BlqLogo';
+import { ShieldCheck, HelpCircle, Lock } from 'lucide-react';
 
 interface FooterProps {
   onOpenAdmin?: () => void;
@@ -12,14 +13,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
         
         {/* Brand Column */}
         <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-emerald-500 p-0.5">
-              <div className="w-full h-full bg-[#0B0E14] rounded-md flex items-center justify-center">
-                <Cpu className="w-4 h-4 text-emerald-400" />
-              </div>
-            </div>
-            <span className="font-black text-xl text-white tracking-wider">BLQ UGANDA</span>
-          </div>
+          <BlqLogo size="md" showSubtitle={false} />
           <p className="text-xs text-slate-400 leading-relaxed">
             High-yield cloud crypto mining platform tailored for investors in Uganda. Powered by SHA-256 ASIC virtual rigs and instant Mobile Money settlement.
           </p>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { BlqLogo } from './BlqLogo';
 import { Phone, Lock, CheckCircle2, ShieldCheck, X, AlertCircle, User as UserIcon, LogIn, UserPlus } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
 
@@ -81,12 +82,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         </button>
 
         {/* Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 mb-3 text-amber-400 shadow-md">
-            <ShieldCheck className="w-6 h-6 text-amber-400" />
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="mb-3">
+            <BlqLogo size="lg" />
           </div>
-          <h2 className="text-2xl font-extrabold tracking-tight text-white">
-            {isLoginMode ? 'Sign In to BLQ' : 'Create Investor Account'}
+          <h2 className="text-xl font-extrabold tracking-tight text-white mt-1">
+            {isLoginMode ? 'Sign In to BLQ Platform' : 'Create Investor Account'}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
             {isLoginMode ? 'Enter your registered phone number & password' : 'Register with your MTN or Airtel number'}
