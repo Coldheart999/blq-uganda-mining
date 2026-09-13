@@ -1,96 +1,96 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, MinerPackage, PurchasedRig, DepositRequest, WithdrawalRequest, AdminConfig } from '../types';
 
-// Pre-configured realistic ASIC crypto miner packages for Ugandans
+// Highly attractive, lucrative miner packages designed for high-conversion Ugandan investors
 export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
   {
     id: 'miner-1',
-    name: 'BLQ S9-Ug',
-    model: 'Bitmain S9 SE (16 TH/s)',
-    priceUGX: 20000,
-    dailyYieldUGX: 1200,
+    name: 'BLQ Starter Node',
+    model: 'Bitmain S9 SE Ultra',
+    priceUGX: 10000,
+    dailyYieldUGX: 1500,
     hashRate: '16 TH/s',
     powerDraw: '1280W',
     algo: 'SHA-256 (BTC)',
     durationDays: 30,
-    stock: 42,
+    stock: 85,
     tier: 'Starter',
-    badge: 'Popular for Beginners',
+    badge: '🔥 Fast Return (UGX 1,500/day)',
     image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'miner-2',
-    name: 'BLQ M30S',
-    model: 'MicroBT M30S+ (88 TH/s)',
-    priceUGX: 70000,
-    dailyYieldUGX: 4500,
+    name: 'BLQ Silver Rig',
+    model: 'MicroBT M30S+ Pro',
+    priceUGX: 40000,
+    dailyYieldUGX: 6800,
     hashRate: '88 TH/s',
     powerDraw: '3344W',
     algo: 'SHA-256 (BTC)',
     durationDays: 30,
-    stock: 25,
+    stock: 50,
     tier: 'Starter',
-    badge: 'Best Value',
+    badge: '⭐ Most Popular (UGX 6,800/day)',
     image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'miner-3',
-    name: 'BLQ T19 Hydro',
+    name: 'BLQ Gold Hydro Farm',
     model: 'Bitmain T19 Liquid Cooling',
-    priceUGX: 200000,
-    dailyYieldUGX: 14000,
+    priceUGX: 150000,
+    dailyYieldUGX: 27000,
     hashRate: '145 TH/s',
     powerDraw: '3150W',
     algo: 'SHA-256 (BTC)',
     durationDays: 30,
-    stock: 18,
+    stock: 30,
     tier: 'Pro',
-    badge: 'High Performance',
+    badge: '🚀 High Yield (UGX 27,000/day)',
     image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'miner-4',
-    name: 'BLQ Avalon 1246',
-    model: 'Canaan Avalon 90 TH/s',
-    priceUGX: 500000,
-    dailyYieldUGX: 38000,
+    name: 'BLQ Platinum ASIC',
+    model: 'Canaan Avalon 1246 Pro',
+    priceUGX: 400000,
+    dailyYieldUGX: 76000,
     hashRate: '220 TH/s',
     powerDraw: '3420W',
     algo: 'SHA-256 (BTC)',
     durationDays: 30,
-    stock: 10,
+    stock: 20,
     tier: 'Pro',
-    badge: 'PRO Choice',
+    badge: '💎 PRO Earner (UGX 76,000/day)',
     image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'miner-5',
-    name: 'BLQ S19 Pro XP',
-    model: 'Bitmain S19 XP Hydro 257 TH',
-    priceUGX: 1200000,
-    dailyYieldUGX: 95000,
+    name: 'BLQ Diamond VIP Rig',
+    model: 'Bitmain S19 XP Hydro 257TH',
+    priceUGX: 1000000,
+    dailyYieldUGX: 210000,
     hashRate: '514 TH/s',
     powerDraw: '5300W',
     algo: 'SHA-256 (BTC)',
     durationDays: 30,
-    stock: 6,
+    stock: 12,
     tier: 'Enterprise',
-    badge: 'Enterprise Rig',
+    badge: '👑 VIP Profit (UGX 210,000/day)',
     image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'miner-6',
-    name: 'BLQ KS3 Kaspa',
-    model: 'IceRiver KS3 Heavy Hash (8 TH)',
+    name: 'BLQ Crown Executive Farm',
+    model: 'IceRiver KS3 HeavyHash Kaspa',
     priceUGX: 2500000,
-    dailyYieldUGX: 210000,
+    dailyYieldUGX: 550000,
     hashRate: '8000 GH/s',
     powerDraw: '3200W',
     algo: 'kHeavyHash (KAS)',
     durationDays: 30,
-    stock: 3,
+    stock: 5,
     tier: 'Industrial',
-    badge: 'VIP Mega Farm',
+    badge: '🏆 Mega Farm (UGX 550,000/day)',
     image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80'
   }
 ];
@@ -105,6 +105,12 @@ const DEFAULT_ADMIN_CONFIG: AdminConfig = {
   withdrawalFeePercent: 2.5
 };
 
+export interface StoredAccount {
+  phone: string;
+  password: string;
+  user: User;
+}
+
 interface AppContextType {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
@@ -116,7 +122,8 @@ interface AppContextType {
   setAdminConfig: React.Dispatch<React.SetStateAction<AdminConfig>>;
   
   // Auth methods
-  loginWithPhone: (phone: string, name?: string) => User;
+  registerAccount: (phone: string, password: string, name?: string) => { success: boolean; message: string; user?: User };
+  loginAccount: (phone: string, password: string) => { success: boolean; message: string; user?: User };
   logout: () => void;
   
   // User Actions
@@ -138,29 +145,28 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load state from LocalStorage or use Defaults
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('ug_miner_user');
+    const saved = localStorage.getItem('blq_current_user');
     return saved ? JSON.parse(saved) : null;
   });
 
   const [purchasedRigs, setPurchasedRigs] = useState<PurchasedRig[]>(() => {
-    const saved = localStorage.getItem('ug_miner_rigs');
+    const saved = localStorage.getItem('blq_purchased_rigs');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [deposits, setDeposits] = useState<DepositRequest[]>(() => {
-    const saved = localStorage.getItem('ug_miner_deposits');
+    const saved = localStorage.getItem('blq_deposits');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>(() => {
-    const saved = localStorage.getItem('ug_miner_withdrawals');
+    const saved = localStorage.getItem('blq_withdrawals');
     return saved ? JSON.parse(saved) : [];
   });
 
   const [adminConfig, setAdminConfig] = useState<AdminConfig>(() => {
-    const saved = localStorage.getItem('ug_miner_admin_config');
+    const saved = localStorage.getItem('blq_admin_config');
     return saved ? JSON.parse(saved) : DEFAULT_ADMIN_CONFIG;
   });
 
@@ -169,29 +175,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Sync state to LocalStorage
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem('ug_miner_user', JSON.stringify(currentUser));
+      localStorage.setItem('blq_current_user', JSON.stringify(currentUser));
     } else {
-      localStorage.removeItem('ug_miner_user');
+      localStorage.removeItem('blq_current_user');
     }
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('ug_miner_rigs', JSON.stringify(purchasedRigs));
+    localStorage.setItem('blq_purchased_rigs', JSON.stringify(purchasedRigs));
   }, [purchasedRigs]);
 
   useEffect(() => {
-    localStorage.setItem('ug_miner_deposits', JSON.stringify(deposits));
+    localStorage.setItem('blq_deposits', JSON.stringify(deposits));
   }, [deposits]);
 
   useEffect(() => {
-    localStorage.setItem('ug_miner_withdrawals', JSON.stringify(withdrawals));
+    localStorage.setItem('blq_withdrawals', JSON.stringify(withdrawals));
   }, [withdrawals]);
 
   useEffect(() => {
-    localStorage.setItem('ug_miner_admin_config', JSON.stringify(adminConfig));
+    localStorage.setItem('blq_admin_config', JSON.stringify(adminConfig));
   }, [adminConfig]);
 
-  // Live real-time yield calculation ticker (adds simulated earnings every second for active user rigs)
+  // Live real-time yield calculation ticker
   useEffect(() => {
     if (!currentUser) return;
 
@@ -201,9 +207,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    // Daily total yield across all active rigs
     const dailyTotal = userActiveRigs.reduce((acc, rig) => acc + rig.dailyYieldUGX, 0);
-    // Yield per second (1 day = 86400s)
     const yieldPerSecond = dailyTotal / 86400;
 
     const interval = setInterval(() => {
@@ -213,34 +217,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [currentUser, purchasedRigs]);
 
-  // Login or Register User by Phone
-  const loginWithPhone = (phone: string, name?: string): User => {
-    const isAdminUser = phone.includes('0780000000') || phone.includes('admin');
-    
-    // Check if user previously saved
-    const savedUsersStr = localStorage.getItem('ug_miner_users');
-    const allUsers: User[] = savedUsersStr ? JSON.parse(savedUsersStr) : [];
-    
-    let existing = allUsers.find(u => u.phone === phone);
-    if (!existing) {
-      existing = {
-        id: 'usr_' + Date.now(),
-        phone,
-        name: name || `Investor ${phone.slice(-4)}`,
-        balanceUGX: 0,
-        uncollectedMinedUGX: 0,
-        totalDepositedUGX: 0,
-        totalWithdrawnUGX: 0,
-        totalMinedUGX: 0,
-        createdAt: new Date().toISOString(),
-        isAdmin: isAdminUser
-      };
-      allUsers.push(existing);
-      localStorage.setItem('ug_miner_users', JSON.stringify(allUsers));
+  // Real Account Registration
+  const registerAccount = (phone: string, password: string, name?: string) => {
+    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
+    const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
+
+    const existing = accounts.find(a => a.phone === phone);
+    if (existing) {
+      return { success: false, message: 'An account with this phone number already exists. Please log in.' };
     }
-    
-    setCurrentUser(existing);
-    return existing;
+
+    const newUser: User = {
+      id: 'usr_' + Date.now(),
+      phone,
+      name: name || `Investor ${phone.slice(-4)}`,
+      balanceUGX: 0,
+      uncollectedMinedUGX: 0,
+      totalDepositedUGX: 0,
+      totalWithdrawnUGX: 0,
+      totalMinedUGX: 0,
+      createdAt: new Date().toISOString()
+    };
+
+    accounts.push({ phone, password, user: newUser });
+    localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
+    setCurrentUser(newUser);
+
+    return { success: true, message: 'Account created successfully!', user: newUser };
+  };
+
+  // Real Account Verification Login (Strict phone + password check)
+  const loginAccount = (phone: string, password: string) => {
+    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
+    const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
+
+    const account = accounts.find(a => a.phone === phone);
+
+    if (!account) {
+      return { success: false, message: 'No account found with this phone number. Please click Sign Up to register.' };
+    }
+
+    if (account.password !== password) {
+      return { success: false, message: 'Incorrect password. Please verify your password and try again.' };
+    }
+
+    setCurrentUser(account.user);
+    return { success: true, message: 'Login successful!', user: account.user };
   };
 
   const logout = () => {
@@ -250,7 +272,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Buy Mining Machine
   const buyMiner = (packageId: string): { success: boolean; message: string } => {
     if (!currentUser) {
-      return { success: false, message: 'Please login or register first.' };
+      return { success: false, message: 'Please log in or create an account first.' };
     }
 
     const pkg = INITIAL_MINER_PACKAGES.find(p => p.id === packageId);
@@ -265,7 +287,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    // Deduct balance and create rig
     const now = new Date();
     const expiry = new Date(now.getTime() + pkg.durationDays * 24 * 60 * 60 * 1000);
 
@@ -292,9 +313,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setCurrentUser(updatedUser);
 
+    // Sync updated user balance into accounts array
+    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
+    if (savedAccountsStr) {
+      const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
+      const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+      if (accIndex !== -1) {
+        accounts[accIndex].user = updatedUser;
+        localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
+      }
+    }
+
     return { 
       success: true, 
-      message: `Success! You have purchased the ${pkg.name} ASIC miner for UGX ${pkg.priceUGX.toLocaleString()}. Daily mining yield: UGX ${pkg.dailyYieldUGX.toLocaleString()}` 
+      message: `Success! You have purchased the ${pkg.name} for UGX ${pkg.priceUGX.toLocaleString()}. Daily profit: UGX ${pkg.dailyYieldUGX.toLocaleString()}` 
     };
   };
 
@@ -313,6 +345,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setCurrentUser(updatedUser);
     setLiveUnclaimedYield(0);
+
+    // Sync updated balance
+    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
+    if (savedAccountsStr) {
+      const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
+      const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+      if (accIndex !== -1) {
+        accounts[accIndex].user = updatedUser;
+        localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
+      }
+    }
   };
 
   // Submit Mobile Money Deposit
@@ -369,7 +412,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
 
-    // Deduct balance immediately into pending escrow
     const updatedUser = {
       ...currentUser,
       balanceUGX: currentUser.balanceUGX - amount
@@ -387,7 +429,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const approveDeposit = (depositId: string) => {
     setDeposits(prev => prev.map(dep => {
       if (dep.id === depositId && dep.status === 'pending') {
-        // Credit target user balance
         if (currentUser && currentUser.id === dep.userId) {
           setCurrentUser({
             ...currentUser,
@@ -423,7 +464,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const rejectWithdrawal = (withdrawalId: string) => {
     setWithdrawals(prev => prev.map(wth => {
       if (wth.id === withdrawalId && wth.status === 'pending') {
-        // Refund back to user balance if rejected
         if (currentUser && currentUser.id === wth.userId) {
           setCurrentUser({
             ...currentUser,
@@ -446,7 +486,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       withdrawals,
       adminConfig,
       setAdminConfig,
-      loginWithPhone,
+      registerAccount,
+      loginAccount,
       logout,
       buyMiner,
       claimEarnings,
