@@ -1,96 +1,146 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, MinerPackage, PurchasedRig, DepositRequest, WithdrawalRequest, AdminConfig } from '../types';
 
-// Highly attractive, lucrative miner packages designed for high-conversion Ugandan investors
+// Highly lucrative miner packages with 5-Day, 10-Day, and 30-Day durations
 export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
+  // 5-DAY EXPRESS PACKAGES (Ultra Fast Return)
   {
-    id: 'miner-1',
-    name: 'BLQ Starter Node',
-    model: 'Bitmain S9 SE Ultra',
+    id: 'miner-5d-1',
+    name: 'BLQ 5-Day Express Mini',
+    model: 'Bitmain S9 SE Turbo',
     priceUGX: 10000,
-    dailyYieldUGX: 1500,
+    dailyYieldUGX: 3000,
     hashRate: '16 TH/s',
     powerDraw: '1280W',
     algo: 'SHA-256 (BTC)',
-    durationDays: 30,
-    stock: 85,
+    durationDays: 5,
+    stock: 100,
     tier: 'Starter',
-    badge: '🔥 Fast Return (UGX 1,500/day)',
+    badge: '⚡ 5-Day Express (UGX 3,000/day)',
     image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-2',
-    name: 'BLQ Silver Rig',
-    model: 'MicroBT M30S+ Pro',
-    priceUGX: 40000,
-    dailyYieldUGX: 6800,
+    id: 'miner-5d-2',
+    name: 'BLQ 5-Day Turbo Rig',
+    model: 'MicroBT M30S+ Turbo',
+    priceUGX: 50000,
+    dailyYieldUGX: 16000,
     hashRate: '88 TH/s',
     powerDraw: '3344W',
     algo: 'SHA-256 (BTC)',
-    durationDays: 30,
-    stock: 50,
+    durationDays: 5,
+    stock: 60,
     tier: 'Starter',
-    badge: '⭐ Most Popular (UGX 6,800/day)',
+    badge: '🔥 5-Day Turbo (UGX 16,000/day)',
     image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-3',
-    name: 'BLQ Gold Hydro Farm',
-    model: 'Bitmain T19 Liquid Cooling',
-    priceUGX: 150000,
-    dailyYieldUGX: 27000,
+    id: 'miner-5d-3',
+    name: 'BLQ 5-Day VIP Express',
+    model: 'Bitmain T19 Express',
+    priceUGX: 200000,
+    dailyYieldUGX: 70000,
     hashRate: '145 TH/s',
     powerDraw: '3150W',
+    algo: 'SHA-256 (BTC)',
+    durationDays: 5,
+    stock: 35,
+    tier: 'Pro',
+    badge: '🚀 5-Day VIP (UGX 70,000/day)',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80'
+  },
+
+  // 10-DAY ACCELERATED PACKAGES
+  {
+    id: 'miner-10d-1',
+    name: 'BLQ 10-Day Silver Producer',
+    model: 'Canaan Avalon 1166',
+    priceUGX: 30000,
+    dailyYieldUGX: 6000,
+    hashRate: '68 TH/s',
+    powerDraw: '3196W',
+    algo: 'SHA-256 (BTC)',
+    durationDays: 10,
+    stock: 50,
+    tier: 'Starter',
+    badge: '⭐ 10-Day Silver (UGX 6,000/day)',
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'miner-10d-2',
+    name: 'BLQ 10-Day Gold Hydro',
+    model: 'Bitmain T19 Hydro Pro',
+    priceUGX: 100000,
+    dailyYieldUGX: 22000,
+    hashRate: '145 TH/s',
+    powerDraw: '3150W',
+    algo: 'SHA-256 (BTC)',
+    durationDays: 10,
+    stock: 40,
+    tier: 'Pro',
+    badge: '💎 10-Day Gold (UGX 22,000/day)',
+    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'miner-10d-3',
+    name: 'BLQ 10-Day Platinum Farm',
+    model: 'IceRiver KS3 HeavyHash',
+    priceUGX: 500000,
+    dailyYieldUGX: 125000,
+    hashRate: '8000 GH/s',
+    powerDraw: '3200W',
+    algo: 'kHeavyHash (KAS)',
+    durationDays: 10,
+    stock: 20,
+    tier: 'Pro',
+    badge: '🏆 10-Day Platinum (UGX 125,000/day)',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80'
+  },
+
+  // 30-DAY HIGH CAPITAL FARMS
+  {
+    id: 'miner-30d-1',
+    name: 'BLQ 30-Day Master Node',
+    model: 'Bitmain S19 Pro XP',
+    priceUGX: 150000,
+    dailyYieldUGX: 27000,
+    hashRate: '257 TH/s',
+    powerDraw: '5300W',
     algo: 'SHA-256 (BTC)',
     durationDays: 30,
     stock: 30,
     tier: 'Pro',
-    badge: '🚀 High Yield (UGX 27,000/day)',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80'
+    badge: '🌟 30-Day Master (UGX 27,000/day)',
+    image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-4',
-    name: 'BLQ Platinum ASIC',
-    model: 'Canaan Avalon 1246 Pro',
-    priceUGX: 400000,
-    dailyYieldUGX: 76000,
-    hashRate: '220 TH/s',
-    powerDraw: '3420W',
-    algo: 'SHA-256 (BTC)',
-    durationDays: 30,
-    stock: 20,
-    tier: 'Pro',
-    badge: '💎 PRO Earner (UGX 76,000/day)',
-    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'miner-5',
-    name: 'BLQ Diamond VIP Rig',
-    model: 'Bitmain S19 XP Hydro 257TH',
+    id: 'miner-30d-2',
+    name: 'BLQ 30-Day Diamond Farm',
+    model: 'Antminer Hydro 514 TH/s',
     priceUGX: 1000000,
     dailyYieldUGX: 210000,
     hashRate: '514 TH/s',
     powerDraw: '5300W',
     algo: 'SHA-256 (BTC)',
     durationDays: 30,
-    stock: 12,
+    stock: 15,
     tier: 'Enterprise',
-    badge: '👑 VIP Profit (UGX 210,000/day)',
+    badge: '👑 30-Day VIP (UGX 210,000/day)',
     image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'miner-6',
-    name: 'BLQ Crown Executive Farm',
-    model: 'IceRiver KS3 HeavyHash Kaspa',
+    id: 'miner-30d-3',
+    name: 'BLQ 30-Day Crown Executive',
+    model: 'IceRiver Mega Node',
     priceUGX: 2500000,
     dailyYieldUGX: 550000,
-    hashRate: '8000 GH/s',
-    powerDraw: '3200W',
+    hashRate: '12000 GH/s',
+    powerDraw: '4500W',
     algo: 'kHeavyHash (KAS)',
     durationDays: 30,
     stock: 5,
     tier: 'Industrial',
-    badge: '🏆 Mega Farm (UGX 550,000/day)',
+    badge: '👑 30-Day Crown (UGX 550,000/day)',
     image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80'
   }
 ];
@@ -246,7 +296,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: 'Account created successfully!', user: newUser };
   };
 
-  // Real Account Verification Login (Strict phone + password check)
+  // Real Account Verification Login
   const loginAccount = (phone: string, password: string) => {
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     const accounts: StoredAccount[] = savedAccountsStr ? JSON.parse(savedAccountsStr) : [];
@@ -313,7 +363,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setCurrentUser(updatedUser);
 
-    // Sync updated user balance into accounts array
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     if (savedAccountsStr) {
       const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
@@ -326,7 +375,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return { 
       success: true, 
-      message: `Success! You have purchased the ${pkg.name} for UGX ${pkg.priceUGX.toLocaleString()}. Daily profit: UGX ${pkg.dailyYieldUGX.toLocaleString()}` 
+      message: `Success! You purchased the ${pkg.name} (${pkg.durationDays}-Day Contract) for UGX ${pkg.priceUGX.toLocaleString()}. Daily profit: UGX ${pkg.dailyYieldUGX.toLocaleString()}` 
     };
   };
 
@@ -346,7 +395,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(updatedUser);
     setLiveUnclaimedYield(0);
 
-    // Sync updated balance
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     if (savedAccountsStr) {
       const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);

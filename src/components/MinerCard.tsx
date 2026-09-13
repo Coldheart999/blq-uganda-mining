@@ -21,8 +21,8 @@ export const MinerCard: React.FC<MinerCardProps> = ({ miner, onBuy, userBalance 
         {/* Top Badges */}
         <div className="flex items-center justify-between mb-3">
           <span className="bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-lg flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5 text-amber-400" />
-            {miner.tier} Package
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            {miner.durationDays}-Day Contract
           </span>
           {miner.badge && (
             <span className="bg-amber-400/10 border border-amber-400/30 text-amber-400 text-[11px] font-bold px-2.5 py-0.5 rounded-lg">
@@ -45,6 +45,10 @@ export const MinerCard: React.FC<MinerCardProps> = ({ miner, onBuy, userBalance 
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span className="text-slate-200 font-semibold">{miner.hashRate}</span>
           </div>
+
+          <div className="absolute bottom-3 right-3 bg-amber-500 text-slate-950 text-xs font-black font-mono px-2 py-0.5 rounded">
+            {miner.durationDays} DAYS
+          </div>
         </div>
 
         {/* Package Title */}
@@ -64,7 +68,7 @@ export const MinerCard: React.FC<MinerCardProps> = ({ miner, onBuy, userBalance 
             </span>
           </div>
           <div className="flex justify-between items-center text-xs border-t border-slate-800/60 pt-1.5">
-            <span className="text-slate-400">30-Day Return:</span>
+            <span className="text-slate-400">{miner.durationDays}-Day Total Return:</span>
             <span className="font-bold text-amber-400 font-mono">
               UGX {totalReturnUGX.toLocaleString()} (+{roiPercentage}%)
             </span>
@@ -82,8 +86,8 @@ export const MinerCard: React.FC<MinerCardProps> = ({ miner, onBuy, userBalance 
             <span className="font-semibold text-slate-200">{miner.powerDraw}</span>
           </div>
           <div>
-            <span className="text-[10px] text-slate-500 block">Duration</span>
-            <span className="font-semibold text-slate-200">{miner.durationDays} Days</span>
+            <span className="text-[10px] text-slate-500 block">Contract Duration</span>
+            <span className="font-bold text-amber-400">{miner.durationDays} Days</span>
           </div>
           <div>
             <span className="text-[10px] text-slate-500 block">Net Profit</span>
@@ -111,7 +115,7 @@ export const MinerCard: React.FC<MinerCardProps> = ({ miner, onBuy, userBalance 
         >
           {canAfford ? (
             <>
-              <span>Buy Package (UGX {miner.priceUGX.toLocaleString()})</span>
+              <span>Buy {miner.durationDays}-Day Package (UGX {miner.priceUGX.toLocaleString()})</span>
               <ArrowRight className="w-4 h-4 text-slate-950" />
             </>
           ) : (

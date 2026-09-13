@@ -9,12 +9,13 @@ import { DepositModal } from './components/DepositModal';
 import { WithdrawModal } from './components/WithdrawModal';
 import { AdminPanel } from './components/AdminPanel';
 import { Footer } from './components/Footer';
-import { Cpu, ShieldCheck, ArrowRight, Activity, TrendingUp, Wallet, CheckCircle, Zap } from 'lucide-react';
+import { Cpu, ShieldCheck, ArrowRight, Activity, TrendingUp, Wallet, CheckCircle, Clock } from 'lucide-react';
 
 const MainContent: React.FC = () => {
   const { currentUser, minerPackages, buyMiner } = useApp();
 
   const [activeTab, setActiveTab] = useState<string>('store');
+  const [durationFilter, setDurationFilter] = useState<number | 'all'>('all');
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isDepositOpen, setIsDepositOpen] = useState<boolean>(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState<boolean>(false);
@@ -51,6 +52,10 @@ const MainContent: React.FC = () => {
     setPurchaseNotice(res.message);
     setTimeout(() => setPurchaseNotice(''), 4000);
   };
+
+  const filteredPackages = durationFilter === 'all' 
+    ? minerPackages 
+    : minerPackages.filter(p => p.durationDays === durationFilter);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0B0F17] text-slate-100 font-sans selection:bg-amber-500 selection:text-slate-950">
@@ -92,35 +97,34 @@ const MainContent: React.FC = () => {
         {/* Executive Hero Banner */}
         {activeTab === 'store' && (
           <div className="relative bg-gradient-to-br from-[#141C2B] via-[#101726] to-[#0A0F1A] border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden">
-            
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/10 border border-amber-400/30 rounded-full text-amber-400 font-medium text-xs">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  High-Profit Cloud Mining in Uganda
+                  Instant 5-Day, 10-Day & 30-Day Mining Offers
                 </div>
                 
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-                  Earn Up to <span className="text-amber-400">UGX 550,000 / day</span> Cloud Mining Bitcoin
+                  Earn Up to <span className="text-amber-400">UGX 70,000 in 5 Days</span> or <span className="text-emerald-400">UGX 550,000 / day</span>
                 </h1>
                 
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  Start with as little as <strong>UGX 10,000</strong>. Deposit using MTN Mobile Money or Airtel Money, activate your mining package, and withdraw your profits directly to your phone anytime.
+                  Start with as little as <strong>UGX 10,000</strong>. Choose ultra-fast <strong>5-Day Express Rigs</strong>, <strong>10-Day VIP Farms</strong>, or <strong>30-Day Executive Nodes</strong>. Payouts settled directly to your MTN or Airtel Mobile Money.
                 </p>
 
                 {/* Trust Badges */}
                 <div className="grid grid-cols-3 gap-3 pt-2 text-xs text-slate-300">
                   <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>Instant MTN & Airtel</span>
+                    <span>MTN & Airtel Direct</span>
                   </div>
                   <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Daily Automatic Returns</span>
+                    <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>5, 10 & 30 Day Contracts</span>
                   </div>
                   <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl flex items-center gap-2">
                     <Wallet className="w-4 h-4 text-cyan-400 shrink-0" />
-                    <span>Fast Withdrawal Payouts</span>
+                    <span>Daily Automatic Returns</span>
                   </div>
                 </div>
               </div>
@@ -128,7 +132,7 @@ const MainContent: React.FC = () => {
               {/* Pool Overview Box */}
               <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-6 space-y-4 shadow-xl">
                 <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                  <span className="text-xs text-slate-400">Global Mining Status:</span>
+                  <span className="text-xs text-slate-400">BLQ Global Network:</span>
                   <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                     Operational (100% Pool Uptime)
@@ -156,7 +160,7 @@ const MainContent: React.FC = () => {
                   </button>
                 ) : (
                   <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300 text-center font-medium">
-                    Your balance: UGX {currentUser.balanceUGX.toLocaleString()} • Select a package below to start mining.
+                    Your balance: UGX {currentUser.balanceUGX.toLocaleString()} • Select a contract package below.
                   </div>
                 )}
               </div>
@@ -167,21 +171,65 @@ const MainContent: React.FC = () => {
         {/* TAB 1: Miner Hardware Store */}
         {activeTab === 'store' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
                   <Cpu className="w-6 h-6 text-amber-400" />
                   Investment Mining Packages
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Select an investment package. All packages run for 30 days and pay daily profits directly into your account balance.
+                  Select your contract duration. 5-Day Express packages offer ultra-fast daily returns!
                 </p>
+              </div>
+
+              {/* Duration Filter Tabs */}
+              <div className="flex bg-slate-900 p-1 rounded-2xl border border-slate-800/80 text-xs font-bold self-start sm:self-auto">
+                <button
+                  onClick={() => setDurationFilter('all')}
+                  className={`px-3 py-2 rounded-xl transition-all ${
+                    durationFilter === 'all'
+                      ? 'bg-amber-500 text-slate-950 shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  All Packages
+                </button>
+                <button
+                  onClick={() => setDurationFilter(5)}
+                  className={`px-3 py-2 rounded-xl transition-all flex items-center gap-1 ${
+                    durationFilter === 5
+                      ? 'bg-amber-500 text-slate-950 shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  ⚡ 5 Days
+                </button>
+                <button
+                  onClick={() => setDurationFilter(10)}
+                  className={`px-3 py-2 rounded-xl transition-all flex items-center gap-1 ${
+                    durationFilter === 10
+                      ? 'bg-amber-500 text-slate-950 shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  ⭐ 10 Days
+                </button>
+                <button
+                  onClick={() => setDurationFilter(30)}
+                  className={`px-3 py-2 rounded-xl transition-all flex items-center gap-1 ${
+                    durationFilter === 30
+                      ? 'bg-amber-500 text-slate-950 shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  💎 30 Days
+                </button>
               </div>
             </div>
 
             {/* Miner Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {minerPackages.map((miner) => (
+              {filteredPackages.map((miner) => (
                 <MinerCard
                   key={miner.id}
                   miner={miner}
