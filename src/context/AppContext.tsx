@@ -162,6 +162,14 @@ export interface StoredAccount {
   user: User;
 }
 
+export interface ReferredUserInfo {
+  id: string;
+  name: string;
+  phone: string;
+  createdAt: string;
+  isActivated: boolean;
+}
+
 interface AppContextType {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
@@ -191,12 +199,15 @@ interface AppContextType {
   
   // Live yield stats
   liveUnclaimedYield: number;
+
+  // Referral helpers
+  referredUsers: ReferredUserInfo[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Helper for flexible canonical phone matching across 077..., +25677..., 25677..., 77...
-const normalizePhoneKey = (p: string): string => {
+export const normalizePhoneKey = (p: string): string => {
   if (!p) return '';
   const digits = p.replace(/\D/g, '');
   if (digits.startsWith('256') && digits.length >= 12) return digits.slice(3);
@@ -259,6 +270,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [liveUnclaimedYield, setLiveUnclaimedYield] = useState<number>(0);
+  const [referredUsers, setReferredUsers] = useState<ReferredUserInfo[]>([]);
 
   // Local Storage Helpers
   const getAllStoredAccounts = (): StoredAccount[] => {
@@ -429,6 +441,81 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return () => clearInterval(interval);
   }, [currentUser, purchasedRigs]);
+
+  // Auto-claim daily mined yield into wallet balance every 24 hours
+  // Runs on app load (catches missed claims while offline) and on an interval.
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const accounts = getAllStoredAccounts();
+    const targetKey = normalizePhoneKey(currentUser.phone);
+    const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === targetKey);
+    if (accIndex === -1) return;
+
+    const user = accounts[accIndex].user;
+    const userActiveRigs = purchasedRigs.filter(r => r.userId === user.id && r.status === 'active');
+    if (userActiveRigs.length === 0) return;
+
+    let changed = false;
+    const now = new Date();
+
+    userActiveRigs.forEach(rig => {
+      const lastClaim = rig.lastClaimDate;
+      if (!lastClaim) return;
+
+      const elapsedMs = now.getTime() - new Date(lastClaim).getTime();
+      if (elapsedMs >= 24 * 60 * 60 * 1000) {
+        // Daily yield is auto-credited directly to wallet balance
+        user.balanceUGX = (user.balanceUGX || 0) + rig.dailyYieldUGX;
+        user.totalMinedUGX = (user.totalMinedUGX || 0) + rig.dailyYieldUGX;
+        rig.lastClaimDate = now.toISOString();
+        changed = true;
+      }
+    });
+
+    // Also expire rigs whose contract has ended
+    userActiveRigs.forEach(rig => {
+      if (new Date(rig.expiryDate) <= now && rig.status === 'active') {
+        rig.status = 'expired';
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      saveAllStoredAccounts(accounts);
+      saveCloudData('accounts', accounts);
+      saveCloudData('rigs', purchasedRigs);
+      setCurrentUser({ ...user });
+    }
+  }, [currentUser, purchasedRigs]);
+
+  // Recompute referred users whenever currentUser or accounts change
+  useEffect(() => {
+    if (!currentUser) {
+      setReferredUsers([]);
+      return;
+    }
+
+    const accounts = getAllStoredAccounts();
+    const myCode = currentUser.referralCode || `BLQ-${currentUser.phone.slice(-5)}`;
+    const savedRigs = localStorage.getItem('blq_purchased_rigs');
+    const allRigs: Array<{ userId: string }> = savedRigs ? JSON.parse(savedRigs) : [];
+
+    const referred = accounts
+      .filter(a => a.user.referredBy === myCode || normalizePhoneKey(a.user.referredBy || '') === normalizePhoneKey(currentUser.phone))
+      .map(a => {
+        const userRigs = allRigs.filter(r => r.userId === a.user.id);
+        return {
+          id: a.user.id,
+          name: a.user.name,
+          phone: a.user.phone,
+          createdAt: a.user.createdAt,
+          isActivated: userRigs.length > 0
+        };
+      });
+
+    setReferredUsers(referred);
+  }, [currentUser, purchasedRigs, deposits]);
 
   // Real Account Registration with Cross-Device Cloud Sync
   const registerAccount = async (phone: string, password: string, name?: string): Promise<{ success: boolean; message: string; user?: User }> => {
@@ -852,7 +939,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       rejectDeposit,
       approveWithdrawal,
       rejectWithdrawal,
-      liveUnclaimedYield
+      liveUnclaimedYield,
+      referredUsers
     }}>
       {children}
     </AppContext.Provider>

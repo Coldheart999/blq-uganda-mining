@@ -3,6 +3,7 @@ import { AppProvider, useApp, StoredAccount } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { MinerCard } from './components/MinerCard';
 import { MiningDashboard } from './components/MiningDashboard';
+import { ReferralsTab } from './components/ReferralsTab';
 import { HistoryTab } from './components/HistoryTab';
 import { AuthModal } from './components/AuthModal';
 import { DepositModal } from './components/DepositModal';
@@ -378,7 +379,12 @@ const MainContent: React.FC = () => {
           />
         )}
 
-        {/* TAB 3: Transactions */}
+        {/* TAB 3: Referrals Dashboard */}
+        {activeTab === 'referrals' && (
+          <ReferralsTab />
+        )}
+
+        {/* TAB 4: Transactions */}
         {activeTab === 'history' && <HistoryTab />}
 
       </main>

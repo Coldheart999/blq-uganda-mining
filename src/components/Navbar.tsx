@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
-import { ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun, Users } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -96,6 +96,26 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               My Miners
+            </button>
+
+            <button
+              onClick={() => setActiveTab('referrals')}
+              className={`px-4 py-2 rounded-lg transition-all relative ${
+                activeTab === 'referrals'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <Users className="w-4 h-4" />
+                Referrals
+                {currentUser && (currentUser.referralCount || 0) > 0 && (
+                  <span className="flex h-2 w-2 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+                  </span>
+                )}
+              </span>
             </button>
 
             <button
@@ -296,16 +316,21 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         <button
-          onClick={openReferral}
-          className="flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-amber-300 hover:text-amber-200 transition-all animate-smooth-hover active:scale-95"
+          onClick={() => setActiveTab('referrals')}
+          className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all relative ${
+            activeTab === 'referrals' 
+              ? 'text-amber-400 font-bold scale-105' 
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
         >
-          <div className="relative">
-            <div className="p-1 rounded-lg bg-amber-500/15 border border-amber-500/30">
-              <Gift className="w-5 h-5 text-yellow-300" />
-            </div>
-            <span className="absolute -top-1 -right-1 text-[8px]">✨</span>
-          </div>
-          <span className="text-[10px] font-mono font-bold text-amber-300">Earn 15K</span>
+          <Users className="w-5 h-5" />
+          <span className="text-[10px] font-mono">Referrals</span>
+          {currentUser && (currentUser.referralCount || 0) > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+            </span>
+          )}
         </button>
 
         <button

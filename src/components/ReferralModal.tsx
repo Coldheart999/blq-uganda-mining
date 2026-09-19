@@ -10,7 +10,7 @@ interface ReferralModalProps {
 }
 
 export const ReferralModal: React.FC<ReferralModalProps> = ({ isOpen, onClose, onGoToStore }) => {
-  const { currentUser, purchasedRigs } = useApp();
+  const { currentUser, purchasedRigs, referredUsers } = useApp();
   const [copied, setCopied] = useState<boolean>(false);
 
   if (!isOpen || !currentUser) return null;
@@ -22,37 +22,6 @@ export const ReferralModal: React.FC<ReferralModalProps> = ({ isOpen, onClose, o
   // Generate unique personal referral link
   const referralCode = currentUser.referralCode || `BLQ-${currentUser.phone.slice(-5)}`;
   const referralLink = `${window.location.origin}/?ref=${referralCode}`;
-
-  // Get list of referred users from localStorage
-  const getReferredUsers = () => {
-    if (!currentUser) return [];
-    const savedAccountsStr = localStorage.getItem('blq_user_accounts');
-    if (!savedAccountsStr) return [];
-    try {
-      const accounts: Array<{ phone: string; user: any }> = JSON.parse(savedAccountsStr);
-      const myCode = currentUser.referralCode || `BLQ-${currentUser.phone.slice(-5)}`;
-      const savedRigsStr = localStorage.getItem('blq_purchased_rigs');
-      const allRigs: Array<{ userId: string }> = savedRigsStr ? JSON.parse(savedRigsStr) : [];
-
-      return accounts
-        .filter(a => a.user.referredBy === myCode || a.user.referredBy === currentUser.phone)
-        .map(a => {
-          const userRigs = allRigs.filter(r => r.userId === a.user.id);
-          const isActivated = userRigs.length > 0;
-          return {
-            id: a.user.id,
-            name: a.user.name,
-            phone: a.user.phone,
-            createdAt: a.user.createdAt,
-            isActivated
-          };
-        });
-    } catch {
-      return [];
-    }
-  };
-
-  const referredUsers = getReferredUsers();
 
   const handleCopyLink = () => {
     if (!isReferralActivated) return;
