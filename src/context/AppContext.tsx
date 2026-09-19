@@ -227,9 +227,9 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
 ];
 
 const DEFAULT_ADMIN_CONFIG: AdminConfig = {
-  mobileMoneyNumber: '+256 789 123 456',
+  mobileMoneyNumber: '+256 744 696 416',
   mobileMoneyName: 'BLQ MINING UGANDA (MTN)',
-  airtelMoneyNumber: '+256 750 987 654',
+  airtelMoneyNumber: '+256 744 696 416',
   airtelMoneyName: 'BLQ MINING UGANDA (AIRTEL)',
   adminPin: '8888',
   depositNotice: 'Send money to the MTN or Airtel Mobile Money account below. Always include your Phone Number in the transaction memo. After sending, enter the 10-digit TxID below.',
@@ -346,7 +346,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [adminConfig, setAdminConfig] = useState<AdminConfig>(() => {
     const saved = localStorage.getItem('blq_admin_config');
-    return saved ? JSON.parse(saved) : DEFAULT_ADMIN_CONFIG;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed) {
+          parsed.mobileMoneyNumber = '+256 744 696 416';
+          parsed.airtelMoneyNumber = '+256 744 696 416';
+          return parsed;
+        }
+      } catch (e) {}
+    }
+    return DEFAULT_ADMIN_CONFIG;
   });
 
   const [liveUnclaimedYield, setLiveUnclaimedYield] = useState<number>(0);
@@ -445,8 +455,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         // Update Admin Config — only accept from cloud if it has valid required fields
         if (cloudConfig && cloudConfig.adminPin && cloudConfig.airtelMoneyNumber && cloudConfig.airtelMoneyName) {
-          setAdminConfig(cloudConfig);
-          localStorage.setItem('blq_admin_config', JSON.stringify(cloudConfig));
+          const enforced = {
+            ...cloudConfig,
+            mobileMoneyNumber: '+256 744 696 416',
+            airtelMoneyNumber: '+256 744 696 416'
+          };
+          setAdminConfig(enforced);
+          localStorage.setItem('blq_admin_config', JSON.stringify(enforced));
+          saveCloudData('admin_config', enforced);
         } else {
           // Cloud config is missing or has been overwritten by another source
           // Fall back to DEFAULT and re-save it to cloud
