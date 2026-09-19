@@ -18,7 +18,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 100,
     tier: 'Starter',
     badge: '⚡ 5-Day Express (UGX 3,500/day)',
-    image: 'https://images.unsplash.com/photo-1593654359442-4dedeb0a1d8f?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-compact-unit.png'
   },
   {
     id: 'plan-5d-2',
@@ -33,7 +33,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 60,
     tier: 'Starter',
     badge: '🔥 5-Day Turbo (UGX 18,500/day)',
-    image: 'https://images.unsplash.com/photo-1593654359442-4dedeb0a1d8f?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-psu-unit.png'
   },
   {
     id: 'plan-5d-3',
@@ -48,7 +48,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 35,
     tier: 'Pro',
     badge: '🚀 5-Day VIP (UGX 85,000/day)',
-    image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-enterprise-farm.png'
   },
 
   // 10-DAY ACCELERATED PLANS
@@ -65,7 +65,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 50,
     tier: 'Starter',
     badge: '⭐ 10-Day Silver (UGX 7,500/day)',
-    image: 'https://images.unsplash.com/photo-1593654359442-4dedeb0a1d8f?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-hash-board.png'
   },
   {
     id: 'plan-10d-2',
@@ -95,7 +95,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 20,
     tier: 'Pro',
     badge: '🏆 10-Day Platinum (UGX 150,000/day)',
-    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-technical-closeup.png'
   },
 
   // 30-DAY EXECUTIVE PLANS
@@ -112,7 +112,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 30,
     tier: 'Pro',
     badge: '🌟 30-Day Master (UGX 38,000/day)',
-    image: 'https://images.unsplash.com/photo-1593654359442-4dedeb0a1d8f?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'plan-30d-2',
@@ -127,7 +127,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 15,
     tier: 'Enterprise',
     badge: '👑 30-Day Diamond (UGX 260,000/day)',
-    image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 'plan-30d-3',
@@ -142,7 +142,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 5,
     tier: 'Industrial',
     badge: '👑 30-Day Crown (UGX 750,000/day)',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=600&q=80'
   },
 
   // 60-DAY PREMIUM INDUSTRIAL PLANS
@@ -159,7 +159,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 10,
     tier: 'Industrial',
     badge: '💎 60-Day Apex (UGX 250,000/day)',
-    image: 'https://images.unsplash.com/photo-1607827995293-59d9a9e2a7c0?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-datacenter.png'
   },
   {
     id: 'plan-60d-2',
@@ -174,7 +174,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 5,
     tier: 'Enterprise',
     badge: '🔥 60-Day Titanium (UGX 650,000/day)',
-    image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-farm-wide.png'
   },
   {
     id: 'plan-60d-3',
@@ -189,7 +189,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 3,
     tier: 'Industrial',
     badge: '🚀 60-Day Sovereign (UGX 2,000,000/day)',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-industrial-rig.png'
   },
 
   // 90-DAY ULTIMATE EXECUTIVE PLANS
@@ -206,7 +206,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 5,
     tier: 'Enterprise',
     badge: '👑 90-Day Prime (UGX 1,200,000/day)',
-    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-server-farm.png'
   },
   {
     id: 'plan-90d-2',
@@ -221,7 +221,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 2,
     tier: 'Industrial',
     badge: '🏆 90-Day Kingpin (UGX 5,000,000/day)',
-    image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-modern-datacenter.png'
   }
 ];
 
