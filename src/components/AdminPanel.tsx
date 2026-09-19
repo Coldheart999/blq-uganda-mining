@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { BackButton } from './BackButton';
-import { ShieldCheck, Check, X, Smartphone, ArrowDownLeft, ArrowUpRight, Settings, Lock, AlertCircle, MessageSquare, CreditCard } from 'lucide-react';
+import { ShieldCheck, Check, X, Smartphone, ArrowDownLeft, ArrowUpRight, Settings, Lock, AlertCircle, MessageSquare, CreditCard, Users, Search, Edit3, DollarSign } from 'lucide-react';
 import { getSMSGatewaySettings, saveSMSGatewaySettings, SMSGatewaySettings } from '../services/smsService';
 import { getPaymentGatewaySettings, savePaymentGatewaySettings, PaymentGatewaySettings } from '../services/paymentGateway';
 
@@ -19,13 +19,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     approveWithdrawal,
     rejectWithdrawal,
     adminConfig,
-    setAdminConfig
+    setAdminConfig,
+    updateUserBalanceByPhone,
+    getAllAccounts
   } = useApp();
 
   const [pinInput, setPinInput] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'withdrawals' | 'deposits' | 'gateway' | 'sms' | 'settings'>('withdrawals');
+  const [activeTab, setActiveTab] = useState<'withdrawals' | 'deposits' | 'users' | 'gateway' | 'sms' | 'settings'>('withdrawals');
   const [pinError, setPinError] = useState<string>('');
+
+  // User Balance Management State
+  const [userSearchTerm, setUserSearchTerm] = useState<string>('');
+  const [targetPhoneInput, setTargetPhoneInput] = useState<string>('');
+  const [newBalanceInput, setNewBalanceInput] = useState<string>('');
+  const [balanceFeedback, setBalanceFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
   // Mobile Money Settings Form State
   const [mtnNum, setMtnNum] = useState<string>(adminConfig.mobileMoneyNumber);
@@ -191,6 +199,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                     {pendingDeposits.length}
                   </span>
                 )}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 ${
+                  activeTab === 'users'
+                    ? 'bg-[#101622] border-slate-700 text-purple-400'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Users className="w-4 h-4 text-purple-400" />
+                Client Balances
               </button>
 
               <button
@@ -366,6 +386,169 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Tab: Client Balances & Accounts Manager */}
+            {activeTab === 'users' && (
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                {/* Balance Update Form */}
+                <div className="p-5 bg-slate-900 border border-purple-500/30 rounded-2xl space-y-4">
+                  <h4 className="text-xs font-extrabold text-purple-400 uppercase font-mono tracking-wider flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-purple-400" />
+                    Direct Client Balance Modifier
+                  </h4>
+                  <p className="text-xs text-slate-300">
+                    Enter any registered client's phone number and the new account balance (UGX).
+                  </p>
+
+                  {balanceFeedback && (
+                    <div className={`p-3 rounded-xl text-xs flex items-center gap-2 font-mono ${
+                      balanceFeedback.success
+                        ? 'bg-emerald-950/80 border border-emerald-800 text-emerald-300'
+                        : 'bg-rose-950/80 border border-rose-800 text-rose-300'
+                    }`}>
+                      {balanceFeedback.success ? <Check className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-rose-400" />}
+                      <span>{balanceFeedback.message}</span>
+                    </div>
+                  )}
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      setBalanceFeedback(null);
+                      const num = parseInt(newBalanceInput, 10);
+                      if (!targetPhoneInput.trim()) {
+                        setBalanceFeedback({ success: false, message: 'Please enter a registered client phone number' });
+                        return;
+                      }
+                      if (isNaN(num) || num < 0) {
+                        setBalanceFeedback({ success: false, message: 'Please enter a valid non-negative balance amount' });
+                        return;
+                      }
+                      const res = updateUserBalanceByPhone(targetPhoneInput.trim(), num);
+                      setBalanceFeedback(res);
+                      if (res.success) {
+                        setNewBalanceInput('');
+                      }
+                    }}
+                    className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end"
+                  >
+                    <div>
+                      <label className="block text-[11px] text-slate-400 font-mono mb-1">Client Phone Number:</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 0771234567 or 0744696416"
+                        value={targetPhoneInput}
+                        onChange={(e) => setTargetPhoneInput(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-purple-400"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-400 font-mono mb-1">New Balance (UGX):</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 150000"
+                        value={newBalanceInput}
+                        onChange={(e) => setNewBalanceInput(e.target.value)}
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-amber-400 font-mono text-xs font-bold focus:outline-none focus:border-purple-400"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      Save & Update Balance
+                    </button>
+                  </form>
+                </div>
+
+                {/* All Registered Clients List */}
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 className="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
+                      <Users className="w-4 h-4 text-purple-400" />
+                      All Registered Client Accounts ({getAllAccounts().length})
+                    </h3>
+
+                    {/* Search filter */}
+                    <div className="relative w-full sm:w-64">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search phone or name..."
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-purple-400"
+                      />
+                    </div>
+                  </div>
+
+                  {getAllAccounts().length === 0 ? (
+                    <div className="p-8 text-center bg-slate-900/40 border border-slate-800 rounded-xl text-slate-400 text-xs">
+                      No client accounts registered yet.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
+                      {getAllAccounts()
+                        .filter(acc => {
+                          if (!userSearchTerm) return true;
+                          const term = userSearchTerm.toLowerCase();
+                          return (
+                            acc.phone.toLowerCase().includes(term) ||
+                            (acc.user.name && acc.user.name.toLowerCase().includes(term))
+                          );
+                        })
+                        .map(acc => (
+                          <div
+                            key={acc.user.id || acc.phone}
+                            className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-purple-500/40 transition-all text-xs"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-white">{acc.user.name || 'Investor User'}</span>
+                                <span className="text-purple-400 font-mono font-bold">{acc.phone}</span>
+                              </div>
+                              <div className="text-[11px] text-slate-400 font-mono flex items-center gap-3 pt-1">
+                                <span>Deposited: UGX {(acc.user.totalDepositedUGX || 0).toLocaleString()}</span>
+                                <span>|</span>
+                                <span>Withdrawn: UGX {(acc.user.totalWithdrawnUGX || 0).toLocaleString()}</span>
+                                <span>|</span>
+                                <span>Mined: UGX {(acc.user.totalMinedUGX || 0).toLocaleString()}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
+                              <div className="text-right font-mono">
+                                <div className="text-[10px] text-slate-400">Current Balance:</div>
+                                <div className="text-base font-black text-amber-400">
+                                  UGX {(acc.user.balanceUGX || 0).toLocaleString()}
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTargetPhoneInput(acc.phone);
+                                  setNewBalanceInput(String(acc.user.balanceUGX || 0));
+                                  setBalanceFeedback(null);
+                                }}
+                                className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-800 text-purple-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1 shrink-0"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                Edit Balance
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
               </div>
             )}
 

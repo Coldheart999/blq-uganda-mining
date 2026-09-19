@@ -282,6 +282,10 @@ interface AppContextType {
 
   // Referral helpers
   referredUsers: ReferredUserInfo[];
+
+  // Admin User Balance Management
+  updateUserBalanceByPhone: (phone: string, newBalanceUGX: number) => { success: boolean; message: string };
+  getAllAccounts: () => StoredAccount[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -1020,6 +1024,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWithdrawals(updated);
     saveCloudData('withdrawals', updated);
   };
+  const getAllAccounts = (): StoredAccount[] => {
+    return getAllStoredAccounts();
+  };
+
+  const updateUserBalanceByPhone = (phone: string, newBalanceUGX: number): { success: boolean; message: string } => {
+    const accounts = getAllStoredAccounts();
+    const targetKey = normalizePhoneKey(phone);
+    const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === targetKey);
+
+    if (accIndex === -1) {
+      return { success: false, message: `No registered user account found with phone number ${phone}` };
+    }
+
+    const updatedUser = {
+      ...accounts[accIndex].user,
+      balanceUGX: newBalanceUGX
+    };
+
+    accounts[accIndex].user = updatedUser;
+    saveAllStoredAccounts(accounts);
+    saveCloudData('accounts', accounts);
+
+    if (currentUser && normalizePhoneKey(currentUser.phone) === targetKey) {
+      setCurrentUser(updatedUser);
+    }
+
+    return { 
+      success: true, 
+      message: `Successfully updated balance for ${updatedUser.name || phone} to UGX ${newBalanceUGX.toLocaleString()}` 
+    };
+  };
 
   return (
     <AppContext.Provider value={{
@@ -1043,7 +1078,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       approveWithdrawal,
       rejectWithdrawal,
       liveUnclaimedYield,
-      referredUsers
+      referredUsers,
+      updateUserBalanceByPhone,
+      getAllAccounts
     }}>
       {children}
     </AppContext.Provider>
