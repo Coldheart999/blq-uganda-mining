@@ -96,7 +96,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 20,
     tier: 'Pro',
     badge: '🏆 10-Day Platinum (UGX 200,000/day — 400% total ROI)',
-    image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80'
+    image: '/images/miners/miner-enterprise-farm.png'
   },
 
   // 30-DAY EXECUTIVE PLANS — 3x total return (200% ROI) + bonus day
@@ -540,12 +540,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const now = new Date();
 
     userActiveRigs.forEach(rig => {
+      // Skip if rig has expired — no yield after contract end
+      if (new Date(rig.expiryDate) <= now) {
+        if (rig.status === 'active') {
+          rig.status = 'expired';
+          changed = true;
+        }
+        return;
+      }
+
       const lastClaim = rig.lastClaimDate;
       if (!lastClaim) return;
 
       const elapsedMs = now.getTime() - new Date(lastClaim).getTime();
       if (elapsedMs >= 24 * 60 * 60 * 1000) {
-        // Daily yield is auto-credited directly to wallet balance
+        // Credit exactly ONE day of mined yield from this rig to the wallet balance
+        // and increment totalMinedUGX. Reset the 24h timer.
         user.balanceUGX = (user.balanceUGX || 0) + rig.dailyYieldUGX;
         user.totalMinedUGX = (user.totalMinedUGX || 0) + rig.dailyYieldUGX;
         rig.lastClaimDate = now.toISOString();
@@ -553,17 +563,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     });
 
-    // Also expire rigs whose contract has ended
-    userActiveRigs.forEach(rig => {
-      if (new Date(rig.expiryDate) <= now && rig.status === 'active') {
-        rig.status = 'expired';
-        changed = true;
-      }
-    });
-
     if (changed) {
       saveAllStoredAccounts(accounts);
-      saveCloudData('accounts', accounts);
       saveCloudData('rigs', purchasedRigs);
       setCurrentUser({ ...user });
     }
