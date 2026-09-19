@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
-import { ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun, Users } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, LogOut, User as UserIcon, LogIn, ChevronDown, Wallet, Store, Activity, History, Gift, Moon, Sun, Users, Bell, Check } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: string;
@@ -24,8 +24,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   openAdmin,
   openFaq
 }) => {
-  const { currentUser, logout } = useApp();
+  const { currentUser, setCurrentUser, logout } = useApp();
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState<boolean>(false);
   const [logoClicks, setLogoClicks] = useState<number>(0);
   const logoTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -170,6 +171,78 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <ArrowUpRight className="w-3.5 h-3.5" />
                   Withdraw
                 </button>
+
+                {/* Notification Bell Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setNotifDropdownOpen(!notifDropdownOpen);
+                      setUserDropdownOpen(false);
+                    }}
+                    className="relative p-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 hover:text-white hover:border-slate-700 transition-colors"
+                    title="Notifications"
+                  >
+                    <Bell className="w-4 h-4 text-amber-400" />
+                    {(currentUser.notifications?.filter(n => !n.read).length || 0) > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-extrabold text-[10px] rounded-full flex items-center justify-center animate-pulse">
+                        {currentUser.notifications?.filter(n => !n.read).length}
+                      </span>
+                    )}
+                  </button>
+
+                  {notifDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-slate-900 border border-amber-500/30 rounded-2xl shadow-2xl p-3 z-50 animate-fade-in max-h-96 overflow-y-auto scrollbar-thin">
+                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+                        <span className="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-1.5">
+                          <Bell className="w-3.5 h-3.5 text-amber-400" />
+                          Notifications ({(currentUser.notifications || []).length})
+                        </span>
+                        {(currentUser.notifications?.filter(n => !n.read).length || 0) > 0 && (
+                          <button
+                            onClick={() => {
+                              const updated = (currentUser.notifications || []).map(n => ({ ...n, read: true }));
+                              setCurrentUser({ ...currentUser, notifications: updated });
+                            }}
+                            className="text-[10px] text-amber-400 hover:underline font-mono"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                      </div>
+
+                      {(currentUser.notifications || []).length === 0 ? (
+                        <div className="py-6 text-center text-xs text-slate-400">
+                          No notifications yet
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {(currentUser.notifications || []).map((notif) => (
+                            <div
+                              key={notif.id}
+                              onClick={() => {
+                                const updated = (currentUser.notifications || []).map(n => n.id === notif.id ? { ...n, read: true } : n);
+                                setCurrentUser({ ...currentUser, notifications: updated });
+                              }}
+                              className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                                notif.read
+                                  ? 'bg-slate-950/60 border-slate-800/80 text-slate-400'
+                                  : 'bg-amber-500/10 border-amber-500/30 text-slate-200'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-1 font-bold text-white mb-0.5">
+                                <span className="truncate">{notif.title}</span>
+                                <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                                  {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <p className="text-[11px] leading-snug text-slate-300">{notif.message}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* User Dropdown */}
                 <div className="relative">

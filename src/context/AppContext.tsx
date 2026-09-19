@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { User, MinerPackage, PurchasedRig, DepositRequest, WithdrawalRequest, AdminConfig } from '../types';
+import { User, MinerPackage, PurchasedRig, DepositRequest, WithdrawalRequest, AdminConfig, ReferralNotification } from '../types';
 import { fetchCloudData, saveCloudData } from '../services/cloudSync';
 
 // Clean, attractive investment plans tailored for Ugandan investors
@@ -659,7 +659,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       referredBy: pendingRef,
       referralCount: 0,
       referralEarningsUGX: 0,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      notifications: [
+        {
+          id: 'notif_' + Date.now(),
+          title: '🎁 UGX 1,000 Welcome Bonus',
+          message: 'Welcome to BLQ Mining! UGX 1,000 starter bonus credited to your account.',
+          amountUGX: 1000,
+          referredName: '',
+          referredPhone: '',
+          createdAt: new Date().toISOString(),
+          read: false
+        }
+      ]
     };
 
     const newAccount: StoredAccount = { phone: cleanPhone, password: cleanPassword, user: newUser };
@@ -963,6 +975,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (accIndex !== -1) {
           accounts[accIndex].user.balanceUGX = (accounts[accIndex].user.balanceUGX || 0) + dep.amountUGX;
           accounts[accIndex].user.totalDepositedUGX = (accounts[accIndex].user.totalDepositedUGX || 0) + dep.amountUGX;
+          
+          const notif: ReferralNotification = {
+            id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            title: '💳 Deposit Verified!',
+            message: `Your deposit of UGX ${dep.amountUGX.toLocaleString()} via ${dep.provider} has been approved & added to your wallet!`,
+            amountUGX: dep.amountUGX,
+            referredName: '',
+            referredPhone: '',
+            createdAt: new Date().toISOString(),
+            read: false
+          };
+          accounts[accIndex].user.notifications = [notif, ...(accounts[accIndex].user.notifications || [])];
+
           saveAllStoredAccounts(accounts);
           saveCloudData('accounts', accounts);
           if (currentUser && currentUser.id === dep.userId) {
@@ -990,6 +1015,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const accIndex = accounts.findIndex(a => a.user.id === wth.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(wth.userPhone));
         if (accIndex !== -1) {
           accounts[accIndex].user.totalWithdrawnUGX = (accounts[accIndex].user.totalWithdrawnUGX || 0) + wth.amountUGX;
+          
+          const notif: ReferralNotification = {
+            id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            title: '📤 Payout Sent Successfully!',
+            message: `Your withdrawal payout of UGX ${wth.netAmountUGX.toLocaleString()} was processed to ${wth.destinationNumber}!`,
+            amountUGX: wth.netAmountUGX,
+            referredName: '',
+            referredPhone: '',
+            createdAt: new Date().toISOString(),
+            read: false
+          };
+          accounts[accIndex].user.notifications = [notif, ...(accounts[accIndex].user.notifications || [])];
+
           saveAllStoredAccounts(accounts);
           saveCloudData('accounts', accounts);
           if (currentUser && currentUser.id === wth.userId) {
