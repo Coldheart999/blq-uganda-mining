@@ -650,7 +650,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: 'usr_' + Date.now(),
       phone: cleanPhone,
       name: name?.trim() || `Investor ${cleanPhone.slice(-4)}`,
-      balanceUGX: 0,
+      balanceUGX: 1000,
       uncollectedMinedUGX: 0,
       totalDepositedUGX: 0,
       totalWithdrawnUGX: 0,

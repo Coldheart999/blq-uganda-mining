@@ -257,6 +257,17 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
                   <span className="text-slate-400 font-mono">Account Name:</span>
                   <span className="font-bold text-slate-200">{targetName}</span>
                 </div>
+
+                {/* Quick USSD Dial Helper */}
+                <div className="flex items-center justify-between text-xs border-t border-slate-800/80 pt-2 font-mono">
+                  <span className="text-slate-400">1-Tap USSD Dial Code:</span>
+                  <a
+                    href={senderProvider === 'MTN Mobile Money' ? 'tel:*165*1*1#' : 'tel:*185*1*1#'}
+                    className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold rounded-lg text-[11px] transition-all flex items-center gap-1"
+                  >
+                    <span>Dial {senderProvider === 'MTN Mobile Money' ? '*165*1*1#' : '*185*1*1#'}</span>
+                  </a>
+                </div>
               </div>
 
               {/* Amount Input */}
