@@ -293,6 +293,26 @@ const MainContent: React.FC = () => {
                   All Plans
                 </button>
                 <button
+                  onClick={() => setDurationFilter(1)}
+                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
+                    durationFilter === 1
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  ⚡ 1-Day Instant
+                </button>
+                <button
+                  onClick={() => setDurationFilter(3)}
+                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
+                    durationFilter === 3
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  🔥 3-Day Express
+                </button>
+                <button
                   onClick={() => setDurationFilter(5)}
                   className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
                     durationFilter === 5
@@ -300,7 +320,7 @@ const MainContent: React.FC = () => {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  ⚡ 5-Day Express
+                  ⭐ 5-Day VIP
                 </button>
                 <button
                   onClick={() => setDurationFilter(10)}
@@ -310,7 +330,7 @@ const MainContent: React.FC = () => {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  ⭐ 10-Day VIP
+                  💎 10-Day Gold
                 </button>
                 <button
                   onClick={() => setDurationFilter(30)}
@@ -320,27 +340,7 @@ const MainContent: React.FC = () => {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  💎 30-Day Executive
-                </button>
-                <button
-                  onClick={() => setDurationFilter(60)}
-                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
-                    durationFilter === 60
-                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  💎 60-Day Apex
-                </button>
-                <button
-                  onClick={() => setDurationFilter(90)}
-                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
-                    durationFilter === 90
-                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  👑 90-Day Kingpin
+                  👑 30-Day Crown
                 </button>
               </div>
             </div>
