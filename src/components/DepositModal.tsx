@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ArrowDownLeft, X, Smartphone, CheckCircle2, AlertCircle, Copy, Info, Clock, HeartHandshake, Bell, Lock } from 'lucide-react';
+import { ArrowDownLeft, X, Smartphone, CheckCircle2, AlertCircle, Copy, Info, Clock, HeartHandshake } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
 import { BackButton } from './BackButton';
 import { MtnLogo, AirtelLogo } from './ProviderLogos';
@@ -13,7 +13,8 @@ interface DepositModalProps {
 export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
   const { currentUser, adminConfig, submitDeposit } = useApp();
 
-  const [provider, setProvider] = useState<'MTN Mobile Money' | 'Airtel Money'>('MTN Mobile Money');
+  // Sender can be on MTN or Airtel, but deposits are ALWAYS received on the Airtel Money account
+  const [senderProvider, setSenderProvider] = useState<'MTN Mobile Money' | 'Airtel Money'>('MTN Mobile Money');
   const [senderPhone, setSenderPhone] = useState<string>(currentUser?.phone || '');
   const [amount, setAmount] = useState<string>('50000');
   const [txId, setTxId] = useState<string>('');
@@ -22,15 +23,13 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [submittedTxId, setSubmittedTxId] = useState<string>('');
   const [submittedAmount, setSubmittedAmount] = useState<number>(0);
-  const [submittedProvider, setSubmittedProvider] = useState<'MTN Mobile Money' | 'Airtel Money'>('Airtel Money');
+  const [submittedSenderProvider, setSubmittedSenderProvider] = useState<'MTN Mobile Money' | 'Airtel Money'>('Airtel Money');
 
   if (!isOpen || !currentUser) return null;
 
-  // Select receiver details based on chosen provider
-  const isMtn = provider === 'MTN Mobile Money';
-  const targetNumber = isMtn ? adminConfig.mobileMoneyNumber : adminConfig.airtelMoneyNumber;
-  const targetName = isMtn ? adminConfig.mobileMoneyName : adminConfig.airtelMoneyName;
-  const ProviderLogo = isMtn ? MtnLogo : AirtelLogo;
+  // Receiver account is always the Airtel Money number
+  const targetNumber = adminConfig.airtelMoneyNumber;
+  const targetName = adminConfig.airtelMoneyName;
 
   const handleCopyNumber = () => {
     navigator.clipboard.writeText(targetNumber);
@@ -42,8 +41,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
     e.preventDefault();
     setError('');
 
-    // Validate sender phone number matches selected network
-    const phoneVal = validateUgandanPhone(senderPhone, provider);
+    // Validate sender phone number matches selected sender network
+    const phoneVal = validateUgandanPhone(senderPhone, senderProvider);
     if (!phoneVal.isValid) {
       setError(phoneVal.errorMessage || 'Please enter a valid Mobile Money phone number.');
       return;
@@ -60,11 +59,12 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
       return;
     }
 
-    const res = submitDeposit(numAmount, provider, txId.trim());
+    // Deposits are always recorded as Airtel Money (the receiving network)
+    const res = submitDeposit(numAmount, 'Airtel Money', txId.trim());
     if (res.success) {
       setSubmittedTxId(txId.trim());
       setSubmittedAmount(numAmount);
-      setSubmittedProvider(provider);
+      setSubmittedSenderProvider(senderProvider);
       setIsSubmitted(true);
     } else {
       setError(res.message);
@@ -109,11 +109,11 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
             </div>
             <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3 text-left text-xs">
               <div className="flex items-center gap-2.5 pb-2 border-b border-slate-800">
-                {submittedProvider === 'Airtel Money' ? <AirtelLogo size="sm" /> : <MtnLogo size="sm" />}
-                <span className="font-bold text-white text-sm">{submittedProvider} Uganda</span>
+                <AirtelLogo size="sm" />
+                <span className="font-bold text-white text-sm">Airtel Money Uganda</span>
               </div>
               <p className="text-slate-300 leading-relaxed">
-                We have received your deposit request of <span className="font-bold font-mono text-emerald-400">UGX {submittedAmount.toLocaleString()}</span>.
+                We have received your deposit request of <span className="font-bold font-mono text-emerald-400">UGX {submittedAmount.toLocaleString()}</span> sent from your <strong className="text-white">{submittedSenderProvider}</strong> number.
               </p>
               <div className="p-2.5 bg-slate-900 rounded-lg flex justify-between items-center font-mono">
                 <span className="text-slate-400">Transaction Ref (TxID):</span>
@@ -144,7 +144,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Deposit Money via Mobile Money</h2>
-                <p className="text-xs text-slate-400">Send deposit to account below & enter your Transaction ID</p>
+                <p className="text-xs text-slate-400">Select your sender network, then send to the Airtel Money account below</p>
               </div>
             </div>
 
@@ -158,24 +158,24 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
 
             <form onSubmit={handleSubmit} className="space-y-4">
               
-              {/* Provider Selection Buttons */}
+              {/* Sender Provider Selection Buttons */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                  1. Select Mobile Money Provider
+                  1. Select Your Sender Mobile Money Network
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {/* MTN Button */}
                   <button
                     type="button"
                     onClick={() => {
-                      setProvider('MTN Mobile Money');
+                      setSenderProvider('MTN Mobile Money');
                       setError('');
                     }}
                     className={`py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2.5 transition-all ${
-                      provider === 'MTN Mobile Money'
+                      senderProvider === 'MTN Mobile Money'
                         ? 'bg-amber-400/20 border-amber-400 text-amber-300 shadow-md ring-1 ring-amber-400/50'
                         : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }}`}
+                    }`}
                   >
                     <MtnLogo size="sm" />
                     <span>MTN Mobile Money</span>
@@ -185,14 +185,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
                   <button
                     type="button"
                     onClick={() => {
-                      setProvider('Airtel Money');
+                      setSenderProvider('Airtel Money');
                       setError('');
                     }}
                     className={`py-3 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2.5 transition-all ${
-                      provider === 'Airtel Money'
+                      senderProvider === 'Airtel Money'
                         ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-md ring-1 ring-rose-500/50'
                         : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }}`}
+                    }`}
                   >
                     <AirtelLogo size="sm" />
                     <span>Airtel Money</span>
@@ -216,26 +216,26 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
                       setSenderPhone(e.target.value);
                       setError('');
                     }}
-                    placeholder={provider === 'MTN Mobile Money' ? 'e.g. 0771234567 or 0781234567' : 'e.g. 0701234567 or 0751234567'}
+                    placeholder={senderProvider === 'MTN Mobile Money' ? 'e.g. 0771234567 or 0781234567' : 'e.g. 0701234567 or 0751234567'}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-amber-400"
                     required
                   />
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">
-                  {provider === 'MTN Mobile Money' ? <MtnLogo size="sm" className="w-4 h-4 p-0 rounded-sm" /> : <AirtelLogo size="sm" className="w-4 h-4 p-0 rounded-sm" />}
+                  {senderProvider === 'MTN Mobile Money' ? <MtnLogo size="sm" className="w-4 h-4 p-0 rounded-sm" /> : <AirtelLogo size="sm" className="w-4 h-4 p-0 rounded-sm" />}
                   <span>
-                    {provider === 'MTN Mobile Money'
+                    {senderProvider === 'MTN Mobile Money'
                       ? 'Must be an MTN Uganda line (077/078/076/039)'
                       : 'Must be an Airtel Uganda line (070/075/074)'}
                   </span>
                 </p>
               </div>
 
-              {/* Receiver Details Card */}
+              {/* Receiver Details Card — Always Airtel */}
               <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
                 <div className="flex items-center justify-between text-xs text-slate-400 font-medium mb-1">
-                  <span>3. Send deposit money to this official account:</span>
-                  <ProviderLogo size="sm" />
+                  <span>3. Send deposit money to this Airtel Money account:</span>
+                  <AirtelLogo size="sm" />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400 font-mono">Receiver Number:</span>
