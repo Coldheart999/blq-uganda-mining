@@ -136,7 +136,9 @@ const MainContent: React.FC = () => {
     if (!pkg) return;
 
     if (currentUser.balanceUGX < pkg.priceUGX) {
+      setPurchaseNotice(`Insufficient balance for ${pkg.name} (UGX ${pkg.priceUGX.toLocaleString()} required). Please deposit funds below.`);
       setIsDepositOpen(true);
+      setTimeout(() => setPurchaseNotice(''), 6000);
       return;
     }
 
