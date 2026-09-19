@@ -443,10 +443,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
         }
 
-        // Update Admin Config
-        if (cloudConfig && cloudConfig.adminPin) {
+        // Update Admin Config — only accept from cloud if it has valid required fields
+        if (cloudConfig && cloudConfig.adminPin && cloudConfig.airtelMoneyNumber && cloudConfig.airtelMoneyName) {
           setAdminConfig(cloudConfig);
           localStorage.setItem('blq_admin_config', JSON.stringify(cloudConfig));
+        } else {
+          // Cloud config is missing or has been overwritten by another source
+          // Fall back to DEFAULT and re-save it to cloud
+          setAdminConfig(DEFAULT_ADMIN_CONFIG);
+          localStorage.setItem('blq_admin_config', JSON.stringify(DEFAULT_ADMIN_CONFIG));
+          saveCloudData('admin_config', DEFAULT_ADMIN_CONFIG);
         }
 
         // If currentUser is logged in, refresh state from merged accounts
