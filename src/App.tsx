@@ -322,6 +322,26 @@ const MainContent: React.FC = () => {
                 >
                   💎 30-Day Executive
                 </button>
+                <button
+                  onClick={() => setDurationFilter(60)}
+                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
+                    durationFilter === 60
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  💎 60-Day Apex
+                </button>
+                <button
+                  onClick={() => setDurationFilter(90)}
+                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
+                    durationFilter === 90
+                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  👑 90-Day Kingpin
+                </button>
               </div>
             </div>
 

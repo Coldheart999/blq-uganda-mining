@@ -143,6 +143,85 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     tier: 'Industrial',
     badge: '👑 30-Day Crown (UGX 550,000/day)',
     image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80'
+  },
+
+  // 60-DAY PREMIUM INDUSTRIAL PLANS
+  {
+    id: 'plan-60d-1',
+    name: 'Apex Industrial Plan (60-Day)',
+    model: '60-Day Industrial Validator Cluster',
+    priceUGX: 5000000,
+    dailyYieldUGX: 180000,
+    hashRate: '1.2 PH/s',
+    powerDraw: '7800W',
+    algo: 'SHA-256',
+    durationDays: 60,
+    stock: 10,
+    tier: 'Industrial',
+    badge: '💎 60-Day Apex (UGX 180,000/day)',
+    image: 'https://images.unsplash.com/photo-1607827995293-59d9a9e2a7c0?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'plan-60d-2',
+    name: 'Titanium Max Plan (60-Day)',
+    model: '60-Day Enterprise Super Rig',
+    priceUGX: 10000000,
+    dailyYieldUGX: 480000,
+    hashRate: '2.4 PH/s',
+    powerDraw: '15600W',
+    algo: 'SHA-256',
+    durationDays: 60,
+    stock: 5,
+    tier: 'Enterprise',
+    badge: '🔥 60-Day Titanium (UGX 480,000/day)',
+    image: 'https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'plan-60d-3',
+    name: 'Bluelightning Sovereign Plan (60-Day)',
+    model: '60-Day Quantum Fleet Master',
+    priceUGX: 25000000,
+    dailyYieldUGX: 1500000,
+    hashRate: '5.0 PH/s',
+    powerDraw: '32000W',
+    algo: 'SHA-256',
+    durationDays: 60,
+    stock: 3,
+    tier: 'Industrial',
+    badge: '🚀 60-Day Sovereign (UGX 1,500,000/day)',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80'
+  },
+
+  // 90-DAY ULTIMATE EXECUTIVE PLANS
+  {
+    id: 'plan-90d-1',
+    name: 'Executive Prime Plan (90-Day)',
+    model: '90-Day Prime Enterprise Rig',
+    priceUGX: 15000000,
+    dailyYieldUGX: 800000,
+    hashRate: '3.2 PH/s',
+    powerDraw: '21000W',
+    algo: 'SHA-256',
+    durationDays: 90,
+    stock: 5,
+    tier: 'Enterprise',
+    badge: '👑 90-Day Prime (UGX 800,000/day)',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'plan-90d-2',
+    name: 'Kingpin Legacy Plan (90-Day)',
+    model: '90-Day Legacy Mega Farm',
+    priceUGX: 50000000,
+    dailyYieldUGX: 3500000,
+    hashRate: '8.0 PH/s',
+    powerDraw: '52000W',
+    algo: 'SHA-256',
+    durationDays: 90,
+    stock: 2,
+    tier: 'Industrial',
+    badge: '🏆 90-Day Kingpin (UGX 3,500,000/day)',
+    image: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&w=600&q=80'
   }
 ];
 
