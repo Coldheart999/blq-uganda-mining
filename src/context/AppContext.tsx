@@ -3,55 +3,8 @@ import { User, MinerPackage, PurchasedRig, DepositRequest, WithdrawalRequest, Ad
 import { fetchCloudData, saveCloudData } from '../services/cloudSync';
 
 // Clean, attractive investment plans tailored for Ugandan investors
-// Pricing scales cleanly with compelling ROI. Lowest package is UGX 10,000.
+// Organized pricing across 3-Day, 5-Day, 10-Day, and 30-Day tiers with distinct crypto miner visuals.
 export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
-  // 1-DAY ULTRA-EXPRESS INSTANT PLANS — Entry Trial & High Impulse 50K+ Plans
-  {
-    id: 'plan-1d-1',
-    name: 'Starter Trial (1-Day)',
-    model: 'Antminer S19 XP (1-Day Express)',
-    priceUGX: 10000,
-    dailyYieldUGX: 15000,
-    hashRate: '140 TH/s',
-    powerDraw: '3010W',
-    algo: 'SHA-256',
-    durationDays: 1,
-    stock: 200,
-    tier: 'Starter',
-    badge: '⚡ 1-Day Instant (UGX 15,000 Next Morning — 50% ROI)',
-    image: '/images/miners/miner-compact-unit.png'
-  },
-  {
-    id: 'plan-1d-2',
-    name: 'Express Turbo (1-Day)',
-    model: 'Whatsminer M50S (1-Day Turbo)',
-    priceUGX: 50000,
-    dailyYieldUGX: 85000,
-    hashRate: '126 TH/s',
-    powerDraw: '3250W',
-    algo: 'SHA-256',
-    durationDays: 1,
-    stock: 150,
-    tier: 'Starter',
-    badge: '🔥 1-Day Turbo (UGX 85,000 Next Morning — 70% ROI)',
-    image: '/images/miners/miner-psu-unit.png'
-  },
-  {
-    id: 'plan-1d-3',
-    name: 'VIP Instant (1-Day)',
-    model: 'Antminer S21 Hydro (1-Day VIP)',
-    priceUGX: 100000,
-    dailyYieldUGX: 180000,
-    hashRate: '335 TH/s',
-    powerDraw: '5360W',
-    algo: 'SHA-256',
-    durationDays: 1,
-    stock: 80,
-    tier: 'Pro',
-    badge: '🚀 1-Day VIP (UGX 180,000 Next Morning — 80% ROI)',
-    image: '/images/miners/miner-technical-closeup.png'
-  },
-
   // 3-DAY EXPRESS POWER PLANS — Clean organized pricing (20K, 50K, 150K)
   {
     id: 'plan-3d-1',
@@ -66,7 +19,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 120,
     tier: 'Starter',
     badge: '⚡ 3-Day Express (UGX 12,000/day — UGX 36,000 Total)',
-    image: '/images/miners/miner-hash-board.png'
+    image: '/images/miners/miner-compact-unit.png'
   },
   {
     id: 'plan-3d-2',
@@ -81,7 +34,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 90,
     tier: 'Pro',
     badge: '⭐ 3-Day Silver (UGX 35,000/day — UGX 105,000 Total — 110% ROI)',
-    image: '/images/miners/miner-compact-unit.png'
+    image: '/images/miners/miner-psu-unit.png'
   },
   {
     id: 'plan-3d-3',
@@ -96,7 +49,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 50,
     tier: 'Pro',
     badge: '👑 3-Day Gold (UGX 115,000/day — UGX 345,000 Total — 130% ROI)',
-    image: '/images/miners/miner-psu-unit.png'
+    image: '/images/miners/miner-technical-closeup.png'
   },
 
   // 5-DAY EXECUTIVE PLANS — High volume conversion (50K, 100K, 250K)
@@ -113,7 +66,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 100,
     tier: 'Starter',
     badge: '⚡ 5-Day Executive (UGX 22,000/day — UGX 110,000 Total — 120% ROI)',
-    image: '/images/miners/miner-compact-unit.png'
+    image: '/images/miners/miner-hash-board.png'
   },
   {
     id: 'plan-5d-2',
@@ -128,7 +81,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 60,
     tier: 'Starter',
     badge: '🔥 5-Day Pro Turbo (UGX 48,000/day — UGX 240,000 Total — 140% ROI)',
-    image: '/images/miners/miner-psu-unit.png'
+    image: '/images/miners/miner-enterprise-farm.png'
   },
   {
     id: 'plan-5d-3',
@@ -143,7 +96,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 35,
     tier: 'Pro',
     badge: '🚀 5-Day VIP (UGX 130,000/day — UGX 650,000 Total — 160% ROI)',
-    image: '/images/miners/miner-enterprise-farm.png'
+    image: '/images/miners/miner-datacenter.png'
   },
 
   // 10-DAY ACCELERATED PLANS — Scaled up high-tier returns (50K, 250K, 500K)
@@ -160,7 +113,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 50,
     tier: 'Starter',
     badge: '⭐ 10-Day Silver (UGX 12,000/day — UGX 120,000 Total — 140% ROI)',
-    image: '/images/miners/miner-hash-board.png'
+    image: '/images/miners/miner-farm-wide.png'
   },
   {
     id: 'plan-10d-2',
@@ -175,7 +128,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 40,
     tier: 'Pro',
     badge: '💎 10-Day Gold (UGX 68,000/day — UGX 680,000 Total — 172% ROI)',
-    image: '/images/miners/miner-technical-closeup.png'
+    image: '/images/miners/miner-industrial-rig.png'
   },
   {
     id: 'plan-10d-3',
@@ -190,7 +143,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 20,
     tier: 'Pro',
     badge: '🏆 10-Day Platinum (UGX 145,000/day — UGX 1,450,000 Total — 190% ROI)',
-    image: '/images/miners/miner-enterprise-farm.png'
+    image: '/images/miners/miner-server-farm.png'
   },
 
   // 30-DAY EXECUTIVE INDUSTRIAL PLANS — Organized whale tiers (250K, 1M, 2.5M)
@@ -207,7 +160,7 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     stock: 30,
     tier: 'Pro',
     badge: '🌟 30-Day Master (UGX 25,000/day — UGX 750,000 Total — 200% ROI)',
-    image: '/images/miners/miner-datacenter.png'
+    image: '/images/miners/miner-modern-datacenter.png'
   },
   {
     id: 'plan-30d-2',

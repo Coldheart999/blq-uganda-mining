@@ -293,16 +293,6 @@ const MainContent: React.FC = () => {
                   All Plans
                 </button>
                 <button
-                  onClick={() => setDurationFilter(1)}
-                  className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
-                    durationFilter === 1
-                      ? 'bg-amber-500 text-slate-950 font-bold shadow'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  ⚡ 1-Day Instant
-                </button>
-                <button
                   onClick={() => setDurationFilter(3)}
                   className={`px-3.5 py-2 rounded-xl shrink-0 transition-all ${
                     durationFilter === 3
