@@ -146,20 +146,20 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     image: '/images/miners/miner-enterprise-farm.png'
   },
 
-  // 10-DAY ACCELERATED PLANS
+  // 10-DAY ACCELERATED PLANS — Scaled up returns for high-tier depositors (60% - 100% Net Profit)
   {
     id: 'plan-10d-1',
     name: 'Silver Plan (10-Day)',
     model: 'Antminer S19a (10-Day Silver)',
     priceUGX: 60000,
-    dailyYieldUGX: 8000,
+    dailyYieldUGX: 9600,
     hashRate: '58 TH/s',
     powerDraw: '2380W',
     algo: 'SHA-256',
     durationDays: 10,
     stock: 50,
     tier: 'Starter',
-    badge: '⭐ 10-Day Silver (UGX 8,000/day — UGX 80,000 Total Return)',
+    badge: '⭐ 10-Day Silver (UGX 9,600/day — UGX 96,000 Total Return — 60% ROI)',
     image: '/images/miners/miner-hash-board.png'
   },
   {
@@ -167,14 +167,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     name: 'Gold Hydro Plan (10-Day)',
     model: 'HydroMiner Blade (10-Day Gold)',
     priceUGX: 250000,
-    dailyYieldUGX: 33000,
+    dailyYieldUGX: 42500,
     hashRate: '120 TH/s',
     powerDraw: '3200W',
     algo: 'SHA-256',
     durationDays: 10,
     stock: 40,
     tier: 'Pro',
-    badge: '💎 10-Day Gold (UGX 33,000/day — UGX 330,000 Total Return)',
+    badge: '💎 10-Day Gold (UGX 42,500/day — UGX 425,000 Total Return — 70% ROI)',
     image: '/images/miners/miner-technical-closeup.png'
   },
   {
@@ -182,31 +182,31 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     name: 'Platinum Plan (10-Day)',
     model: 'IceRiver KS1 (10-Day Platinum)',
     priceUGX: 500000,
-    dailyYieldUGX: 68000,
+    dailyYieldUGX: 90000,
     hashRate: '8.0 GH/s',
     powerDraw: '3200W',
     algo: 'kHeavyHash',
     durationDays: 10,
     stock: 20,
     tier: 'Pro',
-    badge: '🏆 10-Day Platinum (UGX 68,000/day — UGX 680,000 Total Return)',
+    badge: '🏆 10-Day Platinum (UGX 90,000/day — UGX 900,000 Total Return — 80% ROI)',
     image: '/images/miners/miner-enterprise-farm.png'
   },
 
-  // 30-DAY EXECUTIVE INDUSTRIAL PLANS
+  // 30-DAY EXECUTIVE INDUSTRIAL PLANS — High-value whale incentives (100% - 150% Net Profit)
   {
     id: 'plan-30d-1',
     name: 'Master Plan (30-Day)',
     model: 'Antminer S19 XP (30-Day Master)',
     priceUGX: 300000,
-    dailyYieldUGX: 14000,
+    dailyYieldUGX: 20000,
     hashRate: '140 TH/s',
     powerDraw: '3000W',
     algo: 'SHA-256',
     durationDays: 30,
     stock: 30,
     tier: 'Pro',
-    badge: '🌟 30-Day Master (UGX 14,000/day — UGX 420,000 Total Return)',
+    badge: '🌟 30-Day Master (UGX 20,000/day — UGX 600,000 Total Return — 100% ROI)',
     image: '/images/miners/miner-datacenter.png'
   },
   {
@@ -214,14 +214,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     name: 'Diamond Plan (30-Day)',
     model: 'Whatsminer M52 (30-Day Diamond)',
     priceUGX: 1000000,
-    dailyYieldUGX: 48000,
+    dailyYieldUGX: 75000,
     hashRate: '126 TH/s',
     powerDraw: '3200W',
     algo: 'SHA-256',
     durationDays: 30,
     stock: 15,
     tier: 'Enterprise',
-    badge: '👑 30-Day Diamond (UGX 48,000/day — UGX 1,440,000 Total Return)',
+    badge: '👑 30-Day Diamond (UGX 75,000/day — UGX 2,250,000 Total Return — 125% ROI)',
     image: '/images/miners/miner-farm-wide.png'
   },
   {
@@ -229,14 +229,14 @@ export const INITIAL_MINER_PACKAGES: MinerPackage[] = [
     name: 'Crown Executive Plan (30-Day)',
     model: 'Antminer S21 (30-Day Crown)',
     priceUGX: 2500000,
-    dailyYieldUGX: 125000,
+    dailyYieldUGX: 208333,
     hashRate: '200 TH/s',
     powerDraw: '3500W',
     algo: 'SHA-256',
     durationDays: 30,
     stock: 5,
     tier: 'Industrial',
-    badge: '👑 30-Day Crown (UGX 125,000/day — UGX 3,750,000 Total Return)',
+    badge: '👑 30-Day Crown (UGX 208,333/day — UGX 6,250,000 Total Return — 150% ROI)',
     image: '/images/miners/miner-industrial-rig.png'
   }
 ];
