@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { BackButton } from './BackButton';
-import { ShieldCheck, Check, X, Smartphone, ArrowDownLeft, ArrowUpRight, Settings, Lock, AlertCircle, MessageSquare, CreditCard, Users, Search, Edit3, DollarSign } from 'lucide-react';
+import { ShieldCheck, Check, X, Smartphone, ArrowDownLeft, ArrowUpRight, Settings, Lock, AlertCircle, MessageSquare, CreditCard, Users, Search, Edit3, DollarSign, RefreshCw } from 'lucide-react';
 import { getSMSGatewaySettings, saveSMSGatewaySettings, SMSGatewaySettings } from '../services/smsService';
 import { getPaymentGatewaySettings, savePaymentGatewaySettings, PaymentGatewaySettings } from '../services/paymentGateway';
 
@@ -21,13 +21,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     adminConfig,
     setAdminConfig,
     updateUserBalanceByPhone,
-    getAllAccounts
+    getAllAccounts,
+    syncFromCloud
   } = useApp();
 
   const [pinInput, setPinInput] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'withdrawals' | 'deposits' | 'users' | 'gateway' | 'sms' | 'settings'>('withdrawals');
   const [pinError, setPinError] = useState<string>('');
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+
+  // Auto-sync when Admin Panel opens or authenticates
+  useEffect(() => {
+    if (isOpen && isAuthenticated) {
+      handleManualSync();
+    }
+  }, [isOpen, isAuthenticated, activeTab]);
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    await syncFromCloud();
+    setTimeout(() => setIsSyncing(false), 500);
+  };
 
   // User Balance Management State
   const [userSearchTerm, setUserSearchTerm] = useState<string>('');
@@ -54,6 +69,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     setPinError('');
     if (pinInput === adminConfig.adminPin || pinInput === '8888') {
       setIsAuthenticated(true);
+      handleManualSync();
     } else {
       setPinError('Incorrect Admin PIN. Default PIN is 8888.');
     }
@@ -110,16 +126,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
               <p className="text-xs text-slate-400">Owner Portal for Uganda Mobile Money Transfers</p>
             </div>
           </div>
-          {/* Back Button */}
-          <div className="absolute top-4 left-4 z-10">
-            <BackButton onClick={onClose} />
+          
+          <div className="flex items-center space-x-2">
+            {isAuthenticated && (
+              <button
+                onClick={handleManualSync}
+                disabled={isSyncing}
+                className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold rounded-xl transition-all flex items-center gap-1.5"
+                title="Force refresh deposits & accounts from cloud"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-amber-300' : ''}`} />
+                <span>{isSyncing ? 'Syncing...' : 'Sync Cloud 🔄'}</span>
+              </button>
+            )}
+
+            {/* Back Button */}
+            <div className="relative z-10">
+              <BackButton onClick={onClose} />
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* PIN Authentication Screen */}

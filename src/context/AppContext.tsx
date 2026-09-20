@@ -254,6 +254,7 @@ interface AppContextType {
   // Admin User Balance Management
   updateUserBalanceByPhone: (phone: string, newBalanceUGX: number) => { success: boolean; message: string };
   getAllAccounts: () => StoredAccount[];
+  syncFromCloud: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -315,14 +316,14 @@ const enrichAndMigrateAccounts = (accounts: StoredAccount[]): StoredAccount[] =>
 const mergeAccounts = (local: StoredAccount[], cloud: StoredAccount[]): StoredAccount[] => {
   const map = new Map<string, StoredAccount>();
   for (const acc of local) {
-    map.set(normalizePhoneKey(acc.phone), acc);
+    if (acc && acc.phone) map.set(normalizePhoneKey(acc.phone), acc);
   }
   for (const acc of cloud) {
+    if (!acc || !acc.phone) continue;
     const key = normalizePhoneKey(acc.phone);
     if (!map.has(key)) {
       map.set(key, acc);
     } else {
-      // Merge user state, keeping most up-to-date balance/data
       const localAcc = map.get(key)!;
       const mergedUser: User = {
         ...localAcc.user,
@@ -330,12 +331,79 @@ const mergeAccounts = (local: StoredAccount[], cloud: StoredAccount[]): StoredAc
         balanceUGX: Math.max(localAcc.user.balanceUGX || 0, acc.user.balanceUGX || 0),
         totalDepositedUGX: Math.max(localAcc.user.totalDepositedUGX || 0, acc.user.totalDepositedUGX || 0),
         totalWithdrawnUGX: Math.max(localAcc.user.totalWithdrawnUGX || 0, acc.user.totalWithdrawnUGX || 0),
-        totalMinedUGX: Math.max(localAcc.user.totalMinedUGX || 0, acc.user.totalMinedUGX || 0)
+        totalMinedUGX: Math.max(localAcc.user.totalMinedUGX || 0, acc.user.totalMinedUGX || 0),
+        referralCount: Math.max(localAcc.user.referralCount || 0, acc.user.referralCount || 0),
+        referralEarningsUGX: Math.max(localAcc.user.referralEarningsUGX || 0, acc.user.referralEarningsUGX || 0)
       };
       map.set(key, { ...localAcc, password: acc.password || localAcc.password, user: mergedUser });
     }
   }
   return enrichAndMigrateAccounts(Array.from(map.values()));
+};
+
+// Merge deposits without losing status or items
+const mergeDeposits = (local: DepositRequest[], cloud: DepositRequest[]): DepositRequest[] => {
+  const map = new Map<string, DepositRequest>();
+  for (const dep of local) {
+    if (dep && dep.id) map.set(dep.id, dep);
+  }
+  for (const dep of cloud) {
+    if (!dep || !dep.id) continue;
+    if (!map.has(dep.id)) {
+      map.set(dep.id, dep);
+    } else {
+      const existing = map.get(dep.id)!;
+      let finalStatus = existing.status;
+      if (existing.status === 'pending' && dep.status !== 'pending') {
+        finalStatus = dep.status;
+      } else if (dep.status === 'pending' && existing.status !== 'pending') {
+        finalStatus = existing.status;
+      }
+      map.set(dep.id, { ...existing, ...dep, status: finalStatus });
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+};
+
+// Merge withdrawals without losing status or items
+const mergeWithdrawals = (local: WithdrawalRequest[], cloud: WithdrawalRequest[]): WithdrawalRequest[] => {
+  const map = new Map<string, WithdrawalRequest>();
+  for (const wth of local) {
+    if (wth && wth.id) map.set(wth.id, wth);
+  }
+  for (const wth of cloud) {
+    if (!wth || !wth.id) continue;
+    if (!map.has(wth.id)) {
+      map.set(wth.id, wth);
+    } else {
+      const existing = map.get(wth.id)!;
+      let finalStatus = existing.status;
+      if (existing.status === 'pending' && wth.status !== 'pending') {
+        finalStatus = wth.status;
+      } else if (wth.status === 'pending' && existing.status !== 'pending') {
+        finalStatus = existing.status;
+      }
+      map.set(wth.id, { ...existing, ...wth, status: finalStatus });
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+};
+
+// Merge rigs without losing items
+const mergeRigs = (local: PurchasedRig[], cloud: PurchasedRig[]): PurchasedRig[] => {
+  const map = new Map<string, PurchasedRig>();
+  for (const rig of local) {
+    if (rig && rig.id) map.set(rig.id, rig);
+  }
+  for (const rig of cloud) {
+    if (!rig || !rig.id) continue;
+    if (!map.has(rig.id)) {
+      map.set(rig.id, rig);
+    } else {
+      map.set(rig.id, { ...map.get(rig.id)!, ...rig });
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -413,98 +481,79 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // INITIAL CLOUD SYNC: Run on app mount & poll every 8 seconds for real-time referral tracking
-  useEffect(() => {
-    let isMounted = true;
-    const syncFromCloud = async () => {
-      try {
-        const [cloudAccounts, cloudRigs, cloudDeps, cloudWiths, cloudConfig] = await Promise.all([
-          fetchCloudData<StoredAccount[]>('accounts', []),
-          fetchCloudData<PurchasedRig[]>('rigs', []),
-          fetchCloudData<DepositRequest[]>('deposits', []),
-          fetchCloudData<WithdrawalRequest[]>('withdrawals', []),
-          fetchCloudData<AdminConfig | null>('admin_config', null)
-        ]);
+  // Reusable Cloud Sync Function
+  const syncFromCloud = async (): Promise<void> => {
+    try {
+      const [cloudAccounts, cloudRigs, cloudDeps, cloudWiths, cloudConfig] = await Promise.all([
+        fetchCloudData<StoredAccount[]>('accounts', []),
+        fetchCloudData<PurchasedRig[]>('rigs', []),
+        fetchCloudData<DepositRequest[]>('deposits', []),
+        fetchCloudData<WithdrawalRequest[]>('withdrawals', []),
+        fetchCloudData<AdminConfig | null>('admin_config', null)
+      ]);
 
-        if (!isMounted) return;
+      // Merge Accounts
+      const localAccounts = getAllStoredAccounts();
+      const mergedAccounts = mergeAccounts(localAccounts, cloudAccounts);
+      saveAllStoredAccounts(mergedAccounts);
+      setAccountsTick(v => v + 1);
 
-        // Merge Accounts
-        const localAccounts = getAllStoredAccounts();
-        const mergedAccounts = mergeAccounts(localAccounts, cloudAccounts);
-        saveAllStoredAccounts(mergedAccounts);
-        setAccountsTick(v => v + 1);
-
-        // Update Rigs
-        if (cloudRigs && cloudRigs.length > 0) {
-          setPurchasedRigs(prev => {
-            const combined = [...prev];
-            for (const r of cloudRigs) {
-              if (!combined.some(existing => existing.id === r.id)) combined.push(r);
-            }
-            localStorage.setItem('blq_purchased_rigs', JSON.stringify(combined));
-            return combined;
-          });
-        }
-
-        // Update Deposits
-        if (cloudDeps && cloudDeps.length > 0) {
-          setDeposits(prev => {
-            const combined = [...prev];
-            for (const d of cloudDeps) {
-              if (!combined.some(existing => existing.id === d.id)) combined.push(d);
-            }
-            localStorage.setItem('blq_deposits', JSON.stringify(combined));
-            return combined;
-          });
-        }
-
-        // Update Withdrawals
-        if (cloudWiths && cloudWiths.length > 0) {
-          setWithdrawals(prev => {
-            const combined = [...prev];
-            for (const w of cloudWiths) {
-              if (!combined.some(existing => existing.id === w.id)) combined.push(w);
-            }
-            localStorage.setItem('blq_withdrawals', JSON.stringify(combined));
-            return combined;
-          });
-        }
-
-        // Update Admin Config — only accept from cloud if it has valid required fields
-        if (cloudConfig && cloudConfig.adminPin && cloudConfig.airtelMoneyNumber && cloudConfig.airtelMoneyName) {
-          const enforced = {
-            ...cloudConfig,
-            mobileMoneyNumber: '+256 744 696 416',
-            airtelMoneyNumber: '+256 744 696 416'
-          };
-          setAdminConfig(enforced);
-          localStorage.setItem('blq_admin_config', JSON.stringify(enforced));
-          saveCloudData('admin_config', enforced);
-        } else {
-          // Cloud config is missing or has been overwritten by another source
-          // Fall back to DEFAULT and re-save it to cloud
-          setAdminConfig(DEFAULT_ADMIN_CONFIG);
-          localStorage.setItem('blq_admin_config', JSON.stringify(DEFAULT_ADMIN_CONFIG));
-          saveCloudData('admin_config', DEFAULT_ADMIN_CONFIG);
-        }
-
-        // If currentUser is logged in, refresh state from merged accounts
-        if (currentUser) {
-          const targetKey = normalizePhoneKey(currentUser.phone);
-          const freshAcc = mergedAccounts.find(a => normalizePhoneKey(a.phone) === targetKey);
-          if (freshAcc) {
-            setCurrentUser(freshAcc.user);
-          }
-        }
-      } catch (err) {
-        console.warn('[CloudSync] Background sync error:', err);
+      // Update Rigs with Smart Merge
+      if (cloudRigs) {
+        setPurchasedRigs(prev => {
+          const merged = mergeRigs(prev, cloudRigs);
+          localStorage.setItem('blq_purchased_rigs', JSON.stringify(merged));
+          return merged;
+        });
       }
-    };
 
+      // Update Deposits with Smart Merge
+      if (cloudDeps) {
+        setDeposits(prev => {
+          const merged = mergeDeposits(prev, cloudDeps);
+          localStorage.setItem('blq_deposits', JSON.stringify(merged));
+          return merged;
+        });
+      }
+
+      // Update Withdrawals with Smart Merge
+      if (cloudWiths) {
+        setWithdrawals(prev => {
+          const merged = mergeWithdrawals(prev, cloudWiths);
+          localStorage.setItem('blq_withdrawals', JSON.stringify(merged));
+          return merged;
+        });
+      }
+
+      // Update Admin Config — only accept from cloud if it has valid required fields
+      if (cloudConfig && cloudConfig.adminPin && cloudConfig.airtelMoneyNumber && cloudConfig.airtelMoneyName) {
+        const enforced = {
+          ...cloudConfig,
+          mobileMoneyNumber: '+256 744 696 416',
+          airtelMoneyNumber: '+256 744 696 416'
+        };
+        setAdminConfig(enforced);
+        localStorage.setItem('blq_admin_config', JSON.stringify(enforced));
+      }
+
+      // If currentUser is logged in, refresh state from merged accounts
+      if (currentUser) {
+        const targetKey = normalizePhoneKey(currentUser.phone);
+        const freshAcc = mergedAccounts.find(a => normalizePhoneKey(a.phone) === targetKey);
+        if (freshAcc) {
+          setCurrentUser(freshAcc.user);
+        }
+      }
+    } catch (err) {
+      console.warn('[CloudSync] Background sync error:', err);
+    }
+  };
+
+  // INITIAL CLOUD SYNC: Run on app mount & poll every 8 seconds for real-time tracking
+  useEffect(() => {
     syncFromCloud();
     const intervalId = setInterval(syncFromCloud, 8000);
     return () => { 
-      isMounted = false; 
       clearInterval(intervalId);
     };
   }, []);
@@ -937,6 +986,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Safe Cloud Merge & Save Helpers
+  const syncAndSaveDeposits = async (newOrUpdatedList: DepositRequest[]) => {
+    const cloudDeps = await fetchCloudData<DepositRequest[]>('deposits', []);
+    const merged = mergeDeposits(newOrUpdatedList, cloudDeps);
+    setDeposits(merged);
+    localStorage.setItem('blq_deposits', JSON.stringify(merged));
+    await saveCloudData('deposits', merged);
+    return merged;
+  };
+
+  const syncAndSaveWithdrawals = async (newOrUpdatedList: WithdrawalRequest[]) => {
+    const cloudWiths = await fetchCloudData<WithdrawalRequest[]>('withdrawals', []);
+    const merged = mergeWithdrawals(newOrUpdatedList, cloudWiths);
+    setWithdrawals(merged);
+    localStorage.setItem('blq_withdrawals', JSON.stringify(merged));
+    await saveCloudData('withdrawals', merged);
+    return merged;
+  };
+
+  const syncAndSaveAccounts = async (newOrUpdatedList: StoredAccount[]) => {
+    const cloudAccounts = await fetchCloudData<StoredAccount[]>('accounts', []);
+    const merged = mergeAccounts(newOrUpdatedList, cloudAccounts);
+    saveAllStoredAccounts(merged);
+    await saveCloudData('accounts', merged);
+    setAccountsTick(v => v + 1);
+    return merged;
+  };
+
   // Submit Mobile Money Deposit
   const submitDeposit = (amount: number, provider: 'MTN Mobile Money' | 'Airtel Money', transactionId: string) => {
     if (!currentUser) return { success: false, message: 'User not logged in' };
@@ -957,7 +1034,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const updatedDeposits = [newDeposit, ...deposits];
     setDeposits(updatedDeposits);
-    saveCloudData('deposits', updatedDeposits);
+    syncAndSaveDeposits(updatedDeposits);
 
     return { 
       success: true, 
@@ -1002,14 +1079,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const updatedWithdrawals = [newWithdrawal, ...withdrawals];
     setWithdrawals(updatedWithdrawals);
-    saveCloudData('withdrawals', updatedWithdrawals);
+    syncAndSaveWithdrawals(updatedWithdrawals);
 
     const accounts = getAllStoredAccounts();
     const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
     if (accIndex !== -1) {
       accounts[accIndex].user = updatedUser;
-      saveAllStoredAccounts(accounts);
-      saveCloudData('accounts', accounts);
+      syncAndSaveAccounts(accounts);
     }
 
     return { 
@@ -1019,8 +1095,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Admin Actions
-  const approveDeposit = (depositId: string) => {
-    const updated = deposits.map(dep => {
+  const approveDeposit = async (depositId: string) => {
+    const cloudDeps = await fetchCloudData<DepositRequest[]>('deposits', []);
+    const mergedDeps = mergeDeposits(deposits, cloudDeps);
+
+    const updated = mergedDeps.map(dep => {
       if (dep.id === depositId && dep.status === 'pending') {
         const accounts = getAllStoredAccounts();
         const accIndex = accounts.findIndex(a => a.user.id === dep.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(dep.userPhone));
@@ -1040,8 +1119,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
           accounts[accIndex].user.notifications = [notif, ...(accounts[accIndex].user.notifications || [])];
 
-          saveAllStoredAccounts(accounts);
-          saveCloudData('accounts', accounts);
+          syncAndSaveAccounts(accounts);
           if (currentUser && currentUser.id === dep.userId) {
             setCurrentUser({ ...accounts[accIndex].user });
           }
@@ -1050,18 +1128,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return dep;
     });
-    setDeposits(updated);
-    saveCloudData('deposits', updated);
+
+    syncAndSaveDeposits(updated);
   };
 
-  const rejectDeposit = (depositId: string) => {
-    const updated = deposits.map(dep => dep.id === depositId ? { ...dep, status: 'rejected' as const } : dep);
-    setDeposits(updated);
-    saveCloudData('deposits', updated);
+  const rejectDeposit = async (depositId: string) => {
+    const cloudDeps = await fetchCloudData<DepositRequest[]>('deposits', []);
+    const mergedDeps = mergeDeposits(deposits, cloudDeps);
+    const updated = mergedDeps.map(dep => dep.id === depositId ? { ...dep, status: 'rejected' as const } : dep);
+    syncAndSaveDeposits(updated);
   };
 
-  const approveWithdrawal = (withdrawalId: string) => {
-    const updated = withdrawals.map(wth => {
+  const approveWithdrawal = async (withdrawalId: string) => {
+    const cloudWiths = await fetchCloudData<WithdrawalRequest[]>('withdrawals', []);
+    const mergedWiths = mergeWithdrawals(withdrawals, cloudWiths);
+
+    const updated = mergedWiths.map(wth => {
       if (wth.id === withdrawalId && wth.status === 'pending') {
         const accounts = getAllStoredAccounts();
         const accIndex = accounts.findIndex(a => a.user.id === wth.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(wth.userPhone));
@@ -1080,8 +1162,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
           accounts[accIndex].user.notifications = [notif, ...(accounts[accIndex].user.notifications || [])];
 
-          saveAllStoredAccounts(accounts);
-          saveCloudData('accounts', accounts);
+          syncAndSaveAccounts(accounts);
           if (currentUser && currentUser.id === wth.userId) {
             setCurrentUser({ ...accounts[accIndex].user });
           }
@@ -1090,19 +1171,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return wth;
     });
-    setWithdrawals(updated);
-    saveCloudData('withdrawals', updated);
+
+    syncAndSaveWithdrawals(updated);
   };
 
-  const rejectWithdrawal = (withdrawalId: string) => {
-    const updated = withdrawals.map(wth => {
+  const rejectWithdrawal = async (withdrawalId: string) => {
+    const cloudWiths = await fetchCloudData<WithdrawalRequest[]>('withdrawals', []);
+    const mergedWiths = mergeWithdrawals(withdrawals, cloudWiths);
+
+    const updated = mergedWiths.map(wth => {
       if (wth.id === withdrawalId && wth.status === 'pending') {
         const accounts = getAllStoredAccounts();
         const accIndex = accounts.findIndex(a => a.user.id === wth.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(wth.userPhone));
         if (accIndex !== -1) {
           accounts[accIndex].user.balanceUGX = (accounts[accIndex].user.balanceUGX || 0) + wth.amountUGX;
-          saveAllStoredAccounts(accounts);
-          saveCloudData('accounts', accounts);
+          syncAndSaveAccounts(accounts);
           if (currentUser && currentUser.id === wth.userId) {
             setCurrentUser({ ...accounts[accIndex].user });
           }
@@ -1111,9 +1194,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return wth;
     });
-    setWithdrawals(updated);
-    saveCloudData('withdrawals', updated);
+
+    syncAndSaveWithdrawals(updated);
   };
+
   const getAllAccounts = (): StoredAccount[] => {
     return getAllStoredAccounts();
   };
@@ -1133,8 +1217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     accounts[accIndex].user = updatedUser;
-    saveAllStoredAccounts(accounts);
-    saveCloudData('accounts', accounts);
+    syncAndSaveAccounts(accounts);
 
     if (currentUser && normalizePhoneKey(currentUser.phone) === targetKey) {
       setCurrentUser(updatedUser);
@@ -1170,7 +1253,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       liveUnclaimedYield,
       referredUsers,
       updateUserBalanceByPhone,
-      getAllAccounts
+      getAllAccounts,
+      syncFromCloud
     }}>
       {children}
     </AppContext.Provider>
