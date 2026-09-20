@@ -184,8 +184,8 @@ const AdminPanelContent: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const safeAccounts = Array.isArray(accountsList) ? accountsList.filter(a => a && a.phone) : [];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-4xl h-[90vh] max-h-[92vh] min-h-[520px] bg-gradient-to-b from-[#141B28] via-[#101622] to-[#0B0F19] border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[9999] bg-[#0A0E17] flex flex-col w-full h-full min-h-screen overflow-hidden text-slate-100 font-sans animate-fade-in">
+      <div className="w-full h-full max-w-6xl mx-auto flex flex-col bg-gradient-to-b from-[#141B28] via-[#101622] to-[#0B0F19] shadow-2xl overflow-hidden border-x border-slate-800">
         
         {/* Top Header */}
         <div className="p-4 sm:p-5 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between shrink-0">

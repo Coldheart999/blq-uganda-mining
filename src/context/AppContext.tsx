@@ -417,6 +417,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : null;
   });
 
+  const currentUserRef = useRef<User | null>(currentUser);
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
   const [purchasedRigs, setPurchasedRigs] = useState<PurchasedRig[]>(() => {
     const saved = localStorage.getItem('blq_purchased_rigs');
     return saved ? JSON.parse(saved) : [];
@@ -548,10 +553,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       // If currentUser is logged in, refresh state from merged accounts
-      if (currentUser) {
-        const targetKey = normalizePhoneKey(currentUser.phone);
+      if (currentUserRef.current) {
+        const targetKey = normalizePhoneKey(currentUserRef.current.phone);
         const freshAcc = mergedAccounts.find(a => normalizePhoneKey(a.phone) === targetKey);
-        if (freshAcc) {
+        if (freshAcc && currentUserRef.current) {
           setCurrentUser(freshAcc.user);
         }
       }
@@ -879,6 +884,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logout = () => {
+    currentUserRef.current = null;
+    try {
+      localStorage.removeItem('blq_current_user');
+    } catch (e) {}
     setCurrentUser(null);
   };
 
