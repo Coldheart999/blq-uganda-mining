@@ -78,9 +78,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Main Navbar Header */}
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           
-          {/* Brand Logo with Easter Egg Popover */}
+          {/* Brand Logo */}
           <div className="cursor-pointer select-none">
-            <BlqLogo size="md" />
+            <BlqLogo size="md" onClick={openAdmin} />
           </div>
 
           {/* Center Navigation Tabs (Desktop) */}
@@ -128,8 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
-              onClick={handleHistoryTabClick}
-              style={{ touchAction: 'manipulation' }}
+              onClick={() => setActiveTab('history')}
               className={`px-4 py-2 rounded-lg transition-all ${
                 activeTab === 'history'
                   ? 'bg-amber-500 text-slate-950 font-bold shadow'
@@ -416,8 +415,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         <button
-          onClick={handleHistoryTabClick}
-          style={{ touchAction: 'manipulation' }}
+          onClick={() => setActiveTab('history')}
           className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'history' 
               ? 'text-amber-400 font-bold scale-105' 
