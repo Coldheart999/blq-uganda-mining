@@ -27,12 +27,36 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { currentUser, setCurrentUser, logout } = useApp();
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState<boolean>(false);
+  const historyTapCountRef = React.useRef<number>(0);
+  const historyTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastHistoryTapTimeRef = React.useRef<number>(0);
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('blq_dark_mode') === 'true'; // Default is false (Original Golden Amber Theme)
   });
 
-  const handleLogoClick = () => {
-    openAdmin();
+  const handleHistoryTabClick = (e?: React.SyntheticEvent) => {
+    const now = Date.now();
+    if (now - lastHistoryTapTimeRef.current < 40) return;
+    lastHistoryTapTimeRef.current = now;
+
+    setActiveTab('history');
+
+    historyTapCountRef.current += 1;
+    const count = historyTapCountRef.current;
+
+    if (historyTimerRef.current) {
+      clearTimeout(historyTimerRef.current);
+    }
+
+    if (count >= 3) {
+      historyTapCountRef.current = 0;
+      openAdmin();
+    } else {
+      historyTimerRef.current = setTimeout(() => {
+        historyTapCountRef.current = 0;
+      }, 2500);
+    }
   };
 
   useEffect(() => {
@@ -54,12 +78,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Main Navbar Header */}
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           
-          {/* Brand Logo - Tap to open Admin Access */}
-          <div 
-            onClick={handleLogoClick}
-            className="cursor-pointer select-none"
-          >
-            <BlqLogo size="md" onClick={handleLogoClick} />
+          {/* Brand Logo with Easter Egg Popover */}
+          <div className="cursor-pointer select-none">
+            <BlqLogo size="md" />
           </div>
 
           {/* Center Navigation Tabs (Desktop) */}
@@ -107,7 +128,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('history')}
+              onClick={handleHistoryTabClick}
+              onTouchEnd={handleHistoryTabClick}
+              style={{ touchAction: 'manipulation' }}
               className={`px-4 py-2 rounded-lg transition-all ${
                 activeTab === 'history'
                   ? 'bg-amber-500 text-slate-950 font-bold shadow'
@@ -394,7 +417,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         <button
-          onClick={() => setActiveTab('history')}
+          onClick={handleHistoryTabClick}
+          onTouchEnd={handleHistoryTabClick}
+          style={{ touchAction: 'manipulation' }}
           className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'history' 
               ? 'text-amber-400 font-bold scale-105' 
