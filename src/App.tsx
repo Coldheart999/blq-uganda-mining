@@ -443,8 +443,8 @@ const MainContent: React.FC = () => {
 
       </main>
 
-      {/* Page Footer with Direct Admin Access */}
-      <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
+      {/* Page Footer */}
+      <Footer />
 
       {/* Social Proof Live Ugandan Activity Ticker (Slower rotation between 5s-30s) */}
       <SocialProofTicker />
