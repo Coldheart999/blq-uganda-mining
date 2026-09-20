@@ -268,7 +268,50 @@ export const normalizePhoneKey = (p: string): string => {
   return digits;
 };
 
-// Merge accounts cleanly without duplicates
+// Enrich and retroactively migrate referral codes and referral counts for ALL existing accounts
+const enrichAndMigrateAccounts = (accounts: StoredAccount[]): StoredAccount[] => {
+  const result = accounts.map(acc => {
+    const cleanPhone = (acc.phone || acc.user.phone || '').trim();
+    const last5 = cleanPhone.slice(-5);
+    const referralCode = acc.user.referralCode || `BLQ-${last5}`;
+    return {
+      ...acc,
+      phone: cleanPhone,
+      user: {
+        ...acc.user,
+        phone: cleanPhone,
+        referralCode: referralCode,
+        referredBy: acc.user.referredBy ? acc.user.referredBy.trim() : undefined
+      }
+    };
+  });
+
+  // Calculate actual referral counts retroactively for ALL accounts
+  for (const acc of result) {
+    const myCode = (acc.user.referralCode || `BLQ-${acc.phone.slice(-5)}`).trim().toLowerCase();
+    const myPhone = normalizePhoneKey(acc.phone);
+    const myLast5 = acc.phone.slice(-5).toLowerCase();
+    const myId = (acc.user.id || '').trim().toLowerCase();
+
+    const actualReferrals = result.filter(other => {
+      if (!other.user || other.user.id === acc.user.id) return false;
+      const refBy = (other.user.referredBy || '').trim().toLowerCase();
+      if (!refBy) return false;
+      if (refBy === myCode) return true;
+      if (normalizePhoneKey(refBy) === myPhone) return true;
+      if (refBy === myId) return true;
+      const cleanRef = refBy.replace('blq-', '').replace('blq_', '');
+      if (cleanRef === myLast5 || cleanRef === myCode.replace('blq-', '')) return true;
+      return false;
+    });
+
+    acc.user.referralCount = actualReferrals.length;
+  }
+
+  return result;
+};
+
+// Merge accounts cleanly without duplicates and enrich existing accounts
 const mergeAccounts = (local: StoredAccount[], cloud: StoredAccount[]): StoredAccount[] => {
   const map = new Map<string, StoredAccount>();
   for (const acc of local) {
@@ -292,7 +335,7 @@ const mergeAccounts = (local: StoredAccount[], cloud: StoredAccount[]): StoredAc
       map.set(key, { ...localAcc, password: acc.password || localAcc.password, user: mergedUser });
     }
   }
-  return Array.from(map.values());
+  return enrichAndMigrateAccounts(Array.from(map.values()));
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -333,6 +376,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [liveUnclaimedYield, setLiveUnclaimedYield] = useState<number>(0);
   const [referredUsers, setReferredUsers] = useState<ReferredUserInfo[]>([]);
+  const [accountsTick, setAccountsTick] = useState<number>(0);
 
   // Local Storage Helpers
   const getAllStoredAccounts = (): StoredAccount[] => {
@@ -369,7 +413,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // INITIAL CLOUD SYNC: Run on app mount to sync data from cloud across all devices
+  // INITIAL CLOUD SYNC: Run on app mount & poll every 8 seconds for real-time referral tracking
   useEffect(() => {
     let isMounted = true;
     const syncFromCloud = async () => {
@@ -388,6 +432,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const localAccounts = getAllStoredAccounts();
         const mergedAccounts = mergeAccounts(localAccounts, cloudAccounts);
         saveAllStoredAccounts(mergedAccounts);
+        setAccountsTick(v => v + 1);
 
         // Update Rigs
         if (cloudRigs && cloudRigs.length > 0) {
@@ -568,7 +613,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [currentUser, purchasedRigs]);
 
-  // Recompute referred users whenever currentUser or accounts change
+  // Recompute referred users whenever currentUser, purchasedRigs, deposits or accounts change
   useEffect(() => {
     if (!currentUser) {
       setReferredUsers([]);
@@ -629,7 +674,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         saveCloudData('accounts', accounts);
       }
     }
-  }, [currentUser, purchasedRigs, deposits]);
+  }, [currentUser, purchasedRigs, deposits, accountsTick]);
 
   // Real Account Registration with Cross-Device Cloud Sync
   const registerAccount = async (phone: string, password: string, name?: string, refCodeInput?: string): Promise<{ success: boolean; message: string; user?: User }> => {

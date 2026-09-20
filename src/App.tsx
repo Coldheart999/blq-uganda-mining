@@ -393,7 +393,7 @@ const MainContent: React.FC = () => {
 
         {/* TAB 3: Referrals Dashboard */}
         {activeTab === 'referrals' && (
-          <ReferralsTab />
+          <ReferralsTab onGoToStore={() => setActiveTab('store')} />
         )}
 
         {/* TAB 4: Transactions */}
