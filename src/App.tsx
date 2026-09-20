@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp, StoredAccount } from './context/AppContext';
+import { saveCloudData } from './services/cloudSync';
 import { Navbar } from './components/Navbar';
 import { MinerCard } from './components/MinerCard';
 import { MiningDashboard } from './components/MiningDashboard';
@@ -59,6 +60,10 @@ const MainContent: React.FC = () => {
 
   const handleDismissBonusNotif = () => {
     if (!currentUser || !unreadBonusNotif) return;
+    const isDeposit = unreadBonusNotif.type === 'deposit' || 
+                      unreadBonusNotif.title?.toLowerCase().includes('deposit') ||
+                      (!unreadBonusNotif.referredName && unreadBonusNotif.amountUGX >= 5000);
+
     const updatedNotifications = (currentUser.notifications || []).map(n => 
       n.id === unreadBonusNotif.id ? { ...n, read: true } : n
     );
@@ -75,7 +80,12 @@ const MainContent: React.FC = () => {
       if (accIndex !== -1) {
         accounts[accIndex].user = updatedUser;
         localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));
+        saveCloudData('accounts', accounts);
       }
+    }
+
+    if (isDeposit) {
+      setActiveTab('store');
     }
   };
 

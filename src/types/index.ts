@@ -3,6 +3,8 @@ export interface ReferralNotification {
   title: string;
   message: string;
   amountUGX: number;
+  type?: 'deposit' | 'referral' | 'welcome' | 'system';
+  transactionId?: string;
   referredName: string;
   referredPhone: string;
   createdAt: string;

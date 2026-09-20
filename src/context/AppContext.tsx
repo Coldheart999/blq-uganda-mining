@@ -784,10 +784,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           title: '🎁 UGX 1,000 Welcome Bonus',
           message: 'Welcome to BLQ Mining! UGX 1,000 starter bonus credited to your account.',
           amountUGX: 1000,
+          type: 'welcome',
           referredName: '',
           referredPhone: '',
           createdAt: new Date().toISOString(),
-          read: false
+          read: true
         }
       ]
     };
@@ -943,11 +944,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
       if (referrerIndex !== -1) {
         const referrer = accounts[referrerIndex].user;
-        const sweetNotif = {
+        const sweetNotif: ReferralNotification = {
           id: 'notif_' + Date.now(),
           title: '🎉 Sweet News! UGX 15,000 Bonus Received!',
           message: `Congratulations! Your referred investor ${currentUser.name} (${currentUser.phone.slice(0, 3)}****${currentUser.phone.slice(-3)}) has successfully activated a miner! UGX 15,000 referral commission has been credited directly to your withdrawable balance. Keep sharing to earn more! 🌟💖`,
           amountUGX: 15000,
+          type: 'referral',
           referredName: currentUser.name,
           referredPhone: currentUser.phone,
           createdAt: new Date().toISOString(),
@@ -1050,6 +1052,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           title: '⚡ Deposit Credited Successfully!',
           message: `Your deposit of UGX ${amount.toLocaleString()} has been automatically added to your wallet balance! TxID: ${cleanTxId}. You can now start activating miners right away!`,
           amountUGX: amount,
+          type: 'deposit',
+          transactionId: cleanTxId,
           referredName: '',
           referredPhone: '',
           createdAt: new Date().toISOString(),

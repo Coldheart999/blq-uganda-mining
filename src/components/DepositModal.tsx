@@ -65,7 +65,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
       setSubmittedTxId(txId.trim());
       setSubmittedAmount(numAmount);
       setSubmittedSenderProvider(senderProvider);
-      setIsSubmitted(true);
+      handleCloseModal();
     } else {
       setError(res.message);
     }
