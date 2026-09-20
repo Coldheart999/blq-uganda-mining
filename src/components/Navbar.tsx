@@ -27,36 +27,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { currentUser, setCurrentUser, logout } = useApp();
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState<boolean>(false);
-  const clickCountRef = React.useRef<number>(0);
-  const clickTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastTapTimeRef = React.useRef<number>(0);
-
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('blq_dark_mode') === 'true'; // Default is false (Original Golden Amber Theme)
   });
 
-  const handleLogoSecretClick = (e?: React.SyntheticEvent) => {
-    const now = Date.now();
-    // Debounce duplicate touchEnd + click fires in the same 40ms window
-    if (now - lastTapTimeRef.current < 40) return;
-    lastTapTimeRef.current = now;
-
-    clickCountRef.current += 1;
-    const count = clickCountRef.current;
-
-    if (clickTimerRef.current) {
-      clearTimeout(clickTimerRef.current);
-    }
-
-    if (count >= 3) {
-      clickCountRef.current = 0;
-      openAdmin();
-    } else {
-      clickTimerRef.current = setTimeout(() => {
-        clickCountRef.current = 0;
-        setActiveTab('store');
-      }, 2500);
-    }
+  const handleLogoClick = () => {
+    openAdmin();
   };
 
   useEffect(() => {
@@ -78,14 +54,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Main Navbar Header */}
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           
-          {/* Brand Logo with 3-Tap Secret Admin Gesture */}
+          {/* Brand Logo - Tap to open Admin Access */}
           <div 
-            onClick={handleLogoSecretClick}
-            onTouchEnd={handleLogoSecretClick}
-            style={{ touchAction: 'manipulation' }}
+            onClick={handleLogoClick}
             className="cursor-pointer select-none"
           >
-            <BlqLogo size="md" onClick={handleLogoSecretClick} />
+            <BlqLogo size="md" onClick={handleLogoClick} />
           </div>
 
           {/* Center Navigation Tabs (Desktop) */}
