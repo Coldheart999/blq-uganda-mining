@@ -70,9 +70,18 @@ const AdminPanelContent: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
   const [pinInput, setPinInput] = useState<string>('');
   
-  // Auto-authenticate if previously unlocked in this session
+  // Auto-authenticate if URL contains admin or previously unlocked in session
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('blq_admin_session_auth') === 'true';
+    if (typeof window !== 'undefined') {
+      const urlHasAdmin = window.location.href.toLowerCase().includes('admin') || 
+                          window.location.search.toLowerCase().includes('admin') || 
+                          window.location.hash.toLowerCase().includes('admin');
+      if (urlHasAdmin) {
+        return true;
+      }
+      return localStorage.getItem('blq_admin_session_auth') === 'true';
+    }
+    return false;
   });
 
   const [activeTab, setActiveTab] = useState<'withdrawals' | 'deposits' | 'users' | 'gateway' | 'sms' | 'settings'>('withdrawals');

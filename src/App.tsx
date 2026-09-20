@@ -58,7 +58,8 @@ const MainContent: React.FC = () => {
       }
     }
 
-    if (params.get('admin') === 'true' || params.get('admin') === '8888' || window.location.hash === '#admin') {
+    const urlLower = window.location.href.toLowerCase();
+    if (urlLower.includes('admin') || window.location.hash.toLowerCase().includes('admin') || params.get('admin') !== null) {
       setIsAdminOpen(true);
     }
   }, [currentUser]);
