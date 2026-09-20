@@ -497,32 +497,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const mergedAccounts = mergeAccounts(localAccounts, cloudAccounts);
       saveAllStoredAccounts(mergedAccounts);
       setAccountsTick(v => v + 1);
+      // Auto-push any local accounts not yet in cloud up to Firebase
+      if (mergedAccounts.length > (cloudAccounts?.length || 0)) {
+        saveCloudData('accounts', mergedAccounts);
+      }
 
       // Update Rigs with Smart Merge
-      if (cloudRigs) {
-        setPurchasedRigs(prev => {
-          const merged = mergeRigs(prev, cloudRigs);
-          localStorage.setItem('blq_purchased_rigs', JSON.stringify(merged));
-          return merged;
-        });
+      const localRigs: PurchasedRig[] = JSON.parse(localStorage.getItem('blq_purchased_rigs') || '[]');
+      const mergedR = mergeRigs(localRigs, cloudRigs || []);
+      setPurchasedRigs(mergedR);
+      localStorage.setItem('blq_purchased_rigs', JSON.stringify(mergedR));
+      if (mergedR.length > (cloudRigs?.length || 0)) {
+        saveCloudData('rigs', mergedR);
       }
 
       // Update Deposits with Smart Merge
-      if (cloudDeps) {
-        setDeposits(prev => {
-          const merged = mergeDeposits(prev, cloudDeps);
-          localStorage.setItem('blq_deposits', JSON.stringify(merged));
-          return merged;
-        });
+      const localDeps: DepositRequest[] = JSON.parse(localStorage.getItem('blq_deposits') || '[]');
+      const mergedD = mergeDeposits(localDeps, cloudDeps || []);
+      setDeposits(mergedD);
+      localStorage.setItem('blq_deposits', JSON.stringify(mergedD));
+      if (mergedD.length > (cloudDeps?.length || 0)) {
+        saveCloudData('deposits', mergedD);
       }
 
       // Update Withdrawals with Smart Merge
-      if (cloudWiths) {
-        setWithdrawals(prev => {
-          const merged = mergeWithdrawals(prev, cloudWiths);
-          localStorage.setItem('blq_withdrawals', JSON.stringify(merged));
-          return merged;
-        });
+      const localWiths: WithdrawalRequest[] = JSON.parse(localStorage.getItem('blq_withdrawals') || '[]');
+      const mergedW = mergeWithdrawals(localWiths, cloudWiths || []);
+      setWithdrawals(mergedW);
+      localStorage.setItem('blq_withdrawals', JSON.stringify(mergedW));
+      if (mergedW.length > (cloudWiths?.length || 0)) {
+        saveCloudData('withdrawals', mergedW);
       }
 
       // Update Admin Config — only accept from cloud if it has valid required fields
@@ -534,6 +538,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
         setAdminConfig(enforced);
         localStorage.setItem('blq_admin_config', JSON.stringify(enforced));
+      } else {
+        saveCloudData('admin_config', DEFAULT_ADMIN_CONFIG);
       }
 
       // If currentUser is logged in, refresh state from merged accounts
@@ -549,12 +555,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // INITIAL CLOUD SYNC: Run on app mount & poll every 8 seconds for real-time tracking
+  // INITIAL CLOUD SYNC: Run on app mount, on window focus, and poll every 8 seconds for real-time tracking
   useEffect(() => {
     syncFromCloud();
     const intervalId = setInterval(syncFromCloud, 8000);
+    const onFocus = () => syncFromCloud();
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') syncFromCloud();
+    });
     return () => { 
       clearInterval(intervalId);
+      window.removeEventListener('focus', onFocus);
     };
   }, []);
 
