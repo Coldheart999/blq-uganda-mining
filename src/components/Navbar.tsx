@@ -36,8 +36,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   });
 
   const handleHistoryTabClick = (e?: React.SyntheticEvent) => {
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
     const now = Date.now();
-    if (now - lastHistoryTapTimeRef.current < 40) return;
+    if (now - lastHistoryTapTimeRef.current < 150) return;
     lastHistoryTapTimeRef.current = now;
 
     setActiveTab('history');
@@ -129,7 +132,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={handleHistoryTabClick}
-              onTouchEnd={handleHistoryTabClick}
               style={{ touchAction: 'manipulation' }}
               className={`px-4 py-2 rounded-lg transition-all ${
                 activeTab === 'history'
@@ -418,7 +420,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={handleHistoryTabClick}
-          onTouchEnd={handleHistoryTabClick}
           style={{ touchAction: 'manipulation' }}
           className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition-all ${
             activeTab === 'history' 
