@@ -14,6 +14,7 @@ import { ReferralBonusModal } from './components/ReferralBonusModal';
 import { ConfirmPurchaseModal } from './components/ConfirmPurchaseModal';
 import { FaqModal } from './components/FaqModal';
 import { AdminPanel } from './components/AdminPanel';
+import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
 import { FloatingSupport } from './components/FloatingSupport';
 import { AnimatedCryptoBackground } from './components/AnimatedCryptoBackground';
@@ -426,6 +427,9 @@ const MainContent: React.FC = () => {
         {activeTab === 'history' && <HistoryTab />}
 
       </main>
+
+      {/* Page Footer with Direct Admin Access */}
+      <Footer onOpenAdmin={() => setIsAdminOpen(true)} />
 
       {/* Social Proof Live Ugandan Activity Ticker (Slower rotation between 5s-30s) */}
       <SocialProofTicker />
