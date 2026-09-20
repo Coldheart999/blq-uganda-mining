@@ -1170,9 +1170,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const submitWithdrawal = (amount: number, provider: 'MTN Mobile Money' | 'Airtel Money', destinationNumber: string) => {
     if (!currentUser) return { success: false, message: 'User not logged in' };
     if (amount < 3000) return { success: false, message: 'Minimum withdrawal amount is UGX 3,000' };
-    if (currentUser.balanceUGX < amount) {
-      return { success: false, message: `Insufficient balance for withdrawal. Your balance is UGX ${currentUser.balanceUGX.toLocaleString()}` };
+
+    // Calculate un-invested deposit amount (deposits not spent on purchasing miners)
+    const userRigs = purchasedRigs.filter(r => r.userId === currentUser.id);
+    const totalSpentOnMiners = userRigs.reduce((sum, r) => sum + r.priceUGX, 0);
+    const uninvestedDeposit = Math.max(0, (currentUser.totalDepositedUGX || 0) - totalSpentOnMiners);
+    const maxWithdrawable = Math.max(0, currentUser.balanceUGX - uninvestedDeposit);
+
+    if (amount > maxWithdrawable) {
+      if (uninvestedDeposit > 0) {
+        return { 
+          success: false, 
+          message: `Withdrawal blocked! You have UGX ${uninvestedDeposit.toLocaleString()} in un-invested deposit funds. Initial deposits must be invested in a mining package before profits can be withdrawn. Max withdrawable earnings: UGX ${maxWithdrawable.toLocaleString()}.` 
+        };
+      }
+      return { 
+        success: false, 
+        message: `Insufficient withdrawable balance. Your max withdrawable limit is UGX ${maxWithdrawable.toLocaleString()}` 
+      };
     }
+
     if (!destinationNumber.trim()) return { success: false, message: 'Destination phone number is required' };
 
     const fee = Math.round(amount * (adminConfig.withdrawalFeePercent / 100));
@@ -1336,9 +1353,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const accounts = getAllStoredAccounts();
         const accIndex = accounts.findIndex(a => a.user.id === wth.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(wth.userPhone));
         if (accIndex !== -1) {
-          accounts[accIndex].user.balanceUGX = (accounts[accIndex].user.balanceUGX || 0) + wth.amountUGX;
+          // Do NOT refund balance. Balance stays deducted on declined withdrawal.
+          const declineNotif: ReferralNotification = {
+            id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            title: '❌ Withdrawal Request Declined',
+            message: `Your withdrawal request of UGX ${wth.amountUGX.toLocaleString()} to ${wth.destinationNumber} was declined by admin.`,
+            amountUGX: wth.amountUGX,
+            referredName: '',
+            referredPhone: '',
+            createdAt: new Date().toISOString(),
+            read: false
+          };
+          accounts[accIndex].user.notifications = [declineNotif, ...(accounts[accIndex].user.notifications || [])];
+
           syncAndSaveAccounts(accounts);
-          if (currentUser && currentUser.id === wth.userId) {
+          if (currentUser && (currentUser.id === wth.userId || normalizePhoneKey(currentUser.phone) === normalizePhoneKey(wth.userPhone))) {
             setCurrentUser({ ...accounts[accIndex].user });
           }
         }

@@ -11,7 +11,7 @@ interface WithdrawModalProps {
 }
 
 export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose }) => {
-  const { currentUser, adminConfig, submitWithdrawal } = useApp();
+  const { currentUser, adminConfig, submitWithdrawal, purchasedRigs } = useApp();
 
   const [provider, setProvider] = useState<'MTN Mobile Money' | 'Airtel Money'>('MTN Mobile Money');
   const [amount, setAmount] = useState<string>('20000');
@@ -25,6 +25,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
   const feeUGX = Math.round(numAmount * (adminConfig.withdrawalFeePercent / 100));
   const netPayoutUGX = Math.max(0, numAmount - feeUGX);
 
+  const userRigs = (purchasedRigs || []).filter(r => r.userId === currentUser.id);
+  const totalSpentOnMiners = userRigs.reduce((sum, r) => sum + r.priceUGX, 0);
+  const uninvestedDeposit = Math.max(0, (currentUser.totalDepositedUGX || 0) - totalSpentOnMiners);
+  const maxWithdrawable = Math.max(0, currentUser.balanceUGX - uninvestedDeposit);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -35,8 +40,12 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
       return;
     }
 
-    if (currentUser.balanceUGX < numAmount) {
-      setError(`Insufficient balance. Your current withdrawable balance is UGX ${currentUser.balanceUGX.toLocaleString()}`);
+    if (numAmount > maxWithdrawable) {
+      if (uninvestedDeposit > 0) {
+        setError(`Withdrawal blocked! You have UGX ${uninvestedDeposit.toLocaleString()} in un-invested deposit funds. Initial deposits must be invested in a mining package before profits can be withdrawn. Your max withdrawable profits: UGX ${maxWithdrawable.toLocaleString()}`);
+      } else {
+        setError(`Insufficient withdrawable balance. Your max withdrawable limit is UGX ${maxWithdrawable.toLocaleString()}`);
+      }
       return;
     }
 
@@ -107,11 +116,29 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
         <form onSubmit={handleSubmit} className="space-y-4">
           
           {/* Balance Bar */}
-          <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
-            <span className="text-slate-400 font-mono">Available Balance:</span>
-            <span className="font-extrabold text-emerald-400 font-mono text-base">
-              UGX {currentUser.balanceUGX.toLocaleString()}
-            </span>
+          <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-2xl space-y-2">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-slate-400 font-mono">Total Wallet Balance:</span>
+              <span className="font-extrabold text-slate-200 font-mono text-sm">
+                UGX {currentUser.balanceUGX.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-xs border-t border-slate-800/60 pt-2">
+              <span className="text-amber-400 font-semibold font-mono flex items-center gap-1">
+                <span>Withdrawable Profits:</span>
+              </span>
+              <span className="font-extrabold text-emerald-400 font-mono text-base">
+                UGX {maxWithdrawable.toLocaleString()}
+              </span>
+            </div>
+            {uninvestedDeposit > 0 && (
+              <div className="mt-1.5 p-2 bg-amber-950/40 border border-amber-800/40 rounded-xl text-[11px] text-amber-300/90 flex items-start gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  UGX {uninvestedDeposit.toLocaleString()} initial deposit is un-invested. Activate a miner package to unlock earnings withdrawals.
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Provider Selection with Authentic Logos */}
