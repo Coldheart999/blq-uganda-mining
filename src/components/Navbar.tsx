@@ -27,27 +27,35 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { currentUser, setCurrentUser, logout } = useApp();
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState<boolean>(false);
-  const [logoClicks, setLogoClicks] = useState<number>(0);
-  const logoTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clickCountRef = React.useRef<number>(0);
+  const clickTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTapTimeRef = React.useRef<number>(0);
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('blq_dark_mode') === 'true'; // Default is false (Original Golden Amber Theme)
   });
 
-  const handleLogoSecretClick = () => {
-    setActiveTab('store');
-    const nextClicks = logoClicks + 1;
-    setLogoClicks(nextClicks);
+  const handleLogoSecretClick = (e?: React.SyntheticEvent) => {
+    const now = Date.now();
+    // Debounce duplicate touchEnd + click fires in the same 40ms window
+    if (now - lastTapTimeRef.current < 40) return;
+    lastTapTimeRef.current = now;
 
-    if (logoTimerRef.current) clearTimeout(logoTimerRef.current);
+    clickCountRef.current += 1;
+    const count = clickCountRef.current;
 
-    if (nextClicks >= 5) {
-      setLogoClicks(0);
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+
+    if (count >= 3) {
+      clickCountRef.current = 0;
       openAdmin();
     } else {
-      logoTimerRef.current = setTimeout(() => {
-        setLogoClicks(0);
-      }, 3500);
+      clickTimerRef.current = setTimeout(() => {
+        clickCountRef.current = 0;
+        setActiveTab('store');
+      }, 2500);
     }
   };
 
@@ -70,9 +78,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Main Navbar Header */}
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
           
-          {/* Brand Logo with 5-Tap Secret Admin Gesture */}
-          <div onClick={handleLogoSecretClick} className="cursor-pointer select-none">
-            <BlqLogo size="md" />
+          {/* Brand Logo with 3-Tap Secret Admin Gesture */}
+          <div 
+            onClick={handleLogoSecretClick}
+            onTouchEnd={handleLogoSecretClick}
+            style={{ touchAction: 'manipulation' }}
+            className="cursor-pointer select-none"
+          >
+            <BlqLogo size="md" onClick={handleLogoSecretClick} />
           </div>
 
           {/* Center Navigation Tabs (Desktop) */}
