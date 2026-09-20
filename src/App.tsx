@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppProvider, useApp, StoredAccount } from './context/AppContext';
+import { AppProvider, useApp, StoredAccount, normalizePhoneKey } from './context/AppContext';
 import { saveCloudData } from './services/cloudSync';
 import { Navbar } from './components/Navbar';
 import { MinerCard } from './components/MinerCard';
@@ -94,7 +94,7 @@ const MainContent: React.FC = () => {
     const savedAccountsStr = localStorage.getItem('blq_user_accounts');
     if (savedAccountsStr) {
       const accounts: StoredAccount[] = JSON.parse(savedAccountsStr);
-      const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+      const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === normalizePhoneKey(currentUser.phone));
       if (accIndex !== -1) {
         accounts[accIndex].user = updatedUser;
         localStorage.setItem('blq_user_accounts', JSON.stringify(accounts));

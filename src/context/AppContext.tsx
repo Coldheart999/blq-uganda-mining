@@ -408,7 +408,64 @@ const mergeRigs = (local: PurchasedRig[], cloud: PurchasedRig[]): PurchasedRig[]
       map.set(rig.id, { ...map.get(rig.id)!, ...rig });
     }
   }
-  return Array.from(map.values()).sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+  return Array.from(map.values());
+};
+
+// Reconcile and rectify user balances for all existing and incoming withdrawals
+const reconcileUserBalancesWithWithdrawals = (
+  accounts: StoredAccount[], 
+  allWithdrawals: WithdrawalRequest[]
+): { updatedAccounts: StoredAccount[]; modified: boolean } => {
+  let modified = false;
+
+  const updatedAccounts = accounts.map(acc => {
+    if (!acc || !acc.user) return acc;
+    const accPhoneKey = normalizePhoneKey(acc.phone || acc.user.phone || '');
+    const accUserId = acc.user.id;
+
+    // Find all withdrawals belonging to this account that are pending or approved
+    const userWithdrawals = allWithdrawals.filter(w => {
+      if (!w || w.status === 'rejected') return false;
+      const wthPhoneKey = normalizePhoneKey(w.userPhone || '');
+      return (wthPhoneKey && wthPhoneKey === accPhoneKey) || (w.userId && w.userId === accUserId);
+    });
+
+    if (userWithdrawals.length === 0) return acc;
+
+    const reconciledSet = new Set<string>(acc.user.reconciledWithdrawalIds || []);
+    let currentBalance = acc.user.balanceUGX || 0;
+    let currentWithdrawn = acc.user.totalWithdrawnUGX || 0;
+    let userModified = false;
+
+    for (const wth of userWithdrawals) {
+      if (!reconciledSet.has(wth.id)) {
+        // This withdrawal was not yet deducted from the user's stored balance
+        currentBalance = Math.max(0, currentBalance - wth.amountUGX);
+        if (wth.status === 'approved') {
+          currentWithdrawn += wth.amountUGX;
+        }
+        reconciledSet.add(wth.id);
+        userModified = true;
+      }
+    }
+
+    if (userModified) {
+      modified = true;
+      return {
+        ...acc,
+        user: {
+          ...acc.user,
+          balanceUGX: currentBalance,
+          totalWithdrawnUGX: currentWithdrawn,
+          reconciledWithdrawalIds: Array.from(reconciledSet)
+        }
+      };
+    }
+
+    return acc;
+  });
+
+  return { updatedAccounts, modified };
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -504,13 +561,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Merge Accounts
       const localAccounts = getAllStoredAccounts();
-      const mergedAccounts = mergeAccounts(localAccounts, cloudAccounts);
-      saveAllStoredAccounts(mergedAccounts);
-      setAccountsTick(v => v + 1);
-      // Auto-push any local accounts not yet in cloud up to Firebase
-      if (mergedAccounts.length > (cloudAccounts?.length || 0)) {
-        saveCloudData('accounts', mergedAccounts);
-      }
+      let mergedAccounts = mergeAccounts(localAccounts, cloudAccounts);
 
       // Update Rigs with Smart Merge
       const localRigs: PurchasedRig[] = JSON.parse(localStorage.getItem('blq_purchased_rigs') || '[]');
@@ -538,6 +589,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (mergedW.length > (cloudWiths?.length || 0)) {
         saveCloudData('withdrawals', mergedW);
       }
+
+      // Retroactive balance reconciliation for pending/approved withdrawals
+      const { updatedAccounts: reconciledAccounts, modified } = reconcileUserBalancesWithWithdrawals(mergedAccounts, mergedW);
+      if (modified) {
+        mergedAccounts = reconciledAccounts;
+      }
+
+      saveAllStoredAccounts(mergedAccounts);
+      setAccountsTick(v => v + 1);
+      // Auto-push any local or reconciled accounts up to Firebase
+      saveCloudData('accounts', mergedAccounts);
 
       // Update Admin Config — only accept from cloud if it has valid required fields
       if (cloudConfig && cloudConfig.adminPin && cloudConfig.airtelMoneyNumber && cloudConfig.airtelMoneyName) {
@@ -941,7 +1003,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(updatedUser);
 
     const accounts = getAllStoredAccounts();
-    const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+    const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === normalizePhoneKey(currentUser.phone));
     if (accIndex !== -1) {
       accounts[accIndex].user = updatedUser;
     }
@@ -1006,7 +1068,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLiveUnclaimedYield(0);
 
     const accounts = getAllStoredAccounts();
-    const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+    const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === normalizePhoneKey(currentUser.phone));
     if (accIndex !== -1) {
       accounts[accIndex].user = updatedUser;
       saveAllStoredAccounts(accounts);
@@ -1135,7 +1197,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const updatedUser = {
       ...currentUser,
-      balanceUGX: currentUser.balanceUGX - amount
+      balanceUGX: currentUser.balanceUGX - amount,
+      reconciledWithdrawalIds: [
+        ...(currentUser.reconciledWithdrawalIds || []),
+        newWithdrawal.id
+      ]
     };
     setCurrentUser(updatedUser);
 
@@ -1144,7 +1210,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     syncAndSaveWithdrawals(updatedWithdrawals);
 
     const accounts = getAllStoredAccounts();
-    const accIndex = accounts.findIndex(a => a.phone === currentUser.phone);
+    const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === normalizePhoneKey(currentUser.phone));
     if (accIndex !== -1) {
       accounts[accIndex].user = updatedUser;
       syncAndSaveAccounts(accounts);

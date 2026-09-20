@@ -25,6 +25,7 @@ export interface User {
   referralCount?: number;
   referralEarningsUGX?: number;
   notifications?: ReferralNotification[];
+  reconciledWithdrawalIds?: string[];
   createdAt: string;
   isAdmin?: boolean;
 }
