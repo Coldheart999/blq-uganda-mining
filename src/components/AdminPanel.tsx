@@ -393,15 +393,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
             {activeTab === 'users' && (
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 
-                {/* Balance Update Form */}
-                <div className="p-5 bg-slate-900 border border-purple-500/30 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-extrabold text-purple-400 uppercase font-mono tracking-wider flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-purple-400" />
-                    Direct Client Balance Modifier
-                  </h4>
-                  <p className="text-xs text-slate-300">
-                    Enter any registered client's phone number and the new account balance (UGX).
-                  </p>
+                {/* Header & Quick Manual Search Modifier */}
+                <div className="p-5 bg-slate-900 border border-purple-500/30 rounded-2xl space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-extrabold text-purple-400 uppercase font-mono tracking-wider flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-purple-400" />
+                        Client Accounts & Balance Management
+                      </h4>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        View all registered users and modify their withdrawable Mobile Money balances.
+                      </p>
+                    </div>
+                    <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-xs font-mono font-bold rounded-full">
+                      {getAllAccounts().length} Accounts Total
+                    </span>
+                  </div>
 
                   {balanceFeedback && (
                     <div className={`p-3 rounded-xl text-xs flex items-center gap-2 font-mono ${
@@ -409,7 +416,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                         ? 'bg-emerald-950/80 border border-emerald-800 text-emerald-300'
                         : 'bg-rose-950/80 border border-rose-800 text-rose-300'
                     }`}>
-                      {balanceFeedback.success ? <Check className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-rose-400" />}
+                      {balanceFeedback.success ? <Check className="w-4 h-4 text-emerald-400 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />}
                       <span>{balanceFeedback.message}</span>
                     </div>
                   )}
@@ -433,13 +440,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                         setNewBalanceInput('');
                       }
                     }}
-                    className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end"
+                    className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pt-1"
                   >
                     <div>
-                      <label className="block text-[11px] text-slate-400 font-mono mb-1">Client Phone Number:</label>
+                      <label className="block text-[11px] text-slate-400 font-mono mb-1">Target Phone Number:</label>
                       <input
                         type="text"
-                        placeholder="e.g. 0771234567 or 0744696416"
+                        placeholder="e.g. 0771234567"
                         value={targetPhoneInput}
                         onChange={(e) => setTargetPhoneInput(e.target.value)}
                         className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-xs focus:outline-none focus:border-purple-400"
@@ -447,7 +454,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-slate-400 font-mono mb-1">New Balance (UGX):</label>
+                      <label className="block text-[11px] text-slate-400 font-mono mb-1">Set New Balance (UGX):</label>
                       <input
                         type="number"
                         placeholder="e.g. 150000"
@@ -462,25 +469,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                       className="py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5"
                     >
                       <Edit3 className="w-4 h-4" />
-                      Save & Update Balance
+                      Save Account Balance
                     </button>
                   </form>
                 </div>
 
-                {/* All Registered Clients List */}
+                {/* Registered Accounts List */}
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 className="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
                       <Users className="w-4 h-4 text-purple-400" />
-                      All Registered Client Accounts ({getAllAccounts().length})
+                      Registered Members Registry ({getAllAccounts().length})
                     </h3>
 
                     {/* Search filter */}
-                    <div className="relative w-full sm:w-64">
+                    <div className="relative w-full sm:w-72">
                       <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Search phone or name..."
+                        placeholder="Search phone number or name..."
                         value={userSearchTerm}
                         onChange={(e) => setUserSearchTerm(e.target.value)}
                         className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white font-mono focus:outline-none focus:border-purple-400"
@@ -493,55 +500,105 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                       No client accounts registered yet.
                     </div>
                   ) : (
-                    <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
+                    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
                       {getAllAccounts()
                         .filter(acc => {
                           if (!userSearchTerm) return true;
                           const term = userSearchTerm.toLowerCase();
                           return (
                             acc.phone.toLowerCase().includes(term) ||
-                            (acc.user.name && acc.user.name.toLowerCase().includes(term))
+                            (acc.user.name && acc.user.name.toLowerCase().includes(term)) ||
+                            (acc.user.referralCode && acc.user.referralCode.toLowerCase().includes(term)) ||
+                            (acc.user.referredBy && acc.user.referredBy.toLowerCase().includes(term))
                           );
                         })
                         .map(acc => (
                           <div
                             key={acc.user.id || acc.phone}
-                            className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-purple-500/40 transition-all text-xs"
+                            className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 hover:border-purple-500/40 transition-all text-xs"
                           >
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-white">{acc.user.name || 'Investor User'}</span>
-                                <span className="text-purple-400 font-mono font-bold">{acc.phone}</span>
-                              </div>
-                              <div className="text-[11px] text-slate-400 font-mono flex items-center gap-3 pt-1">
-                                <span>Deposited: UGX {(acc.user.totalDepositedUGX || 0).toLocaleString()}</span>
-                                <span>|</span>
-                                <span>Withdrawn: UGX {(acc.user.totalWithdrawnUGX || 0).toLocaleString()}</span>
-                                <span>|</span>
-                                <span>Mined: UGX {(acc.user.totalMinedUGX || 0).toLocaleString()}</span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
-                              <div className="text-right font-mono">
-                                <div className="text-[10px] text-slate-400">Current Balance:</div>
-                                <div className="text-base font-black text-amber-400">
-                                  UGX {(acc.user.balanceUGX || 0).toLocaleString()}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800/80">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center font-bold text-purple-300 font-mono text-xs">
+                                  {acc.user.name ? acc.user.name.charAt(0) : 'U'}
+                                </div>
+                                <div>
+                                  <div className="font-bold text-white text-sm flex items-center gap-2">
+                                    <span>{acc.user.name || 'Investor User'}</span>
+                                    <span className="px-2 py-0.5 bg-purple-950/80 border border-purple-800 text-purple-300 font-mono text-xs rounded font-bold">
+                                      📞 {acc.phone}
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                                    Joined: {new Date(acc.user.createdAt).toLocaleDateString()} • Ref Code: <strong className="text-amber-400">{acc.user.referralCode || 'BLQ-NONE'}</strong>
+                                    {acc.user.referredBy && (
+                                      <span> • Invited by: <strong className="text-emerald-400">{acc.user.referredBy}</strong></span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
 
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setTargetPhoneInput(acc.phone);
-                                  setNewBalanceInput(String(acc.user.balanceUGX || 0));
-                                  setBalanceFeedback(null);
-                                }}
-                                className="px-3 py-1.5 bg-purple-950/80 hover:bg-purple-900 border border-purple-800 text-purple-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1 shrink-0"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                                Edit Balance
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <div className="text-right font-mono px-3 py-1 bg-slate-950 border border-slate-800 rounded-xl">
+                                  <span className="text-[10px] text-slate-400 block uppercase">Withdrawable Balance</span>
+                                  <span className="text-base font-black text-amber-400">
+                                    UGX {(acc.user.balanceUGX || 0).toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Financial Summary & Quick Adjust Controls */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-[11px]">
+                              <div className="flex flex-wrap items-center gap-3 text-slate-300">
+                                <span>Deposited: <strong className="text-emerald-400">UGX {(acc.user.totalDepositedUGX || 0).toLocaleString()}</strong></span>
+                                <span>•</span>
+                                <span>Withdrawn: <strong className="text-rose-400">UGX {(acc.user.totalWithdrawnUGX || 0).toLocaleString()}</strong></span>
+                                <span>•</span>
+                                <span>Mined: <strong className="text-amber-400">UGX {(acc.user.totalMinedUGX || 0).toLocaleString()}</strong></span>
+                                <span>•</span>
+                                <span>Referrals: <strong className="text-purple-300">{acc.user.referralCount || 0}</strong></span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTargetPhoneInput(acc.phone);
+                                    setNewBalanceInput(String((acc.user.balanceUGX || 0) + 50000));
+                                    setBalanceFeedback(null);
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-lg text-[10px] transition-colors"
+                                  title="Add UGX 50,000"
+                                >
+                                  +50K
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTargetPhoneInput(acc.phone);
+                                    setNewBalanceInput(String((acc.user.balanceUGX || 0) + 100000));
+                                    setBalanceFeedback(null);
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-lg text-[10px] transition-colors"
+                                  title="Add UGX 100,000"
+                                >
+                                  +100K
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTargetPhoneInput(acc.phone);
+                                    setNewBalanceInput(String(acc.user.balanceUGX || 0));
+                                    setBalanceFeedback(null);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1 shrink-0 shadow"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  Edit Balance
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))}
