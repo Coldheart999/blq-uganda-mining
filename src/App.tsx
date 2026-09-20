@@ -56,7 +56,23 @@ const MainContent: React.FC = () => {
         setIsAuthOpen(true);
       }
     }
+
+    if (params.get('admin') === 'true' || params.get('admin') === '8888' || window.location.hash === '#admin') {
+      setIsAdminOpen(true);
+    }
   }, [currentUser]);
+
+  // Global Keyboard Shortcut: Ctrl + Shift + A to trigger Admin Panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        setIsAdminOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleDismissBonusNotif = () => {
     if (!currentUser || !unreadBonusNotif) return;
