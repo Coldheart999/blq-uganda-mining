@@ -185,6 +185,20 @@ const MainContent: React.FC = () => {
     ? minerPackages 
     : minerPackages.filter(p => p.durationDays === durationFilter);
 
+  if (isAdminOpen) {
+    return (
+      <AdminPanel 
+        isOpen={true} 
+        onClose={() => {
+          setIsAdminOpen(false);
+          if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }} 
+      />
+    );
+  }
+
   return (
     <div className="relative min-h-screen flex flex-col bg-[#070A10] text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
       
