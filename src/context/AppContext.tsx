@@ -229,7 +229,7 @@ interface AppContextType {
   setAdminConfig: React.Dispatch<React.SetStateAction<AdminConfig>>;
   
   // Auth methods (Async with cross-device cloud sync)
-  registerAccount: (phone: string, password: string, name?: string) => Promise<{ success: boolean; message: string; user?: User }>;
+  registerAccount: (phone: string, password: string, name?: string, refCodeInput?: string) => Promise<{ success: boolean; message: string; user?: User }>;
   loginAccount: (phone: string, password: string) => Promise<{ success: boolean; message: string; user?: User }>;
   logout: () => void;
   
@@ -457,7 +457,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     syncFromCloud();
-    return () => { isMounted = false; };
+    const intervalId = setInterval(syncFromCloud, 8000);
+    return () => { 
+      isMounted = false; 
+      clearInterval(intervalId);
+    };
   }, []);
 
   // Sync state to LocalStorage and keep accounts registry synced
@@ -572,12 +576,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const accounts = getAllStoredAccounts();
-    const myCode = currentUser.referralCode || `BLQ-${currentUser.phone.slice(-5)}`;
+    const myCode = (currentUser.referralCode || `BLQ-${currentUser.phone.slice(-5)}`).trim().toLowerCase();
+    const myPhone = normalizePhoneKey(currentUser.phone);
+    const myLast5 = currentUser.phone.slice(-5).toLowerCase();
+    const myId = (currentUser.id || '').trim().toLowerCase();
+
     const savedRigs = localStorage.getItem('blq_purchased_rigs');
     const allRigs: Array<{ userId: string }> = savedRigs ? JSON.parse(savedRigs) : [];
 
     const referred = accounts
-      .filter(a => a.user.referredBy === myCode || normalizePhoneKey(a.user.referredBy || '') === normalizePhoneKey(currentUser.phone))
+      .filter(a => {
+        if (!a.user || a.user.id === currentUser.id) return false;
+        const refBy = (a.user.referredBy || '').trim().toLowerCase();
+        if (!refBy) return false;
+
+        // Match 1: Exact or case-insensitive referral code match (e.g. BLQ-12345 or blq-12345)
+        if (refBy === myCode) return true;
+
+        // Match 2: Phone number match (e.g. 0771234567 or 256771234567)
+        if (normalizePhoneKey(refBy) === myPhone) return true;
+
+        // Match 3: User ID match
+        if (refBy === myId) return true;
+
+        // Match 4: Code without prefix or matching last 5 digits (e.g. 96416)
+        const cleanRef = refBy.replace('blq-', '').replace('blq_', '');
+        if (cleanRef === myLast5 || cleanRef === myCode.replace('blq-', '')) return true;
+
+        return false;
+      })
       .map(a => {
         const userRigs = allRigs.filter(r => r.userId === a.user.id);
         return {
@@ -590,10 +617,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
 
     setReferredUsers(referred);
+
+    // Keep currentUser.referralCount synced with actual referred list length
+    if (currentUser.referralCount !== referred.length) {
+      const updatedUser = { ...currentUser, referralCount: referred.length };
+      setCurrentUser(updatedUser);
+      const accIndex = accounts.findIndex(acc => normalizePhoneKey(acc.phone) === myPhone);
+      if (accIndex !== -1) {
+        accounts[accIndex].user = updatedUser;
+        saveAllStoredAccounts(accounts);
+        saveCloudData('accounts', accounts);
+      }
+    }
   }, [currentUser, purchasedRigs, deposits]);
 
   // Real Account Registration with Cross-Device Cloud Sync
-  const registerAccount = async (phone: string, password: string, name?: string): Promise<{ success: boolean; message: string; user?: User }> => {
+  const registerAccount = async (phone: string, password: string, name?: string, refCodeInput?: string): Promise<{ success: boolean; message: string; user?: User }> => {
     const cleanPhone = phone.trim();
     const cleanPassword = password.trim();
     const targetKey = normalizePhoneKey(cleanPhone);
@@ -611,7 +650,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    const pendingRef = localStorage.getItem('blq_pending_ref') || undefined;
+    const pendingRef = refCodeInput?.trim() || localStorage.getItem('blq_pending_ref') || undefined;
     const userReferralCode = `BLQ-${cleanPhone.slice(-5)}`;
 
     const newUser: User = {

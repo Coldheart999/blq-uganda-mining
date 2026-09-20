@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { BlqLogo } from './BlqLogo';
 import { UgandaFlag } from './UgandaFlag';
 import { BackButton } from './BackButton';
-import { Phone, Lock, CheckCircle2, ShieldCheck, X, AlertCircle, User as UserIcon, LogIn, UserPlus, Sparkles, Zap, Heart, Eye, EyeOff } from 'lucide-react';
+import { Phone, Lock, CheckCircle2, ShieldCheck, X, AlertCircle, User as UserIcon, LogIn, UserPlus, Sparkles, Zap, Heart, Eye, EyeOff, Gift } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
 
 interface AuthModalProps {
@@ -20,6 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [fullName, setFullName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [referralCodeInput, setReferralCodeInput] = useState<string>(() => pendingRef || '');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
@@ -67,7 +68,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           setIsSubmitting(false);
           return;
         }
-        const res = await registerAccount(fullFormattedPhone, password, fullName.trim() || undefined);
+        const res = await registerAccount(fullFormattedPhone, password, fullName.trim() || undefined, referralCodeInput.trim() || undefined);
         if (!res.success) {
           setError(res.message);
           setIsSubmitting(false);
@@ -311,6 +312,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4 text-amber-400" /> : <Eye className="w-4 h-4" />}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Inviter Referral Code (Register only) */}
+          {!isLoginMode && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono flex justify-between">
+                <span>Inviter Referral Code / Phone</span>
+                <span className="text-slate-400 font-normal lowercase">(optional)</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <Gift className="w-4 h-4 text-amber-400" />
+                </div>
+                <input
+                  type="text"
+                  value={referralCodeInput}
+                  onChange={(e) => setReferralCodeInput(e.target.value)}
+                  placeholder="e.g. BLQ-12345 or Inviter Phone"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950/90 border border-slate-800 rounded-xl text-white font-mono text-sm focus:outline-none focus:border-amber-400"
+                />
               </div>
             </div>
           )}
