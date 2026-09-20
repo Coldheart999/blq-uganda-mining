@@ -341,6 +341,14 @@ const mergeAccounts = (local: StoredAccount[], cloud: StoredAccount[]): StoredAc
   return enrichAndMigrateAccounts(Array.from(map.values()));
 };
 
+// Status precedence weight for deposits
+const depositStatusWeight: Record<DepositRequest['status'], number> = {
+  rejected: 3,
+  approved: 2,
+  auto_approved: 1,
+  pending: 0
+};
+
 // Merge deposits without losing status or items
 const mergeDeposits = (local: DepositRequest[], cloud: DepositRequest[]): DepositRequest[] => {
   const map = new Map<string, DepositRequest>();
@@ -353,12 +361,9 @@ const mergeDeposits = (local: DepositRequest[], cloud: DepositRequest[]): Deposi
       map.set(dep.id, dep);
     } else {
       const existing = map.get(dep.id)!;
-      let finalStatus = existing.status;
-      if (existing.status === 'pending' && dep.status !== 'pending') {
-        finalStatus = dep.status;
-      } else if (dep.status === 'pending' && existing.status !== 'pending') {
-        finalStatus = existing.status;
-      }
+      const finalStatus = (depositStatusWeight[dep.status] ?? 0) >= (depositStatusWeight[existing.status] ?? 0)
+        ? dep.status
+        : existing.status;
       map.set(dep.id, { ...existing, ...dep, status: finalStatus });
     }
   }
@@ -1026,12 +1031,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return merged;
   };
 
-  // Submit Mobile Money Deposit
+  // Submit Mobile Money Deposit with INSTANT AUTOMATIC BALANCE CREDIT
   const submitDeposit = (amount: number, provider: 'MTN Mobile Money' | 'Airtel Money', transactionId: string) => {
     if (!currentUser) return { success: false, message: 'User not logged in' };
     if (amount < 10000) return { success: false, message: 'Minimum deposit amount is UGX 10,000' };
     if (!transactionId.trim()) return { success: false, message: 'Transaction ID is required' };
 
+    const cleanTxId = transactionId.trim();
+
+    // 1. Immediately credit user wallet balance
+    const updatedUser: User = {
+      ...currentUser,
+      balanceUGX: (currentUser.balanceUGX || 0) + amount,
+      totalDepositedUGX: (currentUser.totalDepositedUGX || 0) + amount,
+      notifications: [
+        {
+          id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          title: '⚡ Deposit Credited Successfully!',
+          message: `Your deposit of UGX ${amount.toLocaleString()} has been automatically added to your wallet balance! TxID: ${cleanTxId}. You can now start activating miners right away!`,
+          amountUGX: amount,
+          referredName: '',
+          referredPhone: '',
+          createdAt: new Date().toISOString(),
+          read: false
+        },
+        ...(currentUser.notifications || [])
+      ]
+    };
+    setCurrentUser(updatedUser);
+
+    // 2. Persist updated user in stored accounts & sync to Firebase
+    const accounts = getAllStoredAccounts();
+    const accIndex = accounts.findIndex(a => normalizePhoneKey(a.phone) === normalizePhoneKey(currentUser.phone));
+    if (accIndex !== -1) {
+      accounts[accIndex].user = updatedUser;
+      syncAndSaveAccounts(accounts);
+    }
+
+    // 3. Record deposit in Admin audit log with status 'auto_approved'
     const newDeposit: DepositRequest = {
       id: 'dep_' + Date.now(),
       userId: currentUser.id,
@@ -1039,8 +1076,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       userName: currentUser.name,
       amountUGX: amount,
       provider,
-      transactionId,
-      status: 'pending',
+      transactionId: cleanTxId,
+      status: 'auto_approved',
       createdAt: new Date().toISOString()
     };
 
@@ -1050,7 +1087,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return { 
       success: true, 
-      message: `Thank you so much! Your deposit of UGX ${amount.toLocaleString()} has been received. Please wait gently while our accounts manager verifies your ${provider} transaction ID (${transactionId}). Your wallet balance will be updated automatically in just a moment!` 
+      message: `🎉 Success! UGX ${amount.toLocaleString()} has been automatically added to your wallet balance! Your Transaction ID (${cleanTxId}) has been logged in the accounts queue.` 
     };
   };
 
@@ -1112,28 +1149,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const mergedDeps = mergeDeposits(deposits, cloudDeps);
 
     const updated = mergedDeps.map(dep => {
-      if (dep.id === depositId && dep.status === 'pending') {
-        const accounts = getAllStoredAccounts();
-        const accIndex = accounts.findIndex(a => a.user.id === dep.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(dep.userPhone));
-        if (accIndex !== -1) {
-          accounts[accIndex].user.balanceUGX = (accounts[accIndex].user.balanceUGX || 0) + dep.amountUGX;
-          accounts[accIndex].user.totalDepositedUGX = (accounts[accIndex].user.totalDepositedUGX || 0) + dep.amountUGX;
-          
-          const notif: ReferralNotification = {
-            id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-            title: '💳 Deposit Verified!',
-            message: `Your deposit of UGX ${dep.amountUGX.toLocaleString()} via ${dep.provider} has been approved & added to your wallet!`,
-            amountUGX: dep.amountUGX,
-            referredName: '',
-            referredPhone: '',
-            createdAt: new Date().toISOString(),
-            read: false
-          };
-          accounts[accIndex].user.notifications = [notif, ...(accounts[accIndex].user.notifications || [])];
-
-          syncAndSaveAccounts(accounts);
-          if (currentUser && currentUser.id === dep.userId) {
-            setCurrentUser({ ...accounts[accIndex].user });
+      if (dep.id === depositId && (dep.status === 'auto_approved' || dep.status === 'pending')) {
+        // If it was an old pending deposit that wasn't credited yet, credit it
+        if (dep.status === 'pending') {
+          const accounts = getAllStoredAccounts();
+          const accIndex = accounts.findIndex(a => a.user.id === dep.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(dep.userPhone));
+          if (accIndex !== -1) {
+            accounts[accIndex].user.balanceUGX = (accounts[accIndex].user.balanceUGX || 0) + dep.amountUGX;
+            accounts[accIndex].user.totalDepositedUGX = (accounts[accIndex].user.totalDepositedUGX || 0) + dep.amountUGX;
+            syncAndSaveAccounts(accounts);
+            if (currentUser && currentUser.id === dep.userId) {
+              setCurrentUser({ ...accounts[accIndex].user });
+            }
           }
         }
         return { ...dep, status: 'approved' as const };
@@ -1147,6 +1174,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const rejectDeposit = async (depositId: string) => {
     const cloudDeps = await fetchCloudData<DepositRequest[]>('deposits', []);
     const mergedDeps = mergeDeposits(deposits, cloudDeps);
+
+    const targetDep = mergedDeps.find(d => d.id === depositId);
+    if (!targetDep) return;
+
+    // Deduct the money back from the user if it was auto_approved or approved
+    if (targetDep.status === 'auto_approved' || targetDep.status === 'approved') {
+      const accounts = getAllStoredAccounts();
+      const accIndex = accounts.findIndex(a => a.user.id === targetDep.userId || normalizePhoneKey(a.phone) === normalizePhoneKey(targetDep.userPhone));
+      if (accIndex !== -1) {
+        const user = accounts[accIndex].user;
+        const previousBalance = user.balanceUGX || 0;
+        user.balanceUGX = Math.max(0, previousBalance - targetDep.amountUGX);
+        user.totalDepositedUGX = Math.max(0, (user.totalDepositedUGX || 0) - targetDep.amountUGX);
+
+        const revokeNotif: ReferralNotification = {
+          id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          title: '⚠️ Deposit Revoked / Funds Not Received',
+          message: `Your deposit of UGX ${targetDep.amountUGX.toLocaleString()} (TxID: ${targetDep.transactionId}) could not be verified on Mobile Money records. UGX ${targetDep.amountUGX.toLocaleString()} has been removed from your balance. Contact support if this was an error.`,
+          amountUGX: targetDep.amountUGX,
+          referredName: '',
+          referredPhone: '',
+          createdAt: new Date().toISOString(),
+          read: false
+        };
+
+        user.notifications = [revokeNotif, ...(user.notifications || [])];
+        syncAndSaveAccounts(accounts);
+
+        if (currentUser && (currentUser.id === targetDep.userId || normalizePhoneKey(currentUser.phone) === normalizePhoneKey(targetDep.userPhone))) {
+          setCurrentUser({ ...user });
+        }
+      }
+    }
+
     const updated = mergedDeps.map(dep => dep.id === depositId ? { ...dep, status: 'rejected' as const } : dep);
     syncAndSaveDeposits(updated);
   };

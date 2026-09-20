@@ -103,8 +103,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
     setTimeout(() => setSaveSuccess(''), 3000);
   };
 
+  const [depositFilter, setDepositFilter] = useState<'needs_verification' | 'all' | 'confirmed' | 'revoked'>('needs_verification');
+
   const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
-  const pendingDeposits = deposits.filter(d => d.status === 'pending');
+  const pendingDeposits = deposits.filter(d => d.status === 'auto_approved' || d.status === 'pending');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
@@ -353,70 +355,208 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
               </div>
             )}
 
-            {/* Tab 2: Deposit Approvals Queue */}
+            {/* Tab 2: Deposit Audit Log & Verification Queue */}
             {activeTab === 'deposits' && (
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                <h3 className="text-sm font-bold text-white uppercase font-mono">
-                  Pending Deposits to Verify ({pendingDeposits.length})
-                </h3>
-
-                {pendingDeposits.length === 0 ? (
-                  <div className="p-8 text-center bg-slate-900/40 border border-slate-800 rounded-xl text-slate-400 text-xs">
-                    No pending deposit verification requests.
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
+                  <div>
+                    <h3 className="text-sm font-bold text-white uppercase font-mono flex items-center gap-2">
+                      <ArrowDownLeft className="w-4 h-4 text-emerald-400" />
+                      Mobile Money Deposit Audit Log ({deposits.length})
+                    </h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      User balances are automatically credited upon entering TxID. If money was not received, click <span className="text-rose-400 font-bold">"Revoke & Remove Balance"</span> to deduct funds.
+                    </p>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {pendingDeposits.map((dep) => (
-                      <div
-                        key={dep.id}
-                        className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-emerald-500/40 transition-all"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-white text-sm">{dep.userName}</span>
-                            <span className="text-xs text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded">
-                              {dep.provider}
-                            </span>
-                          </div>
+                </div>
 
-                          <p className="text-xs text-slate-300 font-mono">
-                            User Phone: <span className="text-slate-100 font-bold">{dep.userPhone}</span>
-                          </p>
+                {/* Filter Pills */}
+                <div className="flex flex-wrap gap-2 pt-1 font-mono text-xs">
+                  <button
+                    onClick={() => setDepositFilter('needs_verification')}
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                      depositFilter === 'needs_verification'
+                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>⚡ Needs TxID Check</span>
+                    <span className="px-1.5 py-0.2 bg-amber-500/30 text-amber-300 rounded text-[10px]">
+                      {deposits.filter(d => d.status === 'auto_approved' || d.status === 'pending').length}
+                    </span>
+                  </button>
 
-                          <p className="text-xs font-mono font-bold text-amber-400">
-                            TxID / Ref: <span className="underline">{dep.transactionId}</span>
-                          </p>
-                        </div>
+                  <button
+                    onClick={() => setDepositFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                      depositFilter === 'all'
+                        ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>All Deposits</span>
+                    <span className="px-1.5 py-0.2 bg-purple-500/30 text-purple-300 rounded text-[10px]">
+                      {deposits.length}
+                    </span>
+                  </button>
 
-                        <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-slate-800 pt-3 md:pt-0">
-                          <div className="text-right font-mono">
-                            <div className="text-xs text-slate-400">Deposit Amount:</div>
-                            <div className="text-lg font-black text-emerald-400">
-                              UGX {dep.amountUGX.toLocaleString()}
+                  <button
+                    onClick={() => setDepositFilter('confirmed')}
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                      depositFilter === 'confirmed'
+                        ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>✓ Confirmed Valid</span>
+                    <span className="px-1.5 py-0.2 bg-emerald-500/30 text-emerald-300 rounded text-[10px]">
+                      {deposits.filter(d => d.status === 'approved').length}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setDepositFilter('revoked')}
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                      depositFilter === 'revoked'
+                        ? 'bg-rose-500/20 border-rose-500/50 text-rose-300'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>✗ Revoked (Deducted)</span>
+                    <span className="px-1.5 py-0.2 bg-rose-500/30 text-rose-300 rounded text-[10px]">
+                      {deposits.filter(d => d.status === 'rejected').length}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Filtered Deposit List */}
+                {(() => {
+                  const filtered = deposits.filter(d => {
+                    if (depositFilter === 'needs_verification') return d.status === 'auto_approved' || d.status === 'pending';
+                    if (depositFilter === 'confirmed') return d.status === 'approved';
+                    if (depositFilter === 'revoked') return d.status === 'rejected';
+                    return true;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="p-8 text-center bg-slate-900/40 border border-slate-800 rounded-xl text-slate-400 text-xs">
+                        No transactions found for this filter.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      {filtered.map((dep) => (
+                        <div
+                          key={dep.id}
+                          className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-emerald-500/40 transition-all"
+                        >
+                          <div className="space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-bold text-white text-sm">{dep.userName}</span>
+                              <span className="text-xs text-slate-300 font-mono bg-slate-800 border border-slate-700 px-2 py-0.5 rounded">
+                                📞 {dep.userPhone}
+                              </span>
+                              
+                              {/* Status Badge */}
+                              {dep.status === 'auto_approved' && (
+                                <span className="text-[11px] text-amber-400 font-mono font-bold bg-amber-950/70 border border-amber-700/70 px-2 py-0.5 rounded flex items-center gap-1">
+                                  ⚡ Auto-Credited (Check TxID)
+                                </span>
+                              )}
+                              {dep.status === 'approved' && (
+                                <span className="text-[11px] text-emerald-400 font-mono font-bold bg-emerald-950/70 border border-emerald-700/70 px-2 py-0.5 rounded flex items-center gap-1">
+                                  ✓ Verified Valid
+                                </span>
+                              )}
+                              {dep.status === 'rejected' && (
+                                <span className="text-[11px] text-rose-400 font-mono font-bold bg-rose-950/70 border border-rose-700/70 px-2 py-0.5 rounded flex items-center gap-1">
+                                  ✗ Revoked (Balance Deducted)
+                                </span>
+                              )}
+                              {dep.status === 'pending' && (
+                                <span className="text-[11px] text-slate-400 font-mono bg-slate-800 px-2 py-0.5 rounded">
+                                  ⏳ Legacy Pending
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
+                              <p className="text-amber-400 font-bold bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                                TxID / Ref: <span className="underline select-all text-white">{dep.transactionId}</span>
+                              </p>
+                              <span className="text-slate-400 text-[11px]">
+                                Received on: {dep.provider} • {new Date(dep.createdAt).toLocaleString()}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => approveDeposit(dep.id)}
-                              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5"
-                            >
-                              <Check className="w-4 h-4" />
-                              Approve & Credit Balance
-                            </button>
+                          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-slate-800 pt-3 md:pt-0">
+                            <div className="text-right font-mono">
+                              <div className="text-xs text-slate-400">Amount:</div>
+                              <div className="text-lg font-black text-emerald-400">
+                                UGX {dep.amountUGX.toLocaleString()}
+                              </div>
+                            </div>
 
-                            <button
-                              onClick={() => rejectDeposit(dep.id)}
-                              className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-xs rounded-xl transition-all"
-                            >
-                              Reject
-                            </button>
+                            <div className="flex gap-2">
+                              {/* Actions for Auto-Credited / Pending */}
+                              {(dep.status === 'auto_approved' || dep.status === 'pending') && (
+                                <>
+                                  <button
+                                    onClick={() => approveDeposit(dep.id)}
+                                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5"
+                                    title="Money received! Mark as verified"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                    Confirm Valid
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm(`Are you sure you want to REVOKE this deposit?\n\nUGX ${dep.amountUGX.toLocaleString()} will be automatically DEDUCTED from client ${dep.userName} (${dep.userPhone}).`)) {
+                                        rejectDeposit(dep.id);
+                                      }
+                                    }}
+                                    className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1"
+                                    title="Money not sent! Deduct balance immediately"
+                                  >
+                                    <X className="w-4 h-4" />
+                                    Revoke & Deduct
+                                  </button>
+                                </>
+                              )}
+
+                              {/* Action for Already Confirmed */}
+                              {dep.status === 'approved' && (
+                                <button
+                                  onClick={() => {
+                                    if (window.confirm(`Deduct UGX ${dep.amountUGX.toLocaleString()} back from client ${dep.userName} (${dep.userPhone})?`)) {
+                                      rejectDeposit(dep.id);
+                                    }
+                                  }}
+                                  className="px-2.5 py-1.5 bg-rose-950/50 hover:bg-rose-900/80 border border-rose-800/60 text-rose-400 font-mono text-[11px] rounded-lg transition-all"
+                                  title="Revoke and take money back"
+                                >
+                                  Revoke Balance
+                                </button>
+                              )}
+
+                              {/* Action for Already Revoked */}
+                              {dep.status === 'rejected' && (
+                                <span className="text-[11px] text-rose-400/80 font-mono italic px-2 py-1 bg-rose-950/40 rounded border border-rose-900/40">
+                                  Balance Deducted
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 

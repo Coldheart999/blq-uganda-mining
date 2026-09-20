@@ -96,42 +96,42 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) =
         </div>
 
         {isSubmitted ? (
-          /* Hospitable Gentle Deposit Success Screen */
+          /* Instant Auto-Credit Success Screen */
           <div className="text-center py-6 px-2 space-y-5">
             <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto text-emerald-400 shadow-lg shadow-emerald-950/50">
-              <HeartHandshake className="w-8 h-8 text-emerald-400 animate-pulse" />
+              <CheckCircle2 className="w-9 h-9 text-emerald-400 animate-bounce" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-2xl font-extrabold text-white">Thank You So Much!</h3>
-              <p className="text-xs text-emerald-400 font-semibold tracking-wide uppercase">
-                Deposit Submission Received
+              <h3 className="text-2xl font-extrabold text-white">Deposit Credited!</h3>
+              <p className="text-xs text-emerald-400 font-semibold tracking-wide uppercase font-mono">
+                ⚡ UGX {submittedAmount.toLocaleString()} Automatically Added
               </p>
             </div>
             <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3 text-left text-xs">
               <div className="flex items-center gap-2.5 pb-2 border-b border-slate-800">
                 <AirtelLogo size="sm" />
-                <span className="font-bold text-white text-sm">Airtel Money Uganda</span>
+                <span className="font-bold text-white text-sm">Mobile Money Deposit Logged</span>
               </div>
               <p className="text-slate-300 leading-relaxed">
-                We have received your deposit request of <span className="font-bold font-mono text-emerald-400">UGX {submittedAmount.toLocaleString()}</span> sent from your <strong className="text-white">{submittedSenderProvider}</strong> number.
+                Your wallet balance has been <strong className="text-emerald-400 font-mono">automatically credited with UGX {submittedAmount.toLocaleString()}</strong>.
               </p>
               <div className="p-2.5 bg-slate-900 rounded-lg flex justify-between items-center font-mono">
                 <span className="text-slate-400">Transaction Ref (TxID):</span>
                 <span className="text-amber-400 font-bold">{submittedTxId}</span>
               </div>
               <p className="text-slate-400 leading-relaxed">
-                Please wait gently while our financial accounts manager verifies your transaction. Your account balance will be updated automatically in just a moment.
+                Your transaction has been submitted to the Admin audit log. You can now start buying mining packages immediately!
               </p>
             </div>
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-xs flex items-center justify-center gap-2">
-              <Clock className="w-4 h-4 text-amber-400 shrink-0 animate-spin" />
-              <span>Verification in progress • You can close this window safely</span>
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-300 text-xs flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Balance updated in real-time • Ready to purchase rigs!</span>
             </div>
             <button
               onClick={handleCloseModal}
-              className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-rose-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg transition-all active:scale-[0.98]"
+              className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500 hover:from-emerald-400 hover:to-amber-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg transition-all active:scale-[0.98]"
             >
-              Return to Dashboard
+              Start Mining / Buy Miner
             </button>
           </div>
         ) : (

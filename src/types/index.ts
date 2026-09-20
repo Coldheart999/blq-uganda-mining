@@ -66,7 +66,7 @@ export interface DepositRequest {
   amountUGX: number;
   provider: 'MTN Mobile Money' | 'Airtel Money';
   transactionId: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'auto_approved';
   createdAt: string;
 }
 
