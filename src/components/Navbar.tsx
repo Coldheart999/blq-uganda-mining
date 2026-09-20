@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     } else {
       logoTimerRef.current = setTimeout(() => {
         setLogoClicks(0);
-      }, 2500);
+      }, 3500);
     }
   };
 
@@ -322,17 +322,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                         }`}>
                           {isDarkMode ? 'ON' : 'OFF'}
                         </span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          openAdmin();
-                          setUserDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-xs text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg flex items-center gap-2 mt-1.5 font-bold transition-all cursor-pointer"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Admin Control Panel (8888)</span>
                       </button>
 
                       <button
