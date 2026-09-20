@@ -411,6 +411,21 @@ const MainContent: React.FC = () => {
 
       </main>
 
+      {/* Modern Platform Footer */}
+      <footer className="mt-12 pb-24 border-t border-slate-900 bg-slate-950/60 text-slate-500 text-xs py-8 px-4 text-center space-y-3">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] font-mono">
+          <span className="text-slate-400">© 2026 BLQ Mining Uganda • Certified Cloud ASIC Infrastructure</span>
+          <span>•</span>
+          <button
+            onClick={() => setIsAdminOpen(true)}
+            className="text-amber-400/80 hover:text-amber-300 font-bold underline transition-colors cursor-pointer flex items-center gap-1 mx-auto"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Owner / Admin Portal (PIN: 8888)</span>
+          </button>
+        </div>
+      </footer>
+
       {/* Social Proof Live Ugandan Activity Ticker (Slower rotation between 5s-30s) */}
       <SocialProofTicker />
 
@@ -422,7 +437,9 @@ const MainContent: React.FC = () => {
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} />
       <WithdrawModal isOpen={isWithdrawOpen} onClose={() => setIsWithdrawOpen(false)} />
       <ReferralModal isOpen={isReferralOpen} onClose={() => setIsReferralOpen(false)} onGoToStore={() => setActiveTab('store')} />
-      <ReferralBonusModal notification={unreadBonusNotif} onClose={handleDismissBonusNotif} />
+      {!isAdminOpen && (
+        <ReferralBonusModal notification={unreadBonusNotif} onClose={handleDismissBonusNotif} />
+      )}
       <ConfirmPurchaseModal 
         packageToBuy={selectedPackageToBuy} 
         userBalance={currentUser ? currentUser.balanceUGX : 0} 

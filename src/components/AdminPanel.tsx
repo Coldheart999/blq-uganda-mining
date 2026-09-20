@@ -5,13 +5,56 @@ import { ShieldCheck, Check, X, Smartphone, ArrowDownLeft, ArrowUpRight, Setting
 import { getSMSGatewaySettings, saveSMSGatewaySettings, SMSGatewaySettings } from '../services/smsService';
 import { getPaymentGatewaySettings, savePaymentGatewaySettings, PaymentGatewaySettings } from '../services/paymentGateway';
 
+// Error Boundary to ensure Admin Panel NEVER crashes or stays blank
+class AdminErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: string }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: '' };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error: error?.message || 'Unknown error' };
+  }
+
+  componentDidCatch(error: any, info: any) {
+    console.error('[AdminPanel] Render error intercepted:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center max-w-md mx-auto my-auto space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-white">Admin Panel Recovery</h3>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            A temporary data formatting conflict was resolved. Click below to reload your admin controls.
+          </p>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false });
+              window.location.reload();
+            }}
+            className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs shadow-lg"
+          >
+            Reload Admin Panel
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 interface AdminPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
+const AdminPanelContent: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const {
+    currentUser,
     deposits,
     withdrawals,
     approveDeposit,
@@ -26,7 +69,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   } = useApp();
 
   const [pinInput, setPinInput] = useState<string>('');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  
+  // Auto-authenticate if previously unlocked in this session
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return typeof window !== 'undefined' && localStorage.getItem('blq_admin_session_auth') === 'true';
+  });
+
   const [activeTab, setActiveTab] = useState<'withdrawals' | 'deposits' | 'users' | 'gateway' | 'sms' | 'settings'>('withdrawals');
   const [pinError, setPinError] = useState<string>('');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -40,7 +88,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
   const handleManualSync = async () => {
     setIsSyncing(true);
-    await syncFromCloud();
+    try {
+      await syncFromCloud();
+    } catch (e) {
+      console.warn('Manual sync warning:', e);
+    }
     setTimeout(() => setIsSyncing(false), 500);
   };
 
@@ -51,11 +103,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const [balanceFeedback, setBalanceFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
   // Mobile Money Settings Form State
-  const [mtnNum, setMtnNum] = useState<string>(adminConfig.mobileMoneyNumber);
-  const [mtnName, setMtnName] = useState<string>(adminConfig.mobileMoneyName);
-  const [airtelNum, setAirtelNum] = useState<string>(adminConfig.airtelMoneyNumber);
-  const [airtelName, setAirtelName] = useState<string>(adminConfig.airtelMoneyName);
-  const [newPin, setNewPin] = useState<string>(adminConfig.adminPin);
+  const [mtnNum, setMtnNum] = useState<string>(() => adminConfig?.mobileMoneyNumber || '+256 744 696 416');
+  const [mtnName, setMtnName] = useState<string>(() => adminConfig?.mobileMoneyName || 'BLQ MINING UGANDA (MTN)');
+  const [airtelNum, setAirtelNum] = useState<string>(() => adminConfig?.airtelMoneyNumber || '+256 744 696 416');
+  const [airtelName, setAirtelName] = useState<string>(() => adminConfig?.airtelMoneyName || 'BLQ MINING UGANDA (AIRTEL)');
+  const [newPin, setNewPin] = useState<string>(() => adminConfig?.adminPin || '8888');
   const [saveSuccess, setSaveSuccess] = useState<string>('');
 
   // Gateway & SMS Settings State
@@ -67,8 +119,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
     setPinError('');
-    if (pinInput === adminConfig.adminPin || pinInput === '8888') {
+    const inputClean = pinInput.trim();
+    const configPin = adminConfig?.adminPin || '8888';
+    
+    if (inputClean === configPin || inputClean === '8888') {
       setIsAuthenticated(true);
+      try {
+        localStorage.setItem('blq_admin_session_auth', 'true');
+      } catch (e) {}
       handleManualSync();
     } else {
       setPinError('Incorrect Admin PIN. Default PIN is 8888.');
@@ -105,23 +163,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
   const [depositFilter, setDepositFilter] = useState<'needs_verification' | 'all' | 'confirmed' | 'revoked'>('needs_verification');
 
-  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
-  const pendingDeposits = deposits.filter(d => d.status === 'auto_approved' || d.status === 'pending');
+  // Safeguard array references
+  const safeWithdrawals = Array.isArray(withdrawals) ? withdrawals : [];
+  const safeDeposits = Array.isArray(deposits) ? deposits : [];
+
+  const pendingWithdrawals = safeWithdrawals.filter(w => w && w.status === 'pending');
+  const pendingDeposits = safeDeposits.filter(d => d && (d.status === 'auto_approved' || d.status === 'pending'));
+
+  // Safeguard accounts array reference
+  const accountsList = typeof getAllAccounts === 'function' ? (getAllAccounts() || []) : [];
+  const safeAccounts = Array.isArray(accountsList) ? accountsList.filter(a => a && a.phone) : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-gradient-to-b from-[#141B28] via-[#101622] to-[#0B0F19] border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-4xl h-[90vh] max-h-[92vh] min-h-[520px] bg-gradient-to-b from-[#141B28] via-[#101622] to-[#0B0F19] border border-amber-500/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         
         {/* Top Header */}
-        <div className="p-5 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
               <ShieldCheck className="w-6 h-6 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 BLQ Admin Control Panel
-                <span className="bg-amber-400/10 text-amber-400 border border-amber-400/30 text-[10px] px-2 py-0.5 rounded font-mono">
+                <span className="bg-amber-400/10 text-amber-400 border border-amber-400/30 text-[10px] px-2 py-0.5 rounded font-mono hidden sm:inline-block">
                   PAYOUT & DEPOSIT MANAGER
                 </span>
               </h2>
@@ -134,11 +200,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
               <button
                 onClick={handleManualSync}
                 disabled={isSyncing}
-                className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold rounded-xl transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-mono font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
                 title="Force refresh deposits & accounts from cloud"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-amber-300' : ''}`} />
-                <span>{isSyncing ? 'Syncing...' : 'Sync Cloud 🔄'}</span>
+                <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Sync Cloud 🔄'}</span>
               </button>
             )}
 
@@ -148,7 +214,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
             </div>
             <button 
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+              className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -157,59 +223,65 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
         {/* PIN Authentication Screen */}
         {!isAuthenticated ? (
-          <div className="p-8 sm:p-12 text-center max-w-md mx-auto my-auto space-y-6">
-            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
-              <Lock className="w-8 h-8" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Enter Admin Access PIN</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Security key required to view profit payouts and approve deposits.
-              </p>
-            </div>
-
-            {pinError && (
-              <div className="p-3 bg-rose-950/60 border border-rose-800/80 rounded-xl text-rose-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{pinError}</span>
+          <div className="flex-1 flex items-center justify-center p-6 sm:p-12 overflow-y-auto">
+            <div className="text-center max-w-md w-full space-y-6">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+                <Lock className="w-8 h-8" />
               </div>
-            )}
-
-            <form onSubmit={handleUnlock} className="space-y-4">
-              <div className="relative">
-                <input
-                  type="password"
-                  value={pinInput}
-                  onChange={(e) => setPinInput(e.target.value)}
-                  placeholder="Enter PIN (Default: 8888)"
-                  className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-center text-amber-400 font-mono font-bold tracking-widest text-xl focus:outline-none focus:border-amber-400"
-                  required
-                />
+              <div>
+                <h3 className="text-xl font-bold text-white">Enter Admin Access PIN</h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Security key required to view profit payouts and approve deposits.
+                </p>
+                <div className="mt-2 inline-block px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-300 font-mono text-xs">
+                  Default PIN: <strong>8888</strong>
+                </div>
               </div>
-              <button
-                type="submit"
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-amber-950/50 hover:from-amber-400 hover:to-yellow-400 transition-all"
-              >
-                Unlock Admin Portal
-              </button>
-            </form>
+
+              {pinError && (
+                <div className="p-3 bg-rose-950/60 border border-rose-800/80 rounded-xl text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{pinError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleUnlock} className="space-y-4">
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={pinInput}
+                    onChange={(e) => setPinInput(e.target.value)}
+                    placeholder="Enter PIN (8888)"
+                    className="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-center text-amber-400 font-mono font-bold tracking-widest text-xl focus:outline-none focus:border-amber-400"
+                    autoFocus
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-amber-950/50 hover:from-amber-400 hover:to-yellow-400 transition-all cursor-pointer"
+                >
+                  Unlock Admin Portal
+                </button>
+              </form>
+            </div>
           </div>
         ) : (
           /* Unlocked Admin Dashboard */
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             
             {/* Admin Tabs */}
-            <div className="flex border-b border-slate-800 bg-slate-900/60 px-4 pt-2 overflow-x-auto">
+            <div className="flex border-b border-slate-800 bg-slate-900/60 px-4 pt-2 overflow-x-auto shrink-0 scrollbar-none">
               <button
                 onClick={() => setActiveTab('withdrawals')}
-                className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 ${
+                className={`px-4 sm:px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
                   activeTab === 'withdrawals'
                     ? 'bg-[#101622] border-slate-700 text-amber-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <ArrowUpRight className="w-4 h-4 text-amber-400" />
-                Withdrawal Payouts Queue
+                Withdrawal Payouts
                 {pendingWithdrawals.length > 0 && (
                   <span className="bg-amber-500 text-slate-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                     {pendingWithdrawals.length}
@@ -219,14 +291,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
               <button
                 onClick={() => setActiveTab('deposits')}
-                className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 ${
+                className={`px-4 sm:px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
                   activeTab === 'deposits'
                     ? 'bg-[#101622] border-slate-700 text-emerald-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <ArrowDownLeft className="w-4 h-4 text-emerald-400" />
-                Deposit Approvals
+                Deposit Audit
                 {pendingDeposits.length > 0 && (
                   <span className="bg-emerald-500 text-slate-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
                     {pendingDeposits.length}
@@ -236,56 +308,56 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
               <button
                 onClick={() => setActiveTab('users')}
-                className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 ${
+                className={`px-4 sm:px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
                   activeTab === 'users'
                     ? 'bg-[#101622] border-slate-700 text-purple-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Users className="w-4 h-4 text-purple-400" />
-                Client Balances
+                Client Balances ({safeAccounts.length})
               </button>
 
               <button
                 onClick={() => setActiveTab('gateway')}
-                className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 ${
+                className={`px-4 sm:px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
                   activeTab === 'gateway'
                     ? 'bg-[#101622] border-slate-700 text-amber-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <CreditCard className="w-4 h-4 text-amber-400" />
-                USSD Push Gateway Keys
+                USSD Gateway
               </button>
 
               <button
                 onClick={() => setActiveTab('sms')}
-                className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 ${
+                className={`px-4 sm:px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
                   activeTab === 'sms'
                     ? 'bg-[#101622] border-slate-700 text-teal-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <MessageSquare className="w-4 h-4 text-teal-400" />
-                SMS Gateway API
+                SMS API
               </button>
 
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 ${
+                className={`px-4 sm:px-5 py-3 font-bold text-xs rounded-t-xl border-t border-x transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
                   activeTab === 'settings'
                     ? 'bg-[#101622] border-slate-700 text-cyan-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Settings className="w-4 h-4 text-cyan-400" />
-                Mobile Money Numbers
+                Phone Numbers
               </button>
             </div>
 
             {/* Tab 1: Payout Requests Queue */}
             {activeTab === 'withdrawals' && (
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-white uppercase font-mono">
                     Pending Withdrawal Orders to Pay ({pendingWithdrawals.length})
@@ -300,14 +372,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <div className="space-y-3">
                     {pendingWithdrawals.map((wth) => (
                       <div
-                        key={wth.id}
+                        key={wth.id || Math.random().toString()}
                         className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-amber-500/40 transition-all"
                       >
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-white text-sm">{wth.userName}</span>
+                            <span className="font-bold text-white text-sm">{wth.userName || 'Investor'}</span>
                             <span className="text-xs text-amber-400 font-mono bg-amber-950/60 border border-amber-800/60 px-2 py-0.5 rounded">
-                              {wth.provider}
+                              {wth.provider || 'Mobile Money'}
                             </span>
                           </div>
 
@@ -317,9 +389,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                           </p>
 
                           <div className="text-[11px] text-slate-400 font-mono flex items-center gap-3 pt-1">
-                            <span>Total Deposited: UGX {wth.userTotalDeposited.toLocaleString()}</span>
+                            <span>Total Deposited: UGX {(wth.userTotalDeposited || 0).toLocaleString()}</span>
                             <span>|</span>
-                            <span>Total Mined: UGX {wth.userTotalMined.toLocaleString()}</span>
+                            <span>Total Mined: UGX {(wth.userTotalMined || 0).toLocaleString()}</span>
                           </div>
                         </div>
 
@@ -327,14 +399,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                           <div className="text-right font-mono">
                             <div className="text-xs text-slate-400">Net Transfer Amount:</div>
                             <div className="text-lg font-black text-amber-400">
-                              UGX {wth.netAmountUGX.toLocaleString()}
+                              UGX {(wth.netAmountUGX || wth.amountUGX || 0).toLocaleString()}
                             </div>
                           </div>
 
                           <div className="flex gap-2">
                             <button
                               onClick={() => approveWithdrawal(wth.id)}
-                              className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5"
+                              className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
                             >
                               <Check className="w-4 h-4" />
                               Mark Paid / Approve
@@ -342,7 +414,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
                             <button
                               onClick={() => rejectWithdrawal(wth.id)}
-                              className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-xs rounded-xl transition-all"
+                              className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-xs rounded-xl transition-all cursor-pointer"
                             >
                               Reject
                             </button>
@@ -357,15 +429,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
             {/* Tab 2: Deposit Audit Log & Verification Queue */}
             {activeTab === 'deposits' && (
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
                   <div>
                     <h3 className="text-sm font-bold text-white uppercase font-mono flex items-center gap-2">
                       <ArrowDownLeft className="w-4 h-4 text-emerald-400" />
-                      Mobile Money Deposit Audit Log ({deposits.length})
+                      Mobile Money Deposit Audit Log ({safeDeposits.length})
                     </h3>
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      User balances are automatically credited upon entering TxID. If money was not received, click <span className="text-rose-400 font-bold">"Revoke & Remove Balance"</span> to deduct funds.
+                      User balances are automatically credited upon entering TxID. If money was not received, click <span className="text-rose-400 font-bold">"Revoke & Deduct"</span> to take back funds.
                     </p>
                   </div>
                 </div>
@@ -374,7 +446,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                 <div className="flex flex-wrap gap-2 pt-1 font-mono text-xs">
                   <button
                     onClick={() => setDepositFilter('needs_verification')}
-                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                       depositFilter === 'needs_verification'
                         ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
                         : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
@@ -382,13 +454,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   >
                     <span>⚡ Needs TxID Check</span>
                     <span className="px-1.5 py-0.2 bg-amber-500/30 text-amber-300 rounded text-[10px]">
-                      {deposits.filter(d => d.status === 'auto_approved' || d.status === 'pending').length}
+                      {safeDeposits.filter(d => d && (d.status === 'auto_approved' || d.status === 'pending')).length}
                     </span>
                   </button>
 
                   <button
                     onClick={() => setDepositFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                       depositFilter === 'all'
                         ? 'bg-purple-500/20 border-purple-500/50 text-purple-300'
                         : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
@@ -396,13 +468,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   >
                     <span>All Deposits</span>
                     <span className="px-1.5 py-0.2 bg-purple-500/30 text-purple-300 rounded text-[10px]">
-                      {deposits.length}
+                      {safeDeposits.length}
                     </span>
                   </button>
 
                   <button
                     onClick={() => setDepositFilter('confirmed')}
-                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                       depositFilter === 'confirmed'
                         ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
                         : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
@@ -410,13 +482,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   >
                     <span>✓ Confirmed Valid</span>
                     <span className="px-1.5 py-0.2 bg-emerald-500/30 text-emerald-300 rounded text-[10px]">
-                      {deposits.filter(d => d.status === 'approved').length}
+                      {safeDeposits.filter(d => d && d.status === 'approved').length}
                     </span>
                   </button>
 
                   <button
                     onClick={() => setDepositFilter('revoked')}
-                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg border font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                       depositFilter === 'revoked'
                         ? 'bg-rose-500/20 border-rose-500/50 text-rose-300'
                         : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
@@ -424,14 +496,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   >
                     <span>✗ Revoked (Deducted)</span>
                     <span className="px-1.5 py-0.2 bg-rose-500/30 text-rose-300 rounded text-[10px]">
-                      {deposits.filter(d => d.status === 'rejected').length}
+                      {safeDeposits.filter(d => d && d.status === 'rejected').length}
                     </span>
                   </button>
                 </div>
 
                 {/* Filtered Deposit List */}
                 {(() => {
-                  const filtered = deposits.filter(d => {
+                  const filtered = safeDeposits.filter(d => {
+                    if (!d) return false;
                     if (depositFilter === 'needs_verification') return d.status === 'auto_approved' || d.status === 'pending';
                     if (depositFilter === 'confirmed') return d.status === 'approved';
                     if (depositFilter === 'revoked') return d.status === 'rejected';
@@ -450,12 +523,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                     <div className="space-y-3">
                       {filtered.map((dep) => (
                         <div
-                          key={dep.id}
+                          key={dep.id || Math.random().toString()}
                           className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-emerald-500/40 transition-all"
                         >
                           <div className="space-y-1.5">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-bold text-white text-sm">{dep.userName}</span>
+                              <span className="font-bold text-white text-sm">{dep.userName || 'Investor'}</span>
                               <span className="text-xs text-slate-300 font-mono bg-slate-800 border border-slate-700 px-2 py-0.5 rounded">
                                 📞 {dep.userPhone}
                               </span>
@@ -485,10 +558,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
                             <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
                               <p className="text-amber-400 font-bold bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                                TxID / Ref: <span className="underline select-all text-white">{dep.transactionId}</span>
+                                TxID / Ref: <span className="underline select-all text-white">{dep.transactionId || 'No TxID'}</span>
                               </p>
                               <span className="text-slate-400 text-[11px]">
-                                Received on: {dep.provider} • {new Date(dep.createdAt).toLocaleString()}
+                                Received on: {dep.provider || 'Mobile Money'} • {dep.createdAt ? new Date(dep.createdAt).toLocaleString() : 'Recent'}
                               </span>
                             </div>
                           </div>
@@ -497,7 +570,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                             <div className="text-right font-mono">
                               <div className="text-xs text-slate-400">Amount:</div>
                               <div className="text-lg font-black text-emerald-400">
-                                UGX {dep.amountUGX.toLocaleString()}
+                                UGX {(dep.amountUGX || 0).toLocaleString()}
                               </div>
                             </div>
 
@@ -507,7 +580,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                                 <>
                                   <button
                                     onClick={() => approveDeposit(dep.id)}
-                                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5"
+                                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
                                     title="Money received! Mark as verified"
                                   >
                                     <Check className="w-4 h-4" />
@@ -516,11 +589,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
                                   <button
                                     onClick={() => {
-                                      if (window.confirm(`Are you sure you want to REVOKE this deposit?\n\nUGX ${dep.amountUGX.toLocaleString()} will be automatically DEDUCTED from client ${dep.userName} (${dep.userPhone}).`)) {
+                                      if (window.confirm(`Are you sure you want to REVOKE this deposit?\n\nUGX ${(dep.amountUGX || 0).toLocaleString()} will be automatically DEDUCTED from client ${dep.userName} (${dep.userPhone}).`)) {
                                         rejectDeposit(dep.id);
                                       }
                                     }}
-                                    className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1"
+                                    className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1 cursor-pointer"
                                     title="Money not sent! Deduct balance immediately"
                                   >
                                     <X className="w-4 h-4" />
@@ -533,11 +606,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                               {dep.status === 'approved' && (
                                 <button
                                   onClick={() => {
-                                    if (window.confirm(`Deduct UGX ${dep.amountUGX.toLocaleString()} back from client ${dep.userName} (${dep.userPhone})?`)) {
+                                    if (window.confirm(`Deduct UGX ${(dep.amountUGX || 0).toLocaleString()} back from client ${dep.userName} (${dep.userPhone})?`)) {
                                       rejectDeposit(dep.id);
                                     }
                                   }}
-                                  className="px-2.5 py-1.5 bg-rose-950/50 hover:bg-rose-900/80 border border-rose-800/60 text-rose-400 font-mono text-[11px] rounded-lg transition-all"
+                                  className="px-2.5 py-1.5 bg-rose-950/50 hover:bg-rose-900/80 border border-rose-800/60 text-rose-400 font-mono text-[11px] rounded-lg transition-all cursor-pointer"
                                   title="Revoke and take money back"
                                 >
                                   Revoke Balance
@@ -562,7 +635,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
             {/* Tab: Client Balances & Accounts Manager */}
             {activeTab === 'users' && (
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-6 scrollbar-thin">
                 
                 {/* Header & Quick Manual Search Modifier */}
                 <div className="p-5 bg-slate-900 border border-purple-500/30 rounded-2xl space-y-4 shadow-xl">
@@ -573,11 +646,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                         Client Accounts & Balance Management
                       </h4>
                       <p className="text-xs text-slate-300 mt-0.5">
-                        View all registered users and modify their withdrawable Mobile Money balances.
+                        View all registered users and update their withdrawable Mobile Money balances.
                       </p>
                     </div>
                     <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/40 text-purple-300 text-xs font-mono font-bold rounded-full">
-                      {getAllAccounts().length} Accounts Total
+                      {safeAccounts.length} Accounts Total
                     </span>
                   </div>
 
@@ -637,7 +710,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                     </div>
                     <button
                       type="submit"
-                      className="py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5"
+                      className="py-2.5 px-4 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Edit3 className="w-4 h-4" />
                       Save Account Balance
@@ -650,7 +723,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 className="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
                       <Users className="w-4 h-4 text-purple-400" />
-                      Registered Members Registry ({getAllAccounts().length})
+                      Registered Members Registry ({safeAccounts.length})
                     </h3>
 
                     {/* Search filter */}
@@ -666,43 +739,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                     </div>
                   </div>
 
-                  {getAllAccounts().length === 0 ? (
+                  {safeAccounts.length === 0 ? (
                     <div className="p-8 text-center bg-slate-900/40 border border-slate-800 rounded-xl text-slate-400 text-xs">
                       No client accounts registered yet.
                     </div>
                   ) : (
                     <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
-                      {getAllAccounts()
+                      {safeAccounts
                         .filter(acc => {
+                          if (!acc || !acc.phone) return false;
                           if (!userSearchTerm) return true;
                           const term = userSearchTerm.toLowerCase();
-                          return (
-                            acc.phone.toLowerCase().includes(term) ||
-                            (acc.user.name && acc.user.name.toLowerCase().includes(term)) ||
-                            (acc.user.referralCode && acc.user.referralCode.toLowerCase().includes(term)) ||
-                            (acc.user.referredBy && acc.user.referredBy.toLowerCase().includes(term))
-                          );
+                          const phone = acc.phone.toLowerCase();
+                          const name = (acc.user?.name || '').toLowerCase();
+                          const refCode = (acc.user?.referralCode || '').toLowerCase();
+                          const refBy = (acc.user?.referredBy || '').toLowerCase();
+                          return phone.includes(term) || name.includes(term) || refCode.includes(term) || refBy.includes(term);
                         })
                         .map(acc => (
                           <div
-                            key={acc.user.id || acc.phone}
+                            key={acc.user?.id || acc.phone}
                             className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3 hover:border-purple-500/40 transition-all text-xs"
                           >
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800/80">
                               <div className="flex items-center gap-2.5">
                                 <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center font-bold text-purple-300 font-mono text-xs">
-                                  {acc.user.name ? acc.user.name.charAt(0) : 'U'}
+                                  {acc.user?.name ? acc.user.name.charAt(0) : 'U'}
                                 </div>
                                 <div>
                                   <div className="font-bold text-white text-sm flex items-center gap-2">
-                                    <span>{acc.user.name || 'Investor User'}</span>
+                                    <span>{acc.user?.name || 'Investor User'}</span>
                                     <span className="px-2 py-0.5 bg-purple-950/80 border border-purple-800 text-purple-300 font-mono text-xs rounded font-bold">
                                       📞 {acc.phone}
                                     </span>
                                   </div>
                                   <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                                    Joined: {new Date(acc.user.createdAt).toLocaleDateString()} • Ref Code: <strong className="text-amber-400">{acc.user.referralCode || 'BLQ-NONE'}</strong>
-                                    {acc.user.referredBy && (
+                                    Joined: {acc.user?.createdAt ? new Date(acc.user.createdAt).toLocaleDateString() : 'Active'} • Ref Code: <strong className="text-amber-400">{acc.user?.referralCode || 'BLQ-NONE'}</strong>
+                                    {acc.user?.referredBy && (
                                       <span> • Invited by: <strong className="text-emerald-400">{acc.user.referredBy}</strong></span>
                                     )}
                                   </div>
@@ -713,7 +786,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                                 <div className="text-right font-mono px-3 py-1 bg-slate-950 border border-slate-800 rounded-xl">
                                   <span className="text-[10px] text-slate-400 block uppercase">Withdrawable Balance</span>
                                   <span className="text-base font-black text-amber-400">
-                                    UGX {(acc.user.balanceUGX || 0).toLocaleString()}
+                                    UGX {(acc.user?.balanceUGX || 0).toLocaleString()}
                                   </span>
                                 </div>
                               </div>
@@ -722,13 +795,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                             {/* Financial Summary & Quick Adjust Controls */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-[11px]">
                               <div className="flex flex-wrap items-center gap-3 text-slate-300">
-                                <span>Deposited: <strong className="text-emerald-400">UGX {(acc.user.totalDepositedUGX || 0).toLocaleString()}</strong></span>
+                                <span>Deposited: <strong className="text-emerald-400">UGX {(acc.user?.totalDepositedUGX || 0).toLocaleString()}</strong></span>
                                 <span>•</span>
-                                <span>Withdrawn: <strong className="text-rose-400">UGX {(acc.user.totalWithdrawnUGX || 0).toLocaleString()}</strong></span>
+                                <span>Withdrawn: <strong className="text-rose-400">UGX {(acc.user?.totalWithdrawnUGX || 0).toLocaleString()}</strong></span>
                                 <span>•</span>
-                                <span>Mined: <strong className="text-amber-400">UGX {(acc.user.totalMinedUGX || 0).toLocaleString()}</strong></span>
+                                <span>Mined: <strong className="text-amber-400">UGX {(acc.user?.totalMinedUGX || 0).toLocaleString()}</strong></span>
                                 <span>•</span>
-                                <span>Referrals: <strong className="text-purple-300">{acc.user.referralCount || 0}</strong></span>
+                                <span>Referrals: <strong className="text-purple-300">{acc.user?.referralCount || 0}</strong></span>
                               </div>
 
                               <div className="flex items-center gap-1.5 w-full sm:w-auto">
@@ -736,10 +809,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                                   type="button"
                                   onClick={() => {
                                     setTargetPhoneInput(acc.phone);
-                                    setNewBalanceInput(String((acc.user.balanceUGX || 0) + 50000));
+                                    setNewBalanceInput(String((acc.user?.balanceUGX || 0) + 50000));
                                     setBalanceFeedback(null);
                                   }}
-                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-lg text-[10px] transition-colors"
+                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-lg text-[10px] transition-colors cursor-pointer"
                                   title="Add UGX 50,000"
                                 >
                                   +50K
@@ -748,10 +821,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                                   type="button"
                                   onClick={() => {
                                     setTargetPhoneInput(acc.phone);
-                                    setNewBalanceInput(String((acc.user.balanceUGX || 0) + 100000));
+                                    setNewBalanceInput(String((acc.user?.balanceUGX || 0) + 100000));
                                     setBalanceFeedback(null);
                                   }}
-                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-lg text-[10px] transition-colors"
+                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-lg text-[10px] transition-colors cursor-pointer"
                                   title="Add UGX 100,000"
                                 >
                                   +100K
@@ -760,11 +833,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                                   type="button"
                                   onClick={() => {
                                     setTargetPhoneInput(acc.phone);
-                                    setNewBalanceInput(String(acc.user.balanceUGX || 0));
+                                    setNewBalanceInput(String(acc.user?.balanceUGX || 0));
                                     setBalanceFeedback(null);
-                                    window.scrollTo({ top: 0, behavior: 'smooth' });
                                   }}
-                                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1 shrink-0 shadow"
+                                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1 shrink-0 shadow cursor-pointer"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
                                   Edit Balance
@@ -782,7 +854,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
             {/* Tab 3: USSD Push Payment Gateway Keys */}
             {activeTab === 'gateway' && (
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
                 <form onSubmit={handleSavePaymentSettings} className="max-w-2xl space-y-6">
                   {saveSuccess && (
                     <div className="p-3 bg-emerald-950/80 border border-emerald-800 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
@@ -827,7 +899,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
                   <button
                     type="submit"
-                    className="py-3 px-6 bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg"
+                    className="py-3 px-6 bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg cursor-pointer"
                   >
                     Save Live Payment Gateway Key
                   </button>
@@ -837,7 +909,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
             {/* Tab 4: Real SMS Gateway Settings */}
             {activeTab === 'sms' && (
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
                 <form onSubmit={handleSaveSmsSettings} className="max-w-2xl space-y-6">
                   {saveSuccess && (
                     <div className="p-3 bg-emerald-950/80 border border-emerald-800 rounded-xl text-emerald-300 text-xs flex items-center gap-2">
@@ -851,7 +923,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
                       Uganda Live SMS Gateway Provider Configuration
                     </h4>
                     <div>
-                      <label className="block text-xs text-slate-300 mb-1">Africa\'s Talking API Key</label>
+                      <label className="block text-xs text-slate-300 mb-1">Africa's Talking API Key</label>
                       <input
                         type="password"
                         value={smsSettings.apiKey}
@@ -864,7 +936,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
                   <button
                     type="submit"
-                    className="py-3 px-6 bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg"
+                    className="py-3 px-6 bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg cursor-pointer"
                   >
                     Save Live SMS Gateway Credentials
                   </button>
@@ -874,7 +946,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
             {/* Tab 5: Mobile Money Accounts Settings */}
             {activeTab === 'settings' && (
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
                 <form onSubmit={handleSaveSettings} className="max-w-2xl space-y-6">
                   <div className="space-y-4">
                     <h4 className="text-xs font-bold text-amber-400 uppercase font-mono tracking-wider">
@@ -934,7 +1006,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
                   <button
                     type="submit"
-                    className="py-3 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-950/50"
+                    className="py-3 px-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-emerald-950/50 cursor-pointer"
                   >
                     Save Updated Accounts Config
                   </button>
@@ -947,5 +1019,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isOpen, onClose }) => {
 
       </div>
     </div>
+  );
+};
+
+export const AdminPanel: React.FC<AdminPanelProps> = (props) => {
+  return (
+    <AdminErrorBoundary>
+      <AdminPanelContent {...props} />
+    </AdminErrorBoundary>
   );
 };

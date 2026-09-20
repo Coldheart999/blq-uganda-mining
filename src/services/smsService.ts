@@ -13,8 +13,12 @@ export interface SMSGatewaySettings {
 
 // Default settings stored in LocalStorage for persistent configuration
 export const getSMSGatewaySettings = (): SMSGatewaySettings => {
-  const saved = localStorage.getItem('blq_sms_gateway_settings');
-  if (saved) return JSON.parse(saved);
+  try {
+    const saved = localStorage.getItem('blq_sms_gateway_settings');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {
+    console.warn('Error reading SMS settings:', e);
+  }
   return {
     provider: 'africastalking',
     apiKey: '',

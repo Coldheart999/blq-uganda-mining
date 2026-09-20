@@ -9,8 +9,12 @@ export interface PaymentGatewaySettings {
 }
 
 export const getPaymentGatewaySettings = (): PaymentGatewaySettings => {
-  const saved = localStorage.getItem('blq_payment_gateway_settings');
-  if (saved) return JSON.parse(saved);
+  try {
+    const saved = localStorage.getItem('blq_payment_gateway_settings');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {
+    console.warn('Error reading payment settings:', e);
+  }
   return {
     provider: 'flutterwave',
     publicKey: '',
