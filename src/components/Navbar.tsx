@@ -39,7 +39,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (e && e.stopPropagation) {
       e.stopPropagation();
     }
-    setActiveTab('history');
 
     historyTapCountRef.current += 1;
     const count = historyTapCountRef.current;
@@ -50,11 +49,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
     if (count >= 3) {
       historyTapCountRef.current = 0;
+      setActiveTab('history');
       openAdmin();
     } else {
       historyTimerRef.current = setTimeout(() => {
         historyTapCountRef.current = 0;
-      }, 3500);
+        setActiveTab('history');
+      }, 400);
     }
   };
 
@@ -334,21 +335,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                       <button
                         onClick={() => {
-                          openAdmin();
-                          setUserDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-xs text-amber-400 hover:bg-amber-950/30 rounded-lg flex items-center gap-2 mt-1 transition-colors font-medium border-t border-slate-800/80 pt-2"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Admin Portal (PIN 8888)</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
                           logout();
                           setUserDropdownOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/30 rounded-lg flex items-center gap-2 mt-1 transition-colors border-t border-slate-800/40 pt-2"
+                        className="w-full text-left px-3 py-2 text-xs text-rose-400 hover:bg-rose-950/30 rounded-lg flex items-center gap-2 mt-1 transition-colors border-t border-slate-800/80 pt-2"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         Sign Out
@@ -359,14 +349,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             ) : (
               <div className="flex items-center space-x-2">
-                <button
-                  onClick={openAdmin}
-                  className="p-2 text-slate-400 hover:text-amber-400 rounded-xl hover:bg-slate-800/80 transition-colors text-xs flex items-center gap-1 font-medium"
-                  title="Admin Portal (PIN 8888)"
-                >
-                  <ShieldCheck className="w-4 h-4 text-amber-400/80 hover:text-amber-400" />
-                </button>
-
                 <button
                   onClick={openFaq}
                   className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/80 transition-colors text-xs flex items-center gap-1 font-medium"
