@@ -1171,6 +1171,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!currentUser) return { success: false, message: 'User not logged in' };
     if (amount < 3000) return { success: false, message: 'Minimum withdrawal amount is UGX 3,000' };
 
+    // 1. Time Window Check (6:00 PM to 12:00 AM EAT / 18:00 to 00:00)
+    const now = new Date();
+    const currentHour = now.getHours();
+    const isWithinWindow = currentHour >= 18 && currentHour < 24;
+    if (!isWithinWindow) {
+      return { 
+        success: false, 
+        message: `Withdrawals are currently closed! Due to high withdrawal rate, payouts are open daily between 6:00 PM and 12:00 AM (18:00 - 00:00 EAT). This schedule is enforced to ensure quick, reliable, and fast withdrawals for all investors.` 
+      };
+    }
+
+    // 2. Daily Withdrawal Limit Check (Maximum 1 withdrawal per day per account)
+    const todayStr = now.toDateString();
+    const myUserPhoneKey = normalizePhoneKey(currentUser.phone);
+    const withdrawalsToday = withdrawals.filter(w => {
+      if (!w || w.status === 'rejected') return false;
+      const isMyWithdrawal = w.userId === currentUser.id || normalizePhoneKey(w.userPhone || '') === myUserPhoneKey;
+      return isMyWithdrawal && new Date(w.createdAt).toDateString() === todayStr;
+    });
+
+    if (withdrawalsToday.length >= 1) {
+      return { 
+        success: false, 
+        message: `Daily withdrawal limit reached! Each account is allowed maximum 1 withdrawal request per day to handle the high withdrawal rate and ensure quick, reliable, and fast payouts.` 
+      };
+    }
+
     // Calculate un-invested deposit amount (deposits not spent on purchasing miners)
     const userRigs = purchasedRigs.filter(r => r.userId === currentUser.id);
     const totalSpentOnMiners = userRigs.reduce((sum, r) => sum + r.priceUGX, 0);

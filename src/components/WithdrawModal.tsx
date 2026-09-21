@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, normalizePhoneKey } from '../context/AppContext';
 import { BackButton } from './BackButton';
-import { ArrowUpRight, X, Smartphone, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, X, Smartphone, CheckCircle2, AlertCircle, ShieldCheck, Clock } from 'lucide-react';
 import { validateUgandanPhone } from '../utils/phoneValidation';
 import { MtnLogo, AirtelLogo } from './ProviderLogos';
 
@@ -11,7 +11,7 @@ interface WithdrawModalProps {
 }
 
 export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose }) => {
-  const { currentUser, adminConfig, submitWithdrawal, purchasedRigs } = useApp();
+  const { currentUser, adminConfig, submitWithdrawal, purchasedRigs, withdrawals } = useApp();
 
   const [provider, setProvider] = useState<'MTN Mobile Money' | 'Airtel Money'>('MTN Mobile Money');
   const [amount, setAmount] = useState<string>('20000');
@@ -30,10 +30,35 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
   const uninvestedDeposit = Math.max(0, (currentUser.totalDepositedUGX || 0) - totalSpentOnMiners);
   const maxWithdrawable = Math.max(0, currentUser.balanceUGX - uninvestedDeposit);
 
+  // Time Window Check (6:00 PM to 12:00 AM EAT / 18:00 to 00:00)
+  const now = new Date();
+  const currentHour = now.getHours();
+  const isWithinWindow = currentHour >= 18 && currentHour < 24;
+
+  // Daily Limit Check (1 per day per account)
+  const todayStr = now.toDateString();
+  const myUserPhoneKey = normalizePhoneKey(currentUser.phone);
+  const withdrawalsToday = (withdrawals || []).filter(w => {
+    if (!w || w.status === 'rejected') return false;
+    const isMyWithdrawal = w.userId === currentUser.id || normalizePhoneKey(w.userPhone || '') === myUserPhoneKey;
+    return isMyWithdrawal && new Date(w.createdAt).toDateString() === todayStr;
+  });
+  const hasWithdrawnToday = withdrawalsToday.length >= 1;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
+
+    if (!isWithinWindow) {
+      setError('Withdrawals are currently closed! Due to high withdrawal rate, payouts are open daily between 6:00 PM and 12:00 AM (18:00 - 00:00 EAT). This is done to ensure quick, reliable, and fast withdrawals for all investors.');
+      return;
+    }
+
+    if (hasWithdrawnToday) {
+      setError('Daily withdrawal limit reached! Each account is allowed maximum 1 withdrawal request per day to handle the high withdrawal rate and ensure quick, reliable, and fast payouts.');
+      return;
+    }
 
     if (numAmount < 3000) {
       setError('Minimum withdrawal amount is UGX 3,000');
@@ -86,7 +111,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Modal Header */}
-        <div className="flex items-center space-x-3 mb-6">
+        <div className="flex items-center space-x-3 mb-5">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-500 p-0.5 shadow-lg shadow-amber-950/50">
             <div className="w-full h-full bg-[#0B0E14] rounded-[10px] flex items-center justify-center">
               <ArrowUpRight className="w-5 h-5 text-amber-400" />
@@ -96,6 +121,28 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
             <h2 className="text-xl font-bold text-white">Withdraw Mining Profits</h2>
             <p className="text-xs text-slate-400">Direct payout to your MTN or Airtel Mobile Money</p>
           </div>
+        </div>
+
+        {/* Withdrawal Schedule & High-Volume Notice Banner */}
+        <div className="mb-5 p-3.5 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-slate-900/50 border border-amber-500/30 rounded-2xl space-y-2">
+          <div className="flex items-center justify-between font-bold text-amber-300 text-xs">
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Daily Payout Window: 6:00 PM – 12:00 AM</span>
+            </span>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${isWithinWindow ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+              {isWithinWindow ? '● Open Now' : '● Closed'}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-300 leading-relaxed">
+            Due to high withdrawal volume, payouts are strictly limited to <strong>1 withdrawal daily per account</strong> between <strong>6:00 PM and 12:00 AM midnight (18:00 – 00:00 EAT)</strong>. This schedule is enforced to ensure quick, reliable, and fast withdrawals for all investors!
+          </p>
+          {hasWithdrawnToday && (
+            <div className="pt-1 text-[11px] font-bold text-rose-400 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <span>You have already submitted your 1 daily withdrawal allowance for today.</span>
+            </div>
+          )}
         </div>
 
         {/* Feedback Messages */}
@@ -241,9 +288,19 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose })
 
           <button
             type="submit"
-            className="w-full py-3 bg-gradient-to-r from-amber-500 via-yellow-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-sm shadow-lg shadow-amber-950/50 transition-all active:scale-[0.98]"
+            disabled={!isWithinWindow || hasWithdrawnToday}
+            className={`w-full py-3 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-[0.98] ${
+              !isWithinWindow || hasWithdrawnToday
+                ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+                : 'bg-gradient-to-r from-amber-500 via-yellow-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 shadow-amber-950/50'
+            }`}
           >
-            Submit Withdrawal Order
+            {!isWithinWindow 
+              ? 'Withdrawals Closed (Opens 6 PM – 12 AM)' 
+              : hasWithdrawnToday 
+                ? 'Daily Limit Reached (1 Withdrawal Daily)' 
+                : 'Submit Withdrawal Order'
+            }
           </button>
         </form>
 
