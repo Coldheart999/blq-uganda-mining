@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { BackButton } from './BackButton';
 import { HelpCircle, ChevronDown, X, Sparkles, ShieldCheck, MessageCircle } from 'lucide-react';
 import { BlqLogo } from './BlqLogo';
@@ -113,18 +113,19 @@ export const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Telegram Direct Help CTA */}
-        <div className="mt-5 p-3.5 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-between gap-3">
+        <div className="mt-5 p-3.5 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <MessageCircle className="w-5 h-5 text-cyan-400 shrink-0" />
-            <span className="text-xs text-slate-300">Still have questions? Join our Telegram group.</span>
+            <span className="text-xs text-slate-300">Join our NEW Official Telegram Community Group for real-time updates and support!</span>
           </div>
           <a
-            href="https://t.me/BLQ_UG"
+            href="https://t.me/blqmining_group"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl shadow transition-colors shrink-0"
+            className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs rounded-xl shadow transition-all shrink-0 flex items-center gap-1.5"
           >
-            Ask Support
+            <span>Join Group</span>
+            <span className="bg-amber-400 text-slate-950 text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase animate-pulse">NEW</span>
           </a>
         </div>
 

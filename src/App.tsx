@@ -18,7 +18,7 @@ import { Footer } from './components/Footer';
 import { SocialProofTicker } from './components/SocialProofTicker';
 import { FloatingSupport } from './components/FloatingSupport';
 import { AnimatedCryptoBackground } from './components/AnimatedCryptoBackground';
-import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity, Gift, Sparkles } from 'lucide-react';
+import { Cpu, ShieldCheck, ArrowRight, TrendingUp, CheckCircle, Zap, Activity, Gift, Sparkles, Send } from 'lucide-react';
 import { MinerPackage, ReferralNotification } from './types';
 
 const MainContent: React.FC = () => {
@@ -244,6 +244,38 @@ const MainContent: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* NEW Official Telegram Community Announcement Banner */}
+        <a 
+          href="https://t.me/blqmining_group"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block bg-gradient-to-r from-cyan-950/80 via-blue-950/60 to-slate-900/90 border border-cyan-500/40 hover:border-cyan-400 rounded-3xl p-4 sm:p-5 shadow-xl transition-all group cursor-pointer"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shrink-0 text-cyan-400 group-hover:scale-110 transition-transform">
+                <Send className="w-6 h-6 text-cyan-400 fill-cyan-400/20" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded font-extrabold font-mono uppercase tracking-wider">NEW TELEGRAM COMMUNITY</span>
+                  <span className="text-[11px] font-bold text-cyan-400 font-mono hidden sm:inline-block">t.me/blqmining_group</span>
+                </div>
+                <h3 className="text-sm sm:text-base font-extrabold text-white mt-0.5 leading-snug">
+                  Join the Official BLQ Mining Telegram Group! 🚀
+                </h3>
+                <p className="text-xs text-slate-300 hidden sm:block mt-0.5">
+                  Connect with fellow Ugandan investors, get instant payout updates, support & platform announcements.
+                </p>
+              </div>
+            </div>
+            <button className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-extrabold text-xs rounded-xl shadow group-hover:scale-105 transition-all shrink-0">
+              <span>Join Now</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </a>
 
         {/* Captivating Referral Challenge Banner */}
         <div 

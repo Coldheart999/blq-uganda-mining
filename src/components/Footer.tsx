@@ -22,9 +22,18 @@ export const Footer: React.FC<FooterProps> = () => {
           </span>
         </div>
 
-        {/* Security Badge */}
+        {/* Telegram Community & Security Badge */}
         <div className="flex items-center gap-4 text-[11px] font-mono">
-          <div className="flex items-center gap-1.5 text-slate-500 hover:text-emerald-400 transition-colors">
+          <a 
+            href="https://t.me/blqmining_group"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 transition-colors font-bold bg-cyan-950/60 border border-cyan-500/30 px-3 py-1 rounded-lg"
+          >
+            <span>Join Telegram Community</span>
+            <span className="bg-amber-400 text-slate-950 text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase animate-pulse">NEW</span>
+          </a>
+          <div className="flex items-center gap-1.5 text-slate-500 hover:text-emerald-400 transition-colors hidden sm:flex">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500/80" />
             <span>256-Bit SSL</span>
             <span>• Uganda 🇺🇬</span>
